@@ -43,6 +43,8 @@ private:
     QTextCharFormat horizontalRuleFormat;
     QTextCharFormat wikiLinkFormat;
     QTextCharFormat brokenWikiLinkFormat;
+    QTextCharFormat inlineLatexFormat;
+    QTextCharFormat blockLatexFormat;
     
     QString rootPath;
     bool checkWikiLinkExists(const QString &linkText) const;

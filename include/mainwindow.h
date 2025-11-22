@@ -16,6 +16,8 @@ class MarkdownPreview;
 class LinkParser;
 class SearchDialog;
 class SettingsDialog;
+class QuickOpenDialog;
+class OutlinePanel;
 
 class MainWindow : public QMainWindow
 {
@@ -36,6 +38,8 @@ private slots:
     void about();
     void toggleTreeView();
     void togglePreview();
+    void toggleBacklinks();
+    void toggleOutline();
     void onFileSelected(const QString &filePath);
     void onFileDoubleClicked(const QString &filePath);
     void onFileModifiedExternally(const QString &filePath);
@@ -52,6 +56,22 @@ private slots:
     void searchInFiles();
     void openSettings();
     void onSearchResultSelected(const QString &filePath, int lineNumber);
+    void insertImage();
+    void insertFormula();
+    void insertWikiLink();
+    void insertHeader();
+    void insertBold();
+    void insertItalic();
+    void insertCode();
+    void insertCodeBlock();
+    void insertList();
+    void insertNumberedList();
+    void insertBlockquote();
+    void insertHorizontalRule();
+    void insertLink();
+    void insertTable();
+    void quickOpen();
+    void jumpToLine(int lineNumber);
 
 private:
     void createActions();
@@ -65,6 +85,7 @@ private:
 
     QMenu *fileMenu;
     QMenu *editMenu;
+    QMenu *insertMenu;
     QMenu *viewMenu;
     QMenu *helpMenu;
 
@@ -72,6 +93,20 @@ private:
     QAction *openFolderAction;
     QAction *saveAction;
     QAction *saveAsAction;
+    QAction *insertImageAction;
+    QAction *insertFormulaAction;
+    QAction *insertWikiLinkAction;
+    QAction *insertHeaderAction;
+    QAction *insertBoldAction;
+    QAction *insertItalicAction;
+    QAction *insertCodeAction;
+    QAction *insertCodeBlockAction;
+    QAction *insertListAction;
+    QAction *insertNumberedListAction;
+    QAction *insertBlockquoteAction;
+    QAction *insertHorizontalRuleAction;
+    QAction *insertLinkAction;
+    QAction *insertTableAction;
     QAction *exitAction;
     QAction *undoAction;
     QAction *redoAction;
@@ -81,9 +116,11 @@ private:
     QAction *findAction;
     QAction *findReplaceAction;
     QAction *searchInFilesAction;
+    QAction *quickOpenAction;
     QAction *toggleTreeViewAction;
     QAction *togglePreviewAction;
     QAction *toggleBacklinksAction;
+    QAction *toggleOutlineAction;
     QAction *previewThemeLightAction;
     QAction *previewThemeDarkAction;
     QAction *previewThemeSepiaAction;
@@ -104,6 +141,8 @@ private:
     MarkdownPreview *preview;
     QListWidget *backlinksView;
     LinkParser *linkParser;
+    
+    QStringList recentFiles;
     QString currentFolder;
     QString currentFilePath;
     QTimer *autoSaveTimer;

@@ -9,6 +9,12 @@
 #include <QTextCursor>
 #include <QRegularExpression>
 #include <QApplication>
+#include <QDragEnterEvent>
+#include <QDragMoveEvent>
+#include <QDropEvent>
+#include <QMimeData>
+#include <QUrl>
+#include <QFileInfo>
 
 MarkdownEditor::MarkdownEditor(QWidget *parent)
     : QPlainTextEdit(parent)
@@ -90,6 +96,64 @@ void MarkdownEditor::mousePressEvent(QMouseEvent *event)
     }
     
     QPlainTextEdit::mousePressEvent(event);
+}
+
+void MarkdownEditor::dragEnterEvent(QDragEnterEvent *event)
+{
+    if (event->mimeData()->hasUrls()) {
+        event->acceptProposedAction();
+    } else {
+        QPlainTextEdit::dragEnterEvent(event);
+    }
+}
+
+void MarkdownEditor::dragMoveEvent(QDragMoveEvent *event)
+{
+    if (event->mimeData()->hasUrls()) {
+        event->acceptProposedAction();
+    } else {
+        QPlainTextEdit::dragMoveEvent(event);
+    }
+}
+
+void MarkdownEditor::dropEvent(QDropEvent *event)
+{
+    if (event->mimeData()->hasUrls()) {
+        QList<QUrl> urls = event->mimeData()->urls();
+        
+        // Get drop position
+        QTextCursor cursor = cursorForPosition(event->pos());
+        setTextCursor(cursor);
+        
+        for (const QUrl &url : urls) {
+            if (url.isLocalFile()) {
+                QString filePath = url.toLocalFile();
+                QFileInfo fileInfo(filePath);
+                
+                // Check if it's an image
+                QStringList imageExtensions;
+                imageExtensions << "png" << "jpg" << "jpeg" << "gif" << "bmp" << "svg";
+                
+                if (imageExtensions.contains(fileInfo.suffix().toLower())) {
+                    // Insert as image
+                    QString imageMarkdown = QString("![%1](%2)")
+                        .arg(fileInfo.baseName(), filePath);
+                    cursor.insertText(imageMarkdown);
+                    cursor.insertText("\n");
+                } else {
+                    // Insert as link
+                    QString linkMarkdown = QString("[%1](%2)")
+                        .arg(fileInfo.fileName(), filePath);
+                    cursor.insertText(linkMarkdown);
+                    cursor.insertText("\n");
+                }
+            }
+        }
+        
+        event->acceptProposedAction();
+    } else {
+        QPlainTextEdit::dropEvent(event);
+    }
 }
 
 void MarkdownEditor::setupEditor()

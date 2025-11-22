@@ -6,6 +6,9 @@
 #include "linkparser.h"
 #include "searchdialog.h"
 #include "settingsdialog.h"
+#include "formuladialog.h"
+#include "quickopendialog.h"
+#include "outlinepanel.h"
 #include <QApplication>
 #include <QMenuBar>
 #include <QActionGroup>
@@ -103,6 +106,76 @@ void MainWindow::createActions()
     saveAsAction->setShortcuts(QKeySequence::SaveAs);
     saveAsAction->setStatusTip(tr("Save the document under a new name"));
     connect(saveAsAction, &QAction::triggered, this, &MainWindow::saveAs);
+    
+    insertImageAction = new QAction(tr("Insert &Image..."), this);
+    insertImageAction->setShortcut(QKeySequence(tr("Ctrl+Shift+I")));
+    insertImageAction->setStatusTip(tr("Insert an image into the document"));
+    connect(insertImageAction, &QAction::triggered, this, &MainWindow::insertImage);
+    
+    insertFormulaAction = new QAction(tr("Insert &Formula..."), this);
+    insertFormulaAction->setShortcut(QKeySequence(tr("Ctrl+Shift+M")));
+    insertFormulaAction->setStatusTip(tr("Insert a LaTeX formula"));
+    connect(insertFormulaAction, &QAction::triggered, this, &MainWindow::insertFormula);
+    
+    insertWikiLinkAction = new QAction(tr("Insert &Wiki Link..."), this);
+    insertWikiLinkAction->setShortcut(QKeySequence(tr("Ctrl+K")));
+    insertWikiLinkAction->setStatusTip(tr("Insert a wiki-style link"));
+    connect(insertWikiLinkAction, &QAction::triggered, this, &MainWindow::insertWikiLink);
+    
+    insertHeaderAction = new QAction(tr("Insert &Header"), this);
+    insertHeaderAction->setShortcut(QKeySequence(tr("Ctrl+1")));
+    insertHeaderAction->setStatusTip(tr("Insert a header"));
+    connect(insertHeaderAction, &QAction::triggered, this, &MainWindow::insertHeader);
+    
+    insertBoldAction = new QAction(tr("&Bold"), this);
+    insertBoldAction->setShortcut(QKeySequence::Bold);
+    insertBoldAction->setStatusTip(tr("Make text bold"));
+    connect(insertBoldAction, &QAction::triggered, this, &MainWindow::insertBold);
+    
+    insertItalicAction = new QAction(tr("&Italic"), this);
+    insertItalicAction->setShortcut(QKeySequence::Italic);
+    insertItalicAction->setStatusTip(tr("Make text italic"));
+    connect(insertItalicAction, &QAction::triggered, this, &MainWindow::insertItalic);
+    
+    insertCodeAction = new QAction(tr("Inline &Code"), this);
+    insertCodeAction->setShortcut(QKeySequence(tr("Ctrl+`")));
+    insertCodeAction->setStatusTip(tr("Insert inline code"));
+    connect(insertCodeAction, &QAction::triggered, this, &MainWindow::insertCode);
+    
+    insertCodeBlockAction = new QAction(tr("Code &Block"), this);
+    insertCodeBlockAction->setShortcut(QKeySequence(tr("Ctrl+Shift+C")));
+    insertCodeBlockAction->setStatusTip(tr("Insert code block"));
+    connect(insertCodeBlockAction, &QAction::triggered, this, &MainWindow::insertCodeBlock);
+    
+    insertListAction = new QAction(tr("Bulleted &List"), this);
+    insertListAction->setShortcut(QKeySequence(tr("Ctrl+Shift+8")));
+    insertListAction->setStatusTip(tr("Insert bulleted list"));
+    connect(insertListAction, &QAction::triggered, this, &MainWindow::insertList);
+    
+    insertNumberedListAction = new QAction(tr("&Numbered List"), this);
+    insertNumberedListAction->setShortcut(QKeySequence(tr("Ctrl+Shift+7")));
+    insertNumberedListAction->setStatusTip(tr("Insert numbered list"));
+    connect(insertNumberedListAction, &QAction::triggered, this, &MainWindow::insertNumberedList);
+    
+    insertBlockquoteAction = new QAction(tr("Block&quote"), this);
+    insertBlockquoteAction->setShortcut(QKeySequence(tr("Ctrl+Shift+.")));
+    insertBlockquoteAction->setStatusTip(tr("Insert blockquote"));
+    connect(insertBlockquoteAction, &QAction::triggered, this, &MainWindow::insertBlockquote);
+    
+    insertHorizontalRuleAction = new QAction(tr("Horizontal &Rule"), this);
+    insertHorizontalRuleAction->setShortcut(QKeySequence(tr("Ctrl+Shift+-")));
+    insertHorizontalRuleAction->setStatusTip(tr("Insert horizontal rule"));
+    connect(insertHorizontalRuleAction, &QAction::triggered, this, &MainWindow::insertHorizontalRule);
+    
+    insertLinkAction = new QAction(tr("Insert Lin&k..."), this);
+    insertLinkAction->setShortcut(QKeySequence(tr("Ctrl+L")));
+    insertLinkAction->setStatusTip(tr("Insert hyperlink"));
+    connect(insertLinkAction, &QAction::triggered, this, &MainWindow::insertLink);
+    
+    insertTableAction = new QAction(tr("Insert &Table"), this);
+    insertTableAction->setShortcut(QKeySequence(tr("Ctrl+Shift+T")));
+    insertTableAction->setStatusTip(tr("Insert table"));
+    connect(insertTableAction, &QAction::triggered, this, &MainWindow::insertTable);
 
     exitAction = new QAction(tr("E&xit"), this);
     exitAction->setShortcuts(QKeySequence::Quit);
@@ -152,6 +225,11 @@ void MainWindow::createActions()
     searchInFilesAction->setShortcut(QKeySequence(tr("Ctrl+Shift+F")));
     searchInFilesAction->setStatusTip(tr("Search across all files"));
     connect(searchInFilesAction, &QAction::triggered, this, &MainWindow::searchInFiles);
+    
+    quickOpenAction = new QAction(tr("&Quick Open..."), this);
+    quickOpenAction->setShortcut(QKeySequence(tr("Ctrl+P")));
+    quickOpenAction->setStatusTip(tr("Quickly open a file"));
+    connect(quickOpenAction, &QAction::triggered, this, &MainWindow::quickOpen);
 
     toggleTreeViewAction = new QAction(tr("&File Tree"), this);
     toggleTreeViewAction->setCheckable(true);
@@ -230,11 +308,35 @@ void MainWindow::createMenus()
     editMenu->addAction(findAction);
     editMenu->addAction(findReplaceAction);
     editMenu->addAction(searchInFilesAction);
+    editMenu->addSeparator();
+    editMenu->addAction(quickOpenAction);
+    
+    insertMenu = menuBar()->addMenu(tr("&Insert"));
+    insertMenu->addAction(insertImageAction);
+    insertMenu->addAction(insertFormulaAction);
+    insertMenu->addSeparator();
+    insertMenu->addAction(insertWikiLinkAction);
+    insertMenu->addAction(insertLinkAction);
+    insertMenu->addSeparator();
+    insertMenu->addAction(insertHeaderAction);
+    insertMenu->addAction(insertBoldAction);
+    insertMenu->addAction(insertItalicAction);
+    insertMenu->addSeparator();
+    insertMenu->addAction(insertCodeAction);
+    insertMenu->addAction(insertCodeBlockAction);
+    insertMenu->addSeparator();
+    insertMenu->addAction(insertListAction);
+    insertMenu->addAction(insertNumberedListAction);
+    insertMenu->addAction(insertBlockquoteAction);
+    insertMenu->addSeparator();
+    insertMenu->addAction(insertHorizontalRuleAction);
+    insertMenu->addAction(insertTableAction);
 
     viewMenu = menuBar()->addMenu(tr("&View"));
     viewMenu->addAction(toggleTreeViewAction);
     viewMenu->addAction(togglePreviewAction);
     viewMenu->addAction(toggleBacklinksAction);
+    viewMenu->addAction(toggleOutlineAction);
     viewMenu->addSeparator();
     QMenu *previewThemeMenu = viewMenu->addMenu(tr("Preview Theme"));
     previewThemeMenu->addAction(previewThemeLightAction);
@@ -496,11 +598,12 @@ void MainWindow::toggleTreeView()
 
 void MainWindow::togglePreview()
 {
-    if (sender() == toggleBacklinksAction) {
-        backlinksPanel->setVisible(toggleBacklinksAction->isChecked());
-    } else {
-        previewPanel->setVisible(togglePreviewAction->isChecked());
-    }
+    previewPanel->setVisible(togglePreviewAction->isChecked());
+}
+
+void MainWindow::toggleBacklinks()
+{
+    backlinksWidget->setVisible(toggleBacklinksAction->isChecked());
 }
 
 void MainWindow::onWikiLinkClicked(const QString &linkTarget)
@@ -697,7 +800,10 @@ bool MainWindow::loadFile(const QString &filePath)
     editor->document()->setModified(false);
     currentFilePath = filePath;
     
+    // Set base path for preview (directory of the current file)
     QFileInfo fileInfo(filePath);
+    preview->setBasePath(fileInfo.absolutePath());
+    
     setWindowTitle(tr("MkEd - %1").arg(fileInfo.fileName()));
     statusBar()->showMessage(tr("Loaded: %1").arg(fileInfo.fileName()), 3000);
     
@@ -831,6 +937,7 @@ void MainWindow::updatePreview()
 {
     QString markdown = editor->toPlainText();
     preview->setMarkdownContent(markdown);
+    outlinePanel->updateOutline(markdown);
 }
 
 void MainWindow::setPreviewThemeLight()
@@ -909,6 +1016,375 @@ void MainWindow::onSearchResultSelected(const QString &filePath, int lineNumber)
         editor->setTextCursor(cursor);
         editor->centerCursor();
         
+        // Add to recent files
+        if (!recentFiles.contains(filePath)) {
+            recentFiles.prepend(filePath);
+            if (recentFiles.size() > 10) {
+                recentFiles.removeLast();
+            }
+        }
+        
         statusBar()->showMessage(tr("Jumped to line %1").arg(lineNumber), 3000);
     }
+}
+
+void MainWindow::insertImage()
+{
+    QString imagePath = QFileDialog::getOpenFileName(
+        this,
+        tr("Select Image"),
+        currentFolder.isEmpty() ? QDir::homePath() : currentFolder,
+        tr("Images (*.png *.jpg *.jpeg *.gif *.bmp *.svg);;All Files (*)")
+    );
+    
+    if (imagePath.isEmpty()) {
+        return;
+    }
+    
+    // Get alt text from user
+    bool ok;
+    QString altText = QInputDialog::getText(
+        this,
+        tr("Image Alt Text"),
+        tr("Enter alt text for the image (optional):"),
+        QLineEdit::Normal,
+        QFileInfo(imagePath).baseName(),
+        &ok
+    );
+    
+    if (!ok) {
+        return;
+    }
+    
+    // Convert to relative path if possible
+    QString finalPath = imagePath;
+    if (!currentFolder.isEmpty() && !currentFilePath.isEmpty()) {
+        QDir currentDir = QFileInfo(currentFilePath).dir();
+        finalPath = currentDir.relativeFilePath(imagePath);
+    }
+    
+    // Insert Markdown image syntax
+    QString imageMarkdown = QString("![%1](%2)").arg(altText, finalPath);
+    
+    QTextCursor cursor = editor->textCursor();
+    cursor.insertText(imageMarkdown);
+    
+    statusBar()->showMessage(tr("Image inserted"), 3000);
+}
+
+void MainWindow::insertFormula()
+{
+    FormulaDialog dialog(this);
+    if (dialog.exec() == QDialog::Accepted) {
+        QString formula = dialog.getFormula();
+        
+        if (!formula.isEmpty()) {
+            QTextCursor cursor = editor->textCursor();
+            
+            if (dialog.isBlockFormula()) {
+                // Block formula - add on new lines
+                cursor.insertText("\n" + formula + "\n");
+            } else {
+                // Inline formula
+                cursor.insertText(formula);
+            }
+            
+            statusBar()->showMessage(tr("Formula inserted"), 3000);
+        }
+    }
+}
+
+void MainWindow::insertWikiLink()
+{
+    if (currentFolder.isEmpty()) {
+        QMessageBox::information(this, tr("No Folder Open"),
+            tr("Please open a folder first to browse files."));
+        return;
+    }
+    
+    // Show file browser to select target file
+    QString targetPath = QFileDialog::getOpenFileName(
+        this,
+        tr("Select Target File"),
+        currentFolder,
+        tr("Markdown Files (*.md *.markdown);;All Files (*)")
+    );
+    
+    if (targetPath.isEmpty()) {
+        return;
+    }
+    
+    // Get just the filename without extension
+    QFileInfo fileInfo(targetPath);
+    QString linkTarget = fileInfo.completeBaseName();
+    
+    // Ask for display text
+    bool ok;
+    QString displayText = QInputDialog::getText(
+        this,
+        tr("Wiki Link Display Text"),
+        tr("Enter display text (leave empty to use filename):"),
+        QLineEdit::Normal,
+        linkTarget,
+        &ok
+    );
+    
+    if (!ok) {
+        return;
+    }
+    
+    // Insert wiki link
+    QString wikiLink;
+    if (displayText.isEmpty() || displayText == linkTarget) {
+        wikiLink = QString("[[%1]]").arg(linkTarget);
+    } else {
+        wikiLink = QString("[[%1|%2]]").arg(linkTarget, displayText);
+    }
+    
+    QTextCursor cursor = editor->textCursor();
+    cursor.insertText(wikiLink);
+    
+    statusBar()->showMessage(tr("Wiki link inserted"), 3000);
+}
+
+void MainWindow::insertHeader()
+{
+    bool ok;
+    QStringList items;
+    items << "# Header 1" << "## Header 2" << "### Header 3" 
+          << "#### Header 4" << "##### Header 5" << "###### Header 6";
+    
+    QString item = QInputDialog::getItem(this, tr("Insert Header"),
+                                         tr("Select header level:"), items, 0, false, &ok);
+    if (ok && !item.isEmpty()) {
+        QTextCursor cursor = editor->textCursor();
+        cursor.insertText(item + " ");
+        statusBar()->showMessage(tr("Header inserted"), 3000);
+    }
+}
+
+void MainWindow::insertBold()
+{
+    QTextCursor cursor = editor->textCursor();
+    QString selectedText = cursor.selectedText();
+    
+    if (selectedText.isEmpty()) {
+        cursor.insertText("**bold text**");
+        cursor.movePosition(QTextCursor::Left, QTextCursor::MoveAnchor, 2);
+    } else {
+        cursor.insertText("**" + selectedText + "**");
+    }
+    
+    editor->setTextCursor(cursor);
+    statusBar()->showMessage(tr("Bold formatting applied"), 3000);
+}
+
+void MainWindow::insertItalic()
+{
+    QTextCursor cursor = editor->textCursor();
+    QString selectedText = cursor.selectedText();
+    
+    if (selectedText.isEmpty()) {
+        cursor.insertText("*italic text*");
+        cursor.movePosition(QTextCursor::Left, QTextCursor::MoveAnchor, 1);
+    } else {
+        cursor.insertText("*" + selectedText + "*");
+    }
+    
+    editor->setTextCursor(cursor);
+    statusBar()->showMessage(tr("Italic formatting applied"), 3000);
+}
+
+void MainWindow::insertCode()
+{
+    QTextCursor cursor = editor->textCursor();
+    QString selectedText = cursor.selectedText();
+    
+    if (selectedText.isEmpty()) {
+        cursor.insertText("`code`");
+        cursor.movePosition(QTextCursor::Left, QTextCursor::MoveAnchor, 1);
+    } else {
+        cursor.insertText("`" + selectedText + "`");
+    }
+    
+    editor->setTextCursor(cursor);
+    statusBar()->showMessage(tr("Code formatting applied"), 3000);
+}
+
+void MainWindow::insertCodeBlock()
+{
+    bool ok;
+    QString language = QInputDialog::getText(
+        this,
+        tr("Code Block"),
+        tr("Enter language (optional):"),
+        QLineEdit::Normal,
+        "",
+        &ok
+    );
+    
+    if (ok) {
+        QTextCursor cursor = editor->textCursor();
+        QString codeBlock = QString("\n```%1\nYour code here\n```\n").arg(language);
+        cursor.insertText(codeBlock);
+        statusBar()->showMessage(tr("Code block inserted"), 3000);
+    }
+}
+
+void MainWindow::insertList()
+{
+    QTextCursor cursor = editor->textCursor();
+    cursor.insertText("\n- List item 1\n- List item 2\n- List item 3\n");
+    statusBar()->showMessage(tr("List inserted"), 3000);
+}
+
+void MainWindow::insertNumberedList()
+{
+    QTextCursor cursor = editor->textCursor();
+    cursor.insertText("\n1. First item\n2. Second item\n3. Third item\n");
+    statusBar()->showMessage(tr("Numbered list inserted"), 3000);
+}
+
+void MainWindow::insertBlockquote()
+{
+    QTextCursor cursor = editor->textCursor();
+    QString selectedText = cursor.selectedText();
+    
+    if (selectedText.isEmpty()) {
+        cursor.insertText("\n> Quote text here\n");
+    } else {
+        cursor.insertText("\n> " + selectedText + "\n");
+    }
+    
+    statusBar()->showMessage(tr("Blockquote inserted"), 3000);
+}
+
+void MainWindow::insertHorizontalRule()
+{
+    QTextCursor cursor = editor->textCursor();
+    cursor.insertText("\n---\n");
+    statusBar()->showMessage(tr("Horizontal rule inserted"), 3000);
+}
+
+void MainWindow::insertLink()
+{
+    bool ok;
+    QString text = QInputDialog::getText(
+        this,
+        tr("Insert Link"),
+        tr("Enter link text:"),
+        QLineEdit::Normal,
+        "",
+        &ok
+    );
+    
+    if (!ok || text.isEmpty()) {
+        return;
+    }
+    
+    QString url = QInputDialog::getText(
+        this,
+        tr("Insert Link"),
+        tr("Enter URL:"),
+        QLineEdit::Normal,
+        "https://",
+        &ok
+    );
+    
+    if (ok && !url.isEmpty()) {
+        QTextCursor cursor = editor->textCursor();
+        cursor.insertText(QString("[%1](%2)").arg(text, url));
+        statusBar()->showMessage(tr("Link inserted"), 3000);
+    }
+}
+
+void MainWindow::insertTable()
+{
+    bool ok;
+    int rows = QInputDialog::getInt(
+        this,
+        tr("Insert Table"),
+        tr("Number of rows:"),
+        3, 2, 20, 1, &ok
+    );
+    
+    if (!ok) {
+        return;
+    }
+    
+    int cols = QInputDialog::getInt(
+        this,
+        tr("Insert Table"),
+        tr("Number of columns:"),
+        3, 2, 10, 1, &ok
+    );
+    
+    if (!ok) {
+        return;
+    }
+    
+    QString table = "\n";
+    
+    // Header row
+    table += "|";
+    for (int c = 0; c < cols; ++c) {
+        table += QString(" Header %1 |").arg(c + 1);
+    }
+    table += "\n";
+    
+    // Separator row
+    table += "|";
+    for (int c = 0; c < cols; ++c) {
+        table += " --- |";
+    }
+    table += "\n";
+    
+    // Data rows
+    for (int r = 0; r < rows - 1; ++r) {
+        table += "|";
+        for (int c = 0; c < cols; ++c) {
+            table += " Cell |";
+        }
+        table += "\n";
+    }
+    
+    table += "\n";
+    
+    QTextCursor cursor = editor->textCursor();
+    cursor.insertText(table);
+    statusBar()->showMessage(tr("Table inserted"), 3000);
+}
+
+void MainWindow::quickOpen()
+{
+    if (currentFolder.isEmpty()) {
+        QMessageBox::information(this, tr("No Folder Open"),
+            tr("Please open a folder first."));
+        return;
+    }
+    
+    QuickOpenDialog dialog(currentFolder, recentFiles, this);
+    connect(&dialog, &QuickOpenDialog::fileSelected,
+            this, [this](const QString &filePath) {
+        if (!maybeSave()) {
+            return;
+        }
+        loadFile(filePath);
+    });
+    dialog.exec();
+}
+
+void MainWindow::jumpToLine(int lineNumber)
+{
+    QTextCursor cursor = editor->textCursor();
+    cursor.movePosition(QTextCursor::Start);
+    cursor.movePosition(QTextCursor::Down, QTextCursor::MoveAnchor, lineNumber - 1);
+    editor->setTextCursor(cursor);
+    editor->centerCursor();
+    editor->setFocus();
+}
+
+void MainWindow::toggleOutline()
+{
+    outlinePanel->setVisible(toggleOutlineAction->isChecked());
 }

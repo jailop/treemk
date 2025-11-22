@@ -1,9 +1,10 @@
 #include "markdownpreview.h"
 #include <QRegularExpression>
 #include <QTextDocument>
+#include <QDir>
 
 MarkdownPreview::MarkdownPreview(QWidget *parent)
-    : QWebEngineView(parent), currentTheme("light")
+    : QWebEngineView(parent), currentTheme("light"), basePath(QDir::homePath()), latexEnabled(true)
 {
     setContextMenuPolicy(Qt::NoContextMenu);
 }
@@ -12,9 +13,24 @@ MarkdownPreview::~MarkdownPreview()
 {
 }
 
+void MarkdownPreview::setBasePath(const QString &path)
+{
+    basePath = path;
+}
+
+void MarkdownPreview::setLatexEnabled(bool enabled)
+{
+    latexEnabled = enabled;
+}
+
 void MarkdownPreview::setMarkdownContent(const QString &markdown)
 {
     QString html = convertMarkdownToHtml(markdown);
+    
+    if (latexEnabled) {
+        html = processLatexFormulas(html);
+    }
+    
     QString styleSheet = getStyleSheet(currentTheme);
     
     QString fullHtml = QString(
@@ -22,11 +38,26 @@ void MarkdownPreview::setMarkdownContent(const QString &markdown)
         "<html>"
         "<head>"
         "<meta charset=\"UTF-8\">"
-        "<style>%1</style>"
+        "<base href=\"file://%1/\">"
+        "<link rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css\">"
+        "<script src=\"https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js\"></script>"
+        "<script src=\"https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js\"></script>"
+        "<style>%2</style>"
+        "<script>"
+        "document.addEventListener('DOMContentLoaded', function() {"
+        "  renderMathInElement(document.body, {"
+        "    delimiters: ["
+        "      {left: '$$', right: '$$', display: true},"
+        "      {left: '$', right: '$', display: false}"
+        "    ],"
+        "    throwOnError: false"
+        "  });"
+        "});"
+        "</script>"
         "</head>"
-        "<body>%2</body>"
+        "<body>%3</body>"
         "</html>"
-    ).arg(styleSheet, html);
+    ).arg(basePath, styleSheet, html);
     
     setHtml(fullHtml);
 }
@@ -125,6 +156,10 @@ QString MarkdownPreview::convertMarkdownToHtml(const QString &markdown)
         // Links [text](url)
         processedLine.replace(QRegularExpression("\\[([^\\]]+)\\]\\(([^\\)]+)\\)"), 
                              "<a href=\"\\2\">\\1</a>");
+        
+        // Images ![alt](url) - must be before links
+        processedLine.replace(QRegularExpression("!\\[([^\\]]*)\\]\\(([^\\)]+)\\)"),
+                             "<img src=\"\\2\" alt=\"\\1\" style=\"max-width: 100%; height: auto;\" />");
         
         // Wiki links [[link]]
         processedLine.replace(QRegularExpression("\\[\\[([^\\]|]+)\\]\\]"), 
@@ -286,4 +321,12 @@ QString MarkdownPreview::getStyleSheet(const QString &theme)
     }
     
     return baseStyle + themeStyle;
+}
+
+QString MarkdownPreview::processLatexFormulas(const QString &html)
+{
+    // KaTeX will handle the rendering via auto-render.js
+    // We just need to make sure the delimiters are preserved in the HTML
+    // The actual rendering happens in the JavaScript
+    return html;
 }

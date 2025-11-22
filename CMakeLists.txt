@@ -32,6 +32,9 @@ set(SOURCES
     src/linkparser.cpp
     src/searchdialog.cpp
     src/settingsdialog.cpp
+    src/formuladialog.cpp
+    src/quickopendialog.cpp
+    src/outlinepanel.cpp
 )
 
 # Header files
@@ -44,6 +47,9 @@ set(HEADERS
     include/linkparser.h
     include/searchdialog.h
     include/settingsdialog.h
+    include/formuladialog.h
+    include/quickopendialog.h
+    include/outlinepanel.h
 )
 
 # Create executable

@@ -128,6 +128,15 @@ MarkdownHighlighter::MarkdownHighlighter(QTextDocument *parent)
     brokenWikiLinkFormat.setForeground(QColor(255, 0, 0));
     brokenWikiLinkFormat.setFontWeight(QFont::Bold);
     brokenWikiLinkFormat.setFontUnderline(true);
+    
+    // LaTeX formulas - inline $...$
+    inlineLatexFormat.setForeground(QColor(128, 0, 128));
+    inlineLatexFormat.setBackground(QColor(250, 240, 250));
+    
+    // LaTeX formulas - block $$...$$
+    blockLatexFormat.setForeground(QColor(100, 0, 100));
+    blockLatexFormat.setBackground(QColor(245, 235, 245));
+    blockLatexFormat.setFontWeight(QFont::Bold);
 }
 
 void MarkdownHighlighter::setRootPath(const QString &path)
@@ -162,6 +171,30 @@ void MarkdownHighlighter::highlightBlock(const QString &text)
         } else {
             setFormat(match.capturedStart(), match.capturedLength(), brokenWikiLinkFormat);
         }
+    }
+    
+    // Handle LaTeX formulas
+    // Block formulas $$...$$
+    QRegularExpression blockLatexPattern("\\$\\$[^$]+\\$\\$");
+    QRegularExpressionMatchIterator blockLatexIterator = blockLatexPattern.globalMatch(text);
+    
+    while (blockLatexIterator.hasNext()) {
+        QRegularExpressionMatch match = blockLatexIterator.next();
+        setFormat(match.capturedStart(), match.capturedLength(), blockLatexFormat);
+    }
+    
+    // Inline formulas $...$
+    QRegularExpression inlineLatexPattern("\\$[^$\\n]+\\$");
+    QRegularExpressionMatchIterator inlineLatexIterator = inlineLatexPattern.globalMatch(text);
+    
+    while (inlineLatexIterator.hasNext()) {
+        QRegularExpressionMatch match = inlineLatexIterator.next();
+        // Make sure it's not part of a block formula
+        int start = match.capturedStart();
+        if (start > 0 && text[start - 1] == '$') continue;
+        if (start + match.capturedLength() < text.length() && text[start + match.capturedLength()] == '$') continue;
+        
+        setFormat(match.capturedStart(), match.capturedLength(), inlineLatexFormat);
     }
 }
 
