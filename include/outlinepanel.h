@@ -29,7 +29,7 @@ signals:
     void headerClicked(int lineNumber);
 
 private slots:
-    void onItemDoubleClicked();
+    void onItemClicked();
 
 private:
     void setupUI();

@@ -26,8 +26,8 @@ void OutlinePanel::setupUI()
     outlineList = new QListWidget(this);
     layout->addWidget(outlineList);
     
-    connect(outlineList, &QListWidget::itemDoubleClicked,
-            this, &OutlinePanel::onItemDoubleClicked);
+    connect(outlineList, &QListWidget::itemClicked,
+            this, &OutlinePanel::onItemClicked);
 }
 
 void OutlinePanel::updateOutline(const QString &markdown)
@@ -68,7 +68,7 @@ void OutlinePanel::updateOutline(const QString &markdown)
     }
 }
 
-void OutlinePanel::onItemDoubleClicked()
+void OutlinePanel::onItemClicked()
 {
     QListWidgetItem *item = outlineList->currentItem();
     if (item) {
@@ -88,10 +88,25 @@ QList<OutlineItem> OutlinePanel::parseHeaders(const QString &markdown)
     // Regex for ATX-style headers: # Header
     QRegularExpression headerPattern("^(#{1,6})\\s+(.+)$");
     
+    bool inCodeBlock = false;
+    
     for (int i = 0; i < lines.size(); ++i) {
-        QString line = lines[i].trimmed();
+        QString line = lines[i];
         
-        QRegularExpressionMatch match = headerPattern.match(line);
+        // Check for code block fences
+        if (line.trimmed().startsWith("```")) {
+            inCodeBlock = !inCodeBlock;
+            continue;
+        }
+        
+        // Skip lines inside code blocks
+        if (inCodeBlock) {
+            continue;
+        }
+        
+        QString trimmedLine = line.trimmed();
+        
+        QRegularExpressionMatch match = headerPattern.match(trimmedLine);
         if (match.hasMatch()) {
             int level = match.captured(1).length();
             QString text = match.captured(2).trimmed();

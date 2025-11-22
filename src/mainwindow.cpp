@@ -1729,12 +1729,22 @@ void MainWindow::jumpToLine(int lineNumber)
     TabEditor *tab = currentTabEditor();
     if (!tab) return;
     
+    // Move editor cursor to line
     QTextCursor cursor = tab->editor()->textCursor();
     cursor.movePosition(QTextCursor::Start);
     cursor.movePosition(QTextCursor::Down, QTextCursor::MoveAnchor, lineNumber - 1);
     tab->editor()->setTextCursor(cursor);
     tab->editor()->centerCursor();
     tab->editor()->setFocus();
+    
+    // Calculate the scroll position as a percentage for the preview
+    int totalLines = tab->editor()->document()->blockCount();
+    if (totalLines > 0) {
+        double percentage = static_cast<double>(lineNumber - 1) / totalLines;
+        // Adjust to center the line in view (scroll a bit before it)
+        percentage = qMax(0.0, percentage - 0.1);
+        tab->preview()->scrollToPercentage(percentage);
+    }
 }
 
 TabEditor* MainWindow::currentTabEditor() const
