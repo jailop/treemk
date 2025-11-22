@@ -1,0 +1,195 @@
+#include "markdowneditor.h"
+#include "markdownhighlighter.h"
+#include <QPainter>
+#include <QTextBlock>
+#include <QFont>
+#include <QFontMetrics>
+#include <QScrollBar>
+#include <QMouseEvent>
+#include <QTextCursor>
+#include <QRegularExpression>
+#include <QApplication>
+
+MarkdownEditor::MarkdownEditor(QWidget *parent)
+    : QPlainTextEdit(parent)
+{
+    lineNumberArea = new LineNumberArea(this);
+    highlighter = new MarkdownHighlighter(document());
+    
+    setupEditor();
+    
+    connect(this, &MarkdownEditor::blockCountChanged,
+            this, &MarkdownEditor::updateLineNumberAreaWidth);
+    connect(this, &MarkdownEditor::updateRequest,
+            this, &MarkdownEditor::updateLineNumberArea);
+    connect(this, &MarkdownEditor::cursorPositionChanged,
+            this, &MarkdownEditor::highlightCurrentLine);
+    
+    updateLineNumberAreaWidth(0);
+    highlightCurrentLine();
+    
+    connect(document(), &QTextDocument::modificationChanged,
+            this, &MarkdownEditor::setModified);
+}
+
+MarkdownEditor::~MarkdownEditor()
+{
+}
+
+bool MarkdownEditor::isModified() const
+{
+    return document()->isModified();
+}
+
+void MarkdownEditor::setModified(bool modified)
+{
+    document()->setModified(modified);
+}
+
+MarkdownHighlighter* MarkdownEditor::getHighlighter() const
+{
+    return highlighter;
+}
+
+QString MarkdownEditor::getLinkAtPosition(int position) const
+{
+    QTextCursor cursor(document());
+    cursor.setPosition(position);
+    
+    QString line = cursor.block().text();
+    int posInBlock = cursor.positionInBlock();
+    
+    // Pattern for [[target]] or [[target|display]]
+    QRegularExpression wikiLinkPattern("\\[\\[([^\\]|]+)(\\|([^\\]]+))?\\]\\]");
+    QRegularExpressionMatchIterator matchIterator = wikiLinkPattern.globalMatch(line);
+    
+    while (matchIterator.hasNext()) {
+        QRegularExpressionMatch match = matchIterator.next();
+        int start = match.capturedStart();
+        int end = start + match.capturedLength();
+        
+        if (posInBlock >= start && posInBlock <= end) {
+            return match.captured(1).trimmed();
+        }
+    }
+    
+    return QString();
+}
+
+void MarkdownEditor::mousePressEvent(QMouseEvent *event)
+{
+    if (event->modifiers() & Qt::ControlModifier) {
+        QTextCursor cursor = cursorForPosition(event->pos());
+        int position = cursor.position();
+        
+        QString linkTarget = getLinkAtPosition(position);
+        if (!linkTarget.isEmpty()) {
+            emit wikiLinkClicked(linkTarget);
+            return;
+        }
+    }
+    
+    QPlainTextEdit::mousePressEvent(event);
+}
+
+void MarkdownEditor::setupEditor()
+{
+    QFont font("Monospace");
+    font.setStyleHint(QFont::Monospace);
+    font.setFixedPitch(true);
+    font.setPointSize(10);
+    setFont(font);
+    
+    QFontMetrics metrics(font);
+    setTabStopDistance(4 * metrics.horizontalAdvance(' '));
+    
+    setLineWrapMode(QPlainTextEdit::WidgetWidth);
+    setWordWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);
+    
+    QPalette p = palette();
+    p.setColor(QPalette::Base, QColor(255, 255, 255));
+    p.setColor(QPalette::Text, QColor(0, 0, 0));
+    setPalette(p);
+}
+
+int MarkdownEditor::lineNumberAreaWidth()
+{
+    int digits = 1;
+    int max = qMax(1, blockCount());
+    while (max >= 10) {
+        max /= 10;
+        ++digits;
+    }
+    
+    int space = 10 + fontMetrics().horizontalAdvance(QLatin1Char('9')) * digits;
+    return space;
+}
+
+void MarkdownEditor::updateLineNumberAreaWidth(int /* newBlockCount */)
+{
+    setViewportMargins(lineNumberAreaWidth(), 0, 0, 0);
+}
+
+void MarkdownEditor::updateLineNumberArea(const QRect &rect, int dy)
+{
+    if (dy)
+        lineNumberArea->scroll(0, dy);
+    else
+        lineNumberArea->update(0, rect.y(), lineNumberArea->width(), rect.height());
+    
+    if (rect.contains(viewport()->rect()))
+        updateLineNumberAreaWidth(0);
+}
+
+void MarkdownEditor::resizeEvent(QResizeEvent *e)
+{
+    QPlainTextEdit::resizeEvent(e);
+    
+    QRect cr = contentsRect();
+    lineNumberArea->setGeometry(QRect(cr.left(), cr.top(),
+                                     lineNumberAreaWidth(), cr.height()));
+}
+
+void MarkdownEditor::highlightCurrentLine()
+{
+    QList<QTextEdit::ExtraSelection> extraSelections;
+    
+    if (!isReadOnly()) {
+        QTextEdit::ExtraSelection selection;
+        
+        QColor lineColor = QColor(Qt::yellow).lighter(160);
+        
+        selection.format.setBackground(lineColor);
+        selection.format.setProperty(QTextFormat::FullWidthSelection, true);
+        selection.cursor = textCursor();
+        selection.cursor.clearSelection();
+        extraSelections.append(selection);
+    }
+    
+    setExtraSelections(extraSelections);
+}
+
+void MarkdownEditor::lineNumberAreaPaintEvent(QPaintEvent *event)
+{
+    QPainter painter(lineNumberArea);
+    painter.fillRect(event->rect(), QColor(240, 240, 240));
+    
+    QTextBlock block = firstVisibleBlock();
+    int blockNumber = block.blockNumber();
+    int top = qRound(blockBoundingGeometry(block).translated(contentOffset()).top());
+    int bottom = top + qRound(blockBoundingRect(block).height());
+    
+    while (block.isValid() && top <= event->rect().bottom()) {
+        if (block.isVisible() && bottom >= event->rect().top()) {
+            QString number = QString::number(blockNumber + 1);
+            painter.setPen(QColor(120, 120, 120));
+            painter.drawText(0, top, lineNumberArea->width() - 5, fontMetrics().height(),
+                           Qt::AlignRight, number);
+        }
+        
+        block = block.next();
+        top = bottom;
+        bottom = top + qRound(blockBoundingRect(block).height());
+        ++blockNumber;
+    }
+}

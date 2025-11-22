@@ -1,0 +1,74 @@
+# Qt-generated files
+*.autosave
+*.pro.user
+*.pro.user.*
+.qmake.cache
+.qmake.stash
+moc_*.cpp
+moc_*.h
+qrc_*.cpp
+ui_*.h
+
+# CMake files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+!CMakeLists.txt
+
+# Build directories
+build/
+build-*/
+debug/
+release/
+Debug/
+Release/
+
+# Generated files
+*.o
+*.obj
+*.so
+*.dylib
+*.dll
+*.a
+*.lib
+*.exe
+*.app
+
+# IDE files
+.vscode/
+.idea/
+*.code-workspace
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Qt Creator
+*.creator.user*
+*.cppcheck
+*.files
+*.includes
+*.config
+*.creator
+
+# Compiled resources
+*.qrc.depends
+*.rcc
+
+# Documentation build
+docs/html/
+docs/latex/
+
+# Test results
+Testing/
+*.gcov
+*.gcda
+*.gcno
+
+# Package files
+*.deb
+*.rpm
+*.dmg
+*.AppImage
