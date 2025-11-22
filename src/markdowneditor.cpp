@@ -122,7 +122,7 @@ void MarkdownEditor::dropEvent(QDropEvent *event)
         QList<QUrl> urls = event->mimeData()->urls();
         
         // Get drop position
-        QTextCursor cursor = cursorForPosition(event->pos());
+        QTextCursor cursor = cursorForPosition(event->position().toPoint());
         setTextCursor(cursor);
         
         for (const QUrl &url : urls) {

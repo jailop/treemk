@@ -43,32 +43,9 @@ MainWindow::MainWindow(QWidget *parent)
     
     statusBar()->showMessage(tr("Ready"));
     
-    autoSaveTimer = new QTimer(this);
-    connect(autoSaveTimer, &QTimer::timeout, this, &MainWindow::autoSave);
-    int autoSaveInterval = settings->value("autoSaveInterval", 60).toInt();
-    autoSaveTimer->start(autoSaveInterval * 1000);
-    
-    previewUpdateTimer = new QTimer(this);
-    previewUpdateTimer->setSingleShot(true);
-    connect(previewUpdateTimer, &QTimer::timeout, this, &MainWindow::updatePreview);
-    
     createLayout();
     createActions();
     createMenus();
-    
-    // Connect editor signals to actions (must be after both are created)
-    connect(editor->document(), &QTextDocument::modificationChanged,
-            this, &MainWindow::onDocumentModified);
-    connect(editor->document(), &QTextDocument::undoAvailable,
-            undoAction, &QAction::setEnabled);
-    connect(editor->document(), &QTextDocument::redoAvailable,
-            redoAction, &QAction::setEnabled);
-    connect(editor, &MarkdownEditor::copyAvailable,
-            cutAction, &QAction::setEnabled);
-    connect(editor, &MarkdownEditor::copyAvailable,
-            copyAction, &QAction::setEnabled);
-    connect(editor->document(), &QTextDocument::contentsChanged,
-            [this]() { previewUpdateTimer->start(500); });
     
     readSettings();
 }
@@ -198,30 +175,45 @@ void MainWindow::createActions()
     undoAction->setShortcuts(QKeySequence::Undo);
     undoAction->setStatusTip(tr("Undo the last operation"));
     undoAction->setEnabled(false);
-    connect(undoAction, &QAction::triggered, editor, &MarkdownEditor::undo);
+    connect(undoAction, &QAction::triggered, this, [this]() {
+        TabEditor *tab = currentTabEditor();
+        if (tab) tab->editor()->undo();
+    });
 
     redoAction = new QAction(tr("&Redo"), this);
     redoAction->setShortcuts(QKeySequence::Redo);
     redoAction->setStatusTip(tr("Redo the last operation"));
     redoAction->setEnabled(false);
-    connect(redoAction, &QAction::triggered, editor, &MarkdownEditor::redo);
+    connect(redoAction, &QAction::triggered, this, [this]() {
+        TabEditor *tab = currentTabEditor();
+        if (tab) tab->editor()->redo();
+    });
 
     cutAction = new QAction(tr("Cu&t"), this);
     cutAction->setShortcuts(QKeySequence::Cut);
     cutAction->setStatusTip(tr("Cut the current selection"));
     cutAction->setEnabled(false);
-    connect(cutAction, &QAction::triggered, editor, &MarkdownEditor::cut);
+    connect(cutAction, &QAction::triggered, this, [this]() {
+        TabEditor *tab = currentTabEditor();
+        if (tab) tab->editor()->cut();
+    });
 
     copyAction = new QAction(tr("&Copy"), this);
     copyAction->setShortcuts(QKeySequence::Copy);
     copyAction->setStatusTip(tr("Copy the current selection"));
     copyAction->setEnabled(false);
-    connect(copyAction, &QAction::triggered, editor, &MarkdownEditor::copy);
+    connect(copyAction, &QAction::triggered, this, [this]() {
+        TabEditor *tab = currentTabEditor();
+        if (tab) tab->editor()->copy();
+    });
 
     pasteAction = new QAction(tr("&Paste"), this);
     pasteAction->setShortcuts(QKeySequence::Paste);
     pasteAction->setStatusTip(tr("Paste the clipboard contents"));
-    connect(pasteAction, &QAction::triggered, editor, &MarkdownEditor::paste);
+    connect(pasteAction, &QAction::triggered, this, [this]() {
+        TabEditor *tab = currentTabEditor();
+        if (tab) tab->editor()->paste();
+    });
     
     findAction = new QAction(tr("&Find..."), this);
     findAction->setShortcuts(QKeySequence::Find);
@@ -435,13 +427,6 @@ void MainWindow::createLayout()
     // Create initial tab
     createNewTab();
 }
-    mainSplitter->addWidget(treePanel);
-    mainSplitter->addWidget(editorSplitter);
-    mainSplitter->setStretchFactor(0, 0);
-    mainSplitter->setStretchFactor(1, 1);
-
-    setCentralWidget(mainSplitter);
-}
 
 void MainWindow::readSettings()
 {
@@ -452,24 +437,19 @@ void MainWindow::readSettings()
 
     if (settings->contains("mainSplitter"))
         mainSplitter->restoreState(settings->value("mainSplitter").toByteArray());
-    if (settings->contains("editorSplitter"))
-        editorSplitter->restoreState(settings->value("editorSplitter").toByteArray());
 
     bool treeVisible = settings->value("treeVisible", true).toBool();
     treePanel->setVisible(treeVisible);
     toggleTreeViewAction->setChecked(treeVisible);
-
-    bool previewVisible = settings->value("previewVisible", true).toBool();
-    previewPanel->setVisible(previewVisible);
-    togglePreviewAction->setChecked(previewVisible);
     
     QString lastFolder = settings->value("lastFolder").toString();
     if (!lastFolder.isEmpty() && QDir(lastFolder).exists()) {
         treeView->setRootPath(lastFolder);
         currentFolder = lastFolder;
         
-        if (editor->getHighlighter()) {
-            editor->getHighlighter()->setRootPath(lastFolder);
+        TabEditor *tab = currentTabEditor();
+        if (tab && tab->editor()->getHighlighter()) {
+            tab->editor()->getHighlighter()->setRootPath(lastFolder);
         }
         
         linkParser->buildLinkIndex(lastFolder);
@@ -483,9 +463,7 @@ void MainWindow::writeSettings()
     settings->setValue("pos", pos());
     settings->setValue("size", size());
     settings->setValue("mainSplitter", mainSplitter->saveState());
-    settings->setValue("editorSplitter", editorSplitter->saveState());
     settings->setValue("treeVisible", treePanel->isVisible());
-    settings->setValue("previewVisible", previewPanel->isVisible());
     settings->setValue("lastFolder", currentFolder);
 }
 
@@ -507,8 +485,9 @@ void MainWindow::openFolder()
         treeView->setRootPath(folder);
         currentFolder = folder;
         
-        if (editor->getHighlighter()) {
-            editor->getHighlighter()->setRootPath(folder);
+        TabEditor *tab = currentTabEditor();
+        if (tab && tab->editor()->getHighlighter()) {
+            tab->editor()->getHighlighter()->setRootPath(folder);
         }
         
         linkParser->buildLinkIndex(folder);
@@ -561,34 +540,6 @@ void MainWindow::saveAs()
         QMessageBox::warning(this, tr("Error"), tr("Could not save file!"));
     }
 }
-{
-    if (currentFolder.isEmpty()) {
-        QMessageBox::information(this, tr("No Folder Open"), 
-            tr("Please open a folder first (File → Open Folder)."));
-        return;
-    }
-    
-    QString filePath = QFileDialog::getSaveFileName(
-        this,
-        tr("Save File"),
-        currentFolder,
-        tr("Markdown Files (*.md *.markdown);;All Files (*)")
-    );
-    
-    if (filePath.isEmpty()) {
-        return;
-    }
-    
-    if (!filePath.endsWith(".md") && !filePath.endsWith(".markdown")) {
-        filePath += ".md";
-    }
-    
-    if (saveFile(filePath)) {
-        currentFilePath = filePath;
-        QFileInfo fileInfo(filePath);
-        setWindowTitle(tr("MkEd - %1").arg(fileInfo.fileName()));
-    }
-}
 
 void MainWindow::about()
 {
@@ -615,7 +566,18 @@ void MainWindow::toggleTreeView()
 
 void MainWindow::togglePreview()
 {
-    previewPanel->setVisible(togglePreviewAction->isChecked());
+    TabEditor *tab = currentTabEditor();
+    if (tab) {
+        tab->preview()->setVisible(togglePreviewAction->isChecked());
+    }
+}
+
+void MainWindow::toggleOutline()
+{
+    TabEditor *tab = currentTabEditor();
+    if (tab) {
+        tab->outline()->setVisible(toggleOutlineAction->isChecked());
+    }
 }
 
 void MainWindow::toggleBacklinks()
@@ -725,35 +687,30 @@ void MainWindow::onFileModifiedExternally(const QString &filePath)
 
 void MainWindow::onDocumentModified()
 {
-    QString title = windowTitle();
-    bool isModified = editor->isModified();
-    
-    if (isModified && !title.startsWith("*")) {
-        setWindowTitle("*" + title);
-    } else if (!isModified && title.startsWith("*")) {
-        setWindowTitle(title.mid(1));
-    }
+    // This is now handled per-tab by connecting each tab's signals
+    // when tabs are created. Keep this for future use if needed.
 }
 
 void MainWindow::autoSave()
 {
-    if (currentFilePath.isEmpty() || !editor->isModified()) {
+    TabEditor *tab = currentTabEditor();
+    if (!tab || tab->filePath().isEmpty() || !tab->isModified()) {
         return;
     }
     
-    if (saveFile(currentFilePath)) {
+    if (tab->saveFile()) {
         statusBar()->showMessage(tr("Auto-saved"), 2000);
     }
 }
 
 bool MainWindow::maybeSave()
 {
-    if (!editor->isModified()) {
+    TabEditor *tab = currentTabEditor();
+    if (!tab || !tab->isModified()) {
         return true;
     }
     
-    QFileInfo fileInfo(currentFilePath);
-    QString fileName = fileInfo.fileName();
+    QString fileName = tab->fileName();
     if (fileName.isEmpty()) {
         fileName = tr("Untitled");
     }
@@ -766,35 +723,14 @@ bool MainWindow::maybeSave()
     );
     
     if (reply == QMessageBox::Save) {
-        if (currentFilePath.isEmpty()) {
-            return saveAs(), !currentFilePath.isEmpty();
+        if (tab->filePath().isEmpty()) {
+            saveAs();
+            return !tab->filePath().isEmpty();
         }
-        return saveFile(currentFilePath);
+        return tab->saveFile();
     } else if (reply == QMessageBox::Cancel) {
         return false;
     }
-    
-    return true;
-}
-
-bool MainWindow::saveFile(const QString &filePath)
-{
-    QFile file(filePath);
-    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        QMessageBox::warning(this, tr("Error"),
-            tr("Could not save file:\n%1").arg(filePath));
-        return false;
-    }
-    
-    QTextStream out(&file);
-    out.setEncoding(QStringConverter::Utf8);
-    out << editor->toPlainText();
-    file.close();
-    
-    editor->document()->setModified(false);
-    
-    QFileInfo fileInfo(filePath);
-    statusBar()->showMessage(tr("Saved: %1").arg(fileInfo.fileName()), 3000);
     
     return true;
 }
@@ -851,39 +787,12 @@ bool MainWindow::loadFile(const QString &filePath)
     QMessageBox::warning(this, tr("Error"), tr("Could not load file!"));
     return false;
 }
-{
-    statusBar()->showMessage(tr("Opening: %1").arg(filePath));
-    
-    QFile file(filePath);
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        QMessageBox::warning(this, tr("Error"),
-            tr("Could not open file:\n%1").arg(filePath));
-        return false;
-    }
-    
-    QTextStream in(&file);
-    in.setEncoding(QStringConverter::Utf8);
-    QString content = in.readAll();
-    file.close();
-    
-    editor->setPlainText(content);
-    editor->document()->setModified(false);
-    currentFilePath = filePath;
-    
-    // Set base path for preview (directory of the current file)
-    QFileInfo fileInfo(filePath);
-    preview->setBasePath(fileInfo.absolutePath());
-    
-    setWindowTitle(tr("MkEd - %1").arg(fileInfo.fileName()));
-    statusBar()->showMessage(tr("Loaded: %1").arg(fileInfo.fileName()), 3000);
-    
-    updateBacklinks();
-    
-    return true;
-}
 
 void MainWindow::find()
 {
+    TabEditor *tab = currentTabEditor();
+    if (!tab) return;
+    
     bool ok;
     QString searchText = QInputDialog::getText(this, tr("Find"),
                                               tr("Find text:"), QLineEdit::Normal,
@@ -893,17 +802,17 @@ void MainWindow::find()
         return;
     }
     
-    QTextCursor cursor = editor->textCursor();
+    QTextCursor cursor = tab->editor()->textCursor();
     QTextDocument::FindFlags flags;
     
-    QTextCursor foundCursor = editor->document()->find(searchText, cursor, flags);
+    QTextCursor foundCursor = tab->editor()->document()->find(searchText, cursor, flags);
     
     if (foundCursor.isNull()) {
-        foundCursor = editor->document()->find(searchText, 0, flags);
+        foundCursor = tab->editor()->document()->find(searchText, 0, flags);
     }
     
     if (!foundCursor.isNull()) {
-        editor->setTextCursor(foundCursor);
+        tab->editor()->setTextCursor(foundCursor);
         statusBar()->showMessage(tr("Found: %1").arg(searchText), 3000);
     } else {
         QMessageBox::information(this, tr("Find"),
@@ -913,6 +822,9 @@ void MainWindow::find()
 
 void MainWindow::findAndReplace()
 {
+    TabEditor *tab = currentTabEditor();
+    if (!tab) return;
+    
     QDialog dialog(this);
     dialog.setWindowTitle(tr("Find and Replace"));
     
@@ -941,37 +853,37 @@ void MainWindow::findAndReplace()
     
     mainLayout->addLayout(buttonLayout);
     
-    connect(findNextButton, &QPushButton::clicked, [this, findEdit]() {
+    connect(findNextButton, &QPushButton::clicked, [tab, findEdit, this]() {
         QString searchText = findEdit->text();
         if (searchText.isEmpty()) {
             return;
         }
         
-        QTextCursor cursor = editor->textCursor();
+        QTextCursor cursor = tab->editor()->textCursor();
         QTextDocument::FindFlags flags;
         
-        QTextCursor foundCursor = editor->document()->find(searchText, cursor, flags);
+        QTextCursor foundCursor = tab->editor()->document()->find(searchText, cursor, flags);
         
         if (foundCursor.isNull()) {
-            foundCursor = editor->document()->find(searchText, 0, flags);
+            foundCursor = tab->editor()->document()->find(searchText, 0, flags);
         }
         
         if (!foundCursor.isNull()) {
-            editor->setTextCursor(foundCursor);
+            tab->editor()->setTextCursor(foundCursor);
         } else {
             QMessageBox::information(this, tr("Find"), tr("Text not found"));
         }
     });
     
-    connect(replaceButton, &QPushButton::clicked, [this, findEdit, replaceEdit]() {
-        QTextCursor cursor = editor->textCursor();
+    connect(replaceButton, &QPushButton::clicked, [tab, findEdit, replaceEdit, this]() {
+        QTextCursor cursor = tab->editor()->textCursor();
         if (cursor.hasSelection() && cursor.selectedText() == findEdit->text()) {
             cursor.insertText(replaceEdit->text());
             statusBar()->showMessage(tr("Replaced"), 2000);
         }
     });
     
-    connect(replaceAllButton, &QPushButton::clicked, [this, findEdit, replaceEdit, &dialog]() {
+    connect(replaceAllButton, &QPushButton::clicked, [tab, findEdit, replaceEdit, &dialog, this]() {
         QString searchText = findEdit->text();
         QString replaceText = replaceEdit->text();
         
@@ -979,18 +891,18 @@ void MainWindow::findAndReplace()
             return;
         }
         
-        QTextCursor cursor = editor->document()->find(searchText);
+        QTextCursor cursor = tab->editor()->document()->find(searchText);
         int count = 0;
         
-        editor->textCursor().beginEditBlock();
+        tab->editor()->textCursor().beginEditBlock();
         
         while (!cursor.isNull()) {
             cursor.insertText(replaceText);
-            cursor = editor->document()->find(searchText, cursor);
+            cursor = tab->editor()->document()->find(searchText, cursor);
             count++;
         }
         
-        editor->textCursor().endEditBlock();
+        tab->editor()->textCursor().endEditBlock();
         
         QMessageBox::information(&dialog, tr("Replace All"),
             tr("Replaced %1 occurrence(s)").arg(count));
@@ -1005,27 +917,30 @@ void MainWindow::findAndReplace()
 
 void MainWindow::updatePreview()
 {
-    QString markdown = editor->toPlainText();
-    preview->setMarkdownContent(markdown);
-    outlinePanel->updateOutline(markdown);
+    TabEditor *tab = currentTabEditor();
+    if (!tab) return;
+    
+    QString markdown = tab->editor()->toPlainText();
+    tab->preview()->setMarkdownContent(markdown);
+    tab->outline()->updateOutline(markdown);
 }
 
 void MainWindow::setPreviewThemeLight()
 {
-    preview->setTheme("light");
-    updatePreview();
+    TabEditor *tab = currentTabEditor();
+    if (tab) tab->preview()->setTheme("light");
 }
 
 void MainWindow::setPreviewThemeDark()
 {
-    preview->setTheme("dark");
-    updatePreview();
+    TabEditor *tab = currentTabEditor();
+    if (tab) tab->preview()->setTheme("dark");
 }
 
 void MainWindow::setPreviewThemeSepia()
 {
-    preview->setTheme("sepia");
-    updatePreview();
+    TabEditor *tab = currentTabEditor();
+    if (tab) tab->preview()->setTheme("sepia");
 }
 
 void MainWindow::searchInFiles()
@@ -1054,10 +969,12 @@ void MainWindow::openSettings()
             autoSaveTimer->stop();
         }
         
-        // Apply theme
+        // Apply theme to current tab
         QString theme = dialog.getDefaultTheme();
-        preview->setTheme(theme);
-        updatePreview();
+        TabEditor *tab = currentTabEditor();
+        if (tab) {
+            tab->preview()->setTheme(theme);
+        }
         
         // Update theme action checkboxes
         if (theme == "dark") {
@@ -1079,18 +996,21 @@ void MainWindow::onSearchResultSelected(const QString &filePath, int lineNumber)
     }
     
     if (loadFile(filePath)) {
-        // Move cursor to the specified line
-        QTextCursor cursor = editor->textCursor();
-        cursor.movePosition(QTextCursor::Start);
-        cursor.movePosition(QTextCursor::Down, QTextCursor::MoveAnchor, lineNumber - 1);
-        editor->setTextCursor(cursor);
-        editor->centerCursor();
+        TabEditor *tab = currentTabEditor();
+        if (tab) {
+            // Move cursor to the specified line
+            QTextCursor cursor = tab->editor()->textCursor();
+            cursor.movePosition(QTextCursor::Start);
+            cursor.movePosition(QTextCursor::Down, QTextCursor::MoveAnchor, lineNumber - 1);
+            tab->editor()->setTextCursor(cursor);
+            tab->editor()->centerCursor();
         
-        // Add to recent files
-        if (!recentFiles.contains(filePath)) {
-            recentFiles.prepend(filePath);
-            if (recentFiles.size() > 10) {
-                recentFiles.removeLast();
+            // Add to recent files
+            if (!recentFiles.contains(filePath)) {
+                recentFiles.prepend(filePath);
+                if (recentFiles.size() > 10) {
+                    recentFiles.removeLast();
+                }
             }
         }
         
@@ -1100,6 +1020,9 @@ void MainWindow::onSearchResultSelected(const QString &filePath, int lineNumber)
 
 void MainWindow::insertImage()
 {
+    TabEditor *tab = currentTabEditor();
+    if (!tab) return;
+    
     QString imagePath = QFileDialog::getOpenFileName(
         this,
         tr("Select Image"),
@@ -1135,8 +1058,7 @@ void MainWindow::insertImage()
     
     // Insert Markdown image syntax
     QString imageMarkdown = QString("![%1](%2)").arg(altText, finalPath);
-    
-    QTextCursor cursor = editor->textCursor();
+    QTextCursor cursor = tab->editor()->textCursor();
     cursor.insertText(imageMarkdown);
     
     statusBar()->showMessage(tr("Image inserted"), 3000);
@@ -1144,12 +1066,15 @@ void MainWindow::insertImage()
 
 void MainWindow::insertFormula()
 {
+    TabEditor *tab = currentTabEditor();
+    if (!tab) return;
+    
     FormulaDialog dialog(this);
     if (dialog.exec() == QDialog::Accepted) {
         QString formula = dialog.getFormula();
         
         if (!formula.isEmpty()) {
-            QTextCursor cursor = editor->textCursor();
+            QTextCursor cursor = tab->editor()->textCursor();
             
             if (dialog.isBlockFormula()) {
                 // Block formula - add on new lines
@@ -1166,6 +1091,9 @@ void MainWindow::insertFormula()
 
 void MainWindow::insertWikiLink()
 {
+    TabEditor *tab = currentTabEditor();
+    if (!tab) return;
+    
     if (currentFilePath.isEmpty()) {
         QMessageBox::information(this, tr("No File Open"),
             tr("Please open or create a file first."));
@@ -1215,7 +1143,7 @@ void MainWindow::insertWikiLink()
         wikiLink = QString("[[%1|%2]]").arg(linkTarget, displayText);
     }
     
-    QTextCursor cursor = editor->textCursor();
+    QTextCursor cursor = tab->editor()->textCursor();
     cursor.insertText(wikiLink);
     
     statusBar()->showMessage(tr("Wiki link inserted (relative to current file)"), 3000);
@@ -1223,6 +1151,9 @@ void MainWindow::insertWikiLink()
 
 void MainWindow::insertHeader()
 {
+    TabEditor *tab = currentTabEditor();
+    if (!tab) return;
+    
     bool ok;
     QStringList items;
     items << "# Header 1" << "## Header 2" << "### Header 3" 
@@ -1231,7 +1162,7 @@ void MainWindow::insertHeader()
     QString item = QInputDialog::getItem(this, tr("Insert Header"),
                                          tr("Select header level:"), items, 0, false, &ok);
     if (ok && !item.isEmpty()) {
-        QTextCursor cursor = editor->textCursor();
+        QTextCursor cursor = tab->editor()->textCursor();
         cursor.insertText(item + " ");
         statusBar()->showMessage(tr("Header inserted"), 3000);
     }
@@ -1239,7 +1170,10 @@ void MainWindow::insertHeader()
 
 void MainWindow::insertBold()
 {
-    QTextCursor cursor = editor->textCursor();
+    TabEditor *tab = currentTabEditor();
+    if (!tab) return;
+    
+    QTextCursor cursor = tab->editor()->textCursor();
     QString selectedText = cursor.selectedText();
     
     if (selectedText.isEmpty()) {
@@ -1249,13 +1183,16 @@ void MainWindow::insertBold()
         cursor.insertText("**" + selectedText + "**");
     }
     
-    editor->setTextCursor(cursor);
+    tab->editor()->setTextCursor(cursor);
     statusBar()->showMessage(tr("Bold formatting applied"), 3000);
 }
 
 void MainWindow::insertItalic()
 {
-    QTextCursor cursor = editor->textCursor();
+    TabEditor *tab = currentTabEditor();
+    if (!tab) return;
+    
+    QTextCursor cursor = tab->editor()->textCursor();
     QString selectedText = cursor.selectedText();
     
     if (selectedText.isEmpty()) {
@@ -1265,13 +1202,16 @@ void MainWindow::insertItalic()
         cursor.insertText("*" + selectedText + "*");
     }
     
-    editor->setTextCursor(cursor);
+    tab->editor()->setTextCursor(cursor);
     statusBar()->showMessage(tr("Italic formatting applied"), 3000);
 }
 
 void MainWindow::insertCode()
 {
-    QTextCursor cursor = editor->textCursor();
+    TabEditor *tab = currentTabEditor();
+    if (!tab) return;
+    
+    QTextCursor cursor = tab->editor()->textCursor();
     QString selectedText = cursor.selectedText();
     
     if (selectedText.isEmpty()) {
@@ -1281,12 +1221,15 @@ void MainWindow::insertCode()
         cursor.insertText("`" + selectedText + "`");
     }
     
-    editor->setTextCursor(cursor);
+    tab->editor()->setTextCursor(cursor);
     statusBar()->showMessage(tr("Code formatting applied"), 3000);
 }
 
 void MainWindow::insertCodeBlock()
 {
+    TabEditor *tab = currentTabEditor();
+    if (!tab) return;
+    
     bool ok;
     QString language = QInputDialog::getText(
         this,
@@ -1298,7 +1241,7 @@ void MainWindow::insertCodeBlock()
     );
     
     if (ok) {
-        QTextCursor cursor = editor->textCursor();
+        QTextCursor cursor = tab->editor()->textCursor();
         QString codeBlock = QString("\n```%1\nYour code here\n```\n").arg(language);
         cursor.insertText(codeBlock);
         statusBar()->showMessage(tr("Code block inserted"), 3000);
@@ -1307,21 +1250,30 @@ void MainWindow::insertCodeBlock()
 
 void MainWindow::insertList()
 {
-    QTextCursor cursor = editor->textCursor();
+    TabEditor *tab = currentTabEditor();
+    if (!tab) return;
+    
+    QTextCursor cursor = tab->editor()->textCursor();
     cursor.insertText("\n- List item 1\n- List item 2\n- List item 3\n");
     statusBar()->showMessage(tr("List inserted"), 3000);
 }
 
 void MainWindow::insertNumberedList()
 {
-    QTextCursor cursor = editor->textCursor();
+    TabEditor *tab = currentTabEditor();
+    if (!tab) return;
+    
+    QTextCursor cursor = tab->editor()->textCursor();
     cursor.insertText("\n1. First item\n2. Second item\n3. Third item\n");
     statusBar()->showMessage(tr("Numbered list inserted"), 3000);
 }
 
 void MainWindow::insertBlockquote()
 {
-    QTextCursor cursor = editor->textCursor();
+    TabEditor *tab = currentTabEditor();
+    if (!tab) return;
+    
+    QTextCursor cursor = tab->editor()->textCursor();
     QString selectedText = cursor.selectedText();
     
     if (selectedText.isEmpty()) {
@@ -1335,13 +1287,19 @@ void MainWindow::insertBlockquote()
 
 void MainWindow::insertHorizontalRule()
 {
-    QTextCursor cursor = editor->textCursor();
+    TabEditor *tab = currentTabEditor();
+    if (!tab) return;
+    
+    QTextCursor cursor = tab->editor()->textCursor();
     cursor.insertText("\n---\n");
     statusBar()->showMessage(tr("Horizontal rule inserted"), 3000);
 }
 
 void MainWindow::insertLink()
 {
+    TabEditor *tab = currentTabEditor();
+    if (!tab) return;
+    
     bool ok;
     QString text = QInputDialog::getText(
         this,
@@ -1366,7 +1324,7 @@ void MainWindow::insertLink()
     );
     
     if (ok && !url.isEmpty()) {
-        QTextCursor cursor = editor->textCursor();
+        QTextCursor cursor = tab->editor()->textCursor();
         cursor.insertText(QString("[%1](%2)").arg(text, url));
         statusBar()->showMessage(tr("Link inserted"), 3000);
     }
@@ -1374,6 +1332,9 @@ void MainWindow::insertLink()
 
 void MainWindow::insertTable()
 {
+    TabEditor *tab = currentTabEditor();
+    if (!tab) return;
+    
     bool ok;
     int rows = QInputDialog::getInt(
         this,
@@ -1424,7 +1385,7 @@ void MainWindow::insertTable()
     
     table += "\n";
     
-    QTextCursor cursor = editor->textCursor();
+    QTextCursor cursor = tab->editor()->textCursor();
     cursor.insertText(table);
     statusBar()->showMessage(tr("Table inserted"), 3000);
 }
@@ -1450,20 +1411,15 @@ void MainWindow::quickOpen()
 
 void MainWindow::jumpToLine(int lineNumber)
 {
-    QTextCursor cursor = editor->textCursor();
+    TabEditor *tab = currentTabEditor();
+    if (!tab) return;
+    
+    QTextCursor cursor = tab->editor()->textCursor();
     cursor.movePosition(QTextCursor::Start);
     cursor.movePosition(QTextCursor::Down, QTextCursor::MoveAnchor, lineNumber - 1);
-    editor->setTextCursor(cursor);
-    editor->centerCursor();
-    editor->setFocus();
-}
-
-void MainWindow::toggleOutline()
-{
-    TabEditor *tab = currentTabEditor();
-    if (tab) {
-        tab->outline()->setVisible(toggleOutlineAction->isChecked());
-    }
+    tab->editor()->setTextCursor(cursor);
+    tab->editor()->centerCursor();
+    tab->editor()->setFocus();
 }
 
 TabEditor* MainWindow::currentTabEditor() const
