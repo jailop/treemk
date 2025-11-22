@@ -4,7 +4,9 @@
 #include <QDir>
 #include <QWebEngineProfile>
 #include <QWebEnginePage>
+#include <QWebEngineSettings>
 #include <QUrl>
+#include <QMap>
 
 // Custom page class to intercept link navigation
 class WikiLinkPage : public QWebEnginePage {
@@ -30,7 +32,11 @@ MarkdownPreview::MarkdownPreview(QWidget *parent)
     setContextMenuPolicy(Qt::NoContextMenu);
     
     // Set custom page to intercept link clicks
-    setPage(new WikiLinkPage(this));
+    WikiLinkPage *wikiPage = new WikiLinkPage(this);
+    setPage(wikiPage);
+    
+    // Allow loading remote content (KaTeX CDN) from local HTML
+    page()->settings()->setAttribute(QWebEngineSettings::LocalContentCanAccessRemoteUrls, true);
 }
 
 MarkdownPreview::~MarkdownPreview()
@@ -99,7 +105,45 @@ QString MarkdownPreview::convertMarkdownToHtml(const QString &markdown)
 {
     QString html = markdown;
     
-    // Escape HTML special characters first
+    // Protect LaTeX formulas from HTML escaping and markdown processing
+    QMap<QString, QString> latexFormulas;
+    int formulaIndex = 0;
+    
+    // Extract block formulas ($$...$$) - must be before inline
+    QRegularExpression blockLatex("\\$\\$(.+?)\\$\\$");
+    blockLatex.setPatternOptions(QRegularExpression::DotMatchesEverythingOption);
+    QRegularExpressionMatchIterator blockIt = blockLatex.globalMatch(html);
+    QList<QRegularExpressionMatch> blockMatches;
+    while (blockIt.hasNext()) {
+        blockMatches.append(blockIt.next());
+    }
+    // Process in reverse to maintain positions
+    for (int i = blockMatches.size() - 1; i >= 0; --i) {
+        const QRegularExpressionMatch &match = blockMatches[i];
+        // Use a marker that survives HTML escaping
+        QString placeholder = QString("LATEXBLOCK%1PLACEHOLDER").arg(formulaIndex);
+        latexFormulas[placeholder] = match.captured(0);
+        html.replace(match.capturedStart(), match.capturedLength(), placeholder);
+        formulaIndex++;
+    }
+    
+    // Extract inline formulas ($...$)
+    QRegularExpression inlineLatex("\\$([^$\n]+)\\$");
+    QRegularExpressionMatchIterator inlineIt = inlineLatex.globalMatch(html);
+    QList<QRegularExpressionMatch> inlineMatches;
+    while (inlineIt.hasNext()) {
+        inlineMatches.append(inlineIt.next());
+    }
+    // Process in reverse to maintain positions
+    for (int i = inlineMatches.size() - 1; i >= 0; --i) {
+        const QRegularExpressionMatch &match = inlineMatches[i];
+        QString placeholder = QString("LATEXINLINE%1PLACEHOLDER").arg(formulaIndex);
+        latexFormulas[placeholder] = match.captured(0);
+        html.replace(match.capturedStart(), match.capturedLength(), placeholder);
+        formulaIndex++;
+    }
+    
+    // Escape HTML special characters
     html.replace("&", "&amp;");
     html.replace("<", "&lt;");
     html.replace(">", "&gt;");
@@ -208,7 +252,14 @@ QString MarkdownPreview::convertMarkdownToHtml(const QString &markdown)
         outputLines.append(processedLine);
     }
     
-    return outputLines.join("\n");
+    QString result = outputLines.join("\n");
+    
+    // Restore LaTeX formulas
+    for (auto it = latexFormulas.constBegin(); it != latexFormulas.constEnd(); ++it) {
+        result.replace(it.key(), it.value());
+    }
+    
+    return result;
 }
 
 QString MarkdownPreview::getStyleSheet(const QString &theme)
