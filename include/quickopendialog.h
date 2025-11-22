@@ -21,6 +21,9 @@ public:
 signals:
     void fileSelected(const QString &filePath);
 
+protected:
+    bool eventFilter(QObject *obj, QEvent *event) override;
+
 private slots:
     void updateFileList();
     void onItemDoubleClicked();

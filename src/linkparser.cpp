@@ -92,33 +92,49 @@ QVector<QString> LinkParser::getBacklinks(const QString &filePath) const
     return result;
 }
 
-QString LinkParser::resolveLinkTarget(const QString &linkTarget, const QString &path) const
+QString LinkParser::resolveLinkTarget(const QString &linkTarget, const QString &currentFilePath) const
 {
     QString cleanTarget = linkTarget.trimmed();
-    QDir dir(path);
     
-    // Try exact matches first
+    // Get the directory of the current file
+    QFileInfo currentFileInfo(currentFilePath);
+    QDir currentDir = currentFileInfo.dir();
+    
+    // Try exact matches relative to current file's directory
     QStringList possibleFiles;
     possibleFiles << cleanTarget + ".md"
                   << cleanTarget + ".markdown"
                   << cleanTarget;
     
     for (const QString &fileName : possibleFiles) {
-        QString fullPath = dir.filePath(fileName);
+        QString fullPath = currentDir.filePath(fileName);
         if (QFileInfo::exists(fullPath)) {
             return fullPath;
         }
     }
     
-    // Case-insensitive search
+    // Case-insensitive search in current directory
     QStringList filters;
     filters << "*.md" << "*.markdown";
     
-    QFileInfoList files = dir.entryInfoList(filters, QDir::Files, QDir::Name);
+    QFileInfoList files = currentDir.entryInfoList(filters, QDir::Files, QDir::Name);
     for (const QFileInfo &fileInfo : files) {
         QString baseName = fileInfo.completeBaseName();
         if (baseName.compare(cleanTarget, Qt::CaseInsensitive) == 0) {
             return fileInfo.absoluteFilePath();
+        }
+    }
+    
+    // If not found in current directory, search in subdirectories
+    QFileInfoList subdirs = currentDir.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name);
+    for (const QFileInfo &subdirInfo : subdirs) {
+        QDir subdir(subdirInfo.absoluteFilePath());
+        QFileInfoList subFiles = subdir.entryInfoList(filters, QDir::Files, QDir::Name);
+        for (const QFileInfo &fileInfo : subFiles) {
+            QString baseName = fileInfo.completeBaseName();
+            if (baseName.compare(cleanTarget, Qt::CaseInsensitive) == 0) {
+                return fileInfo.absoluteFilePath();
+            }
         }
     }
     

@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include "tabeditor.h"
 #include "filesystemtreeview.h"
 #include "markdowneditor.h"
 #include "markdownhighlighter.h"
@@ -28,6 +29,7 @@
 #include <QTimer>
 #include <QDialog>
 #include <QPushButton>
+#include <QTabWidget>
 #include <QListWidget>
 
 MainWindow::MainWindow(QWidget *parent)
@@ -176,6 +178,16 @@ void MainWindow::createActions()
     insertTableAction->setShortcut(QKeySequence(tr("Ctrl+Shift+T")));
     insertTableAction->setStatusTip(tr("Insert table"));
     connect(insertTableAction, &QAction::triggered, this, &MainWindow::insertTable);
+    
+    closeTabAction = new QAction(tr("&Close Tab"), this);
+    closeTabAction->setShortcut(QKeySequence(tr("Ctrl+W")));
+    closeTabAction->setStatusTip(tr("Close current tab"));
+    connect(closeTabAction, &QAction::triggered, this, &MainWindow::closeCurrentTab);
+    
+    closeAllTabsAction = new QAction(tr("Close &All Tabs"), this);
+    closeAllTabsAction->setShortcut(QKeySequence(tr("Ctrl+Shift+W")));
+    closeAllTabsAction->setStatusTip(tr("Close all tabs"));
+    connect(closeAllTabsAction, &QAction::triggered, this, &MainWindow::closeAllTabs);
 
     exitAction = new QAction(tr("E&xit"), this);
     exitAction->setShortcuts(QKeySequence::Quit);
@@ -248,9 +260,16 @@ void MainWindow::createActions()
     toggleBacklinksAction = new QAction(tr("&Backlinks"), this);
     toggleBacklinksAction->setCheckable(true);
     toggleBacklinksAction->setChecked(false);
-    toggleBacklinksAction->setShortcut(QKeySequence(tr("Ctrl+B")));
+    toggleBacklinksAction->setShortcut(QKeySequence(tr("Ctrl+Shift+B")));
     toggleBacklinksAction->setStatusTip(tr("Toggle backlinks panel"));
-    connect(toggleBacklinksAction, &QAction::triggered, this, &MainWindow::togglePreview);
+    connect(toggleBacklinksAction, &QAction::triggered, this, &MainWindow::toggleBacklinks);
+    
+    toggleOutlineAction = new QAction(tr("&Outline"), this);
+    toggleOutlineAction->setCheckable(true);
+    toggleOutlineAction->setChecked(true);
+    toggleOutlineAction->setShortcut(QKeySequence(tr("Ctrl+Shift+O")));
+    toggleOutlineAction->setStatusTip(tr("Toggle document outline"));
+    connect(toggleOutlineAction, &QAction::triggered, this, &MainWindow::toggleOutline);
     
     previewThemeLightAction = new QAction(tr("Light Theme"), this);
     previewThemeLightAction->setCheckable(true);
@@ -292,6 +311,9 @@ void MainWindow::createMenus()
     fileMenu->addSeparator();
     fileMenu->addAction(saveAction);
     fileMenu->addAction(saveAsAction);
+    fileMenu->addSeparator();
+    fileMenu->addAction(closeTabAction);
+    fileMenu->addAction(closeAllTabsAction);
     fileMenu->addSeparator();
     fileMenu->addAction(settingsAction);
     fileMenu->addSeparator();
@@ -350,6 +372,7 @@ void MainWindow::createMenus()
 
 void MainWindow::createLayout()
 {
+    // Tree panel
     treePanel = new QWidget(this);
     QVBoxLayout *treeLayout = new QVBoxLayout(treePanel);
     treeLayout->setContentsMargins(0, 0, 0, 0);
@@ -365,25 +388,18 @@ void MainWindow::createLayout()
     connect(treeView, &FileSystemTreeView::fileModifiedExternally,
             this, &MainWindow::onFileModifiedExternally);
 
-    editorPanel = new QWidget(this);
-    QVBoxLayout *editorLayout = new QVBoxLayout(editorPanel);
-    editorLayout->setContentsMargins(0, 0, 0, 0);
+    // Tab widget for multiple editors
+    tabWidget = new QTabWidget(this);
+    tabWidget->setTabsClosable(true);
+    tabWidget->setMovable(true);
+    tabWidget->setDocumentMode(true);
     
-    editor = new MarkdownEditor(editorPanel);
-    editorLayout->addWidget(editor);
-    editorPanel->setMinimumWidth(200);
+    connect(tabWidget, &QTabWidget::currentChanged,
+            this, &MainWindow::onTabChanged);
+    connect(tabWidget, &QTabWidget::tabCloseRequested,
+            this, &MainWindow::onTabCloseRequested);
     
-    connect(editor, &MarkdownEditor::wikiLinkClicked,
-            this, &MainWindow::onWikiLinkClicked);
-
-    previewPanel = new QWidget(this);
-    QVBoxLayout *previewLayout = new QVBoxLayout(previewPanel);
-    previewLayout->setContentsMargins(0, 0, 0, 0);
-    
-    preview = new MarkdownPreview(previewPanel);
-    previewLayout->addWidget(preview);
-    previewPanel->setMinimumWidth(200);
-    
+    // Backlinks panel
     backlinksPanel = new QWidget(this);
     QVBoxLayout *backlinksLayout = new QVBoxLayout(backlinksPanel);
     backlinksLayout->setContentsMargins(5, 5, 5, 5);
@@ -405,19 +421,20 @@ void MainWindow::createLayout()
                 }
             });
 
-    rightSplitter = new QSplitter(Qt::Vertical, this);
-    rightSplitter->addWidget(previewPanel);
-    rightSplitter->addWidget(backlinksPanel);
-    rightSplitter->setStretchFactor(0, 3);
-    rightSplitter->setStretchFactor(1, 1);
-
-    editorSplitter = new QSplitter(Qt::Horizontal, this);
-    editorSplitter->addWidget(editorPanel);
-    editorSplitter->addWidget(rightSplitter);
-    editorSplitter->setStretchFactor(0, 1);
-    editorSplitter->setStretchFactor(1, 1);
-
+    // Main splitter
     mainSplitter = new QSplitter(Qt::Horizontal, this);
+    mainSplitter->addWidget(treePanel);
+    mainSplitter->addWidget(tabWidget);
+    mainSplitter->addWidget(backlinksPanel);
+    mainSplitter->setStretchFactor(0, 0);  // Tree panel
+    mainSplitter->setStretchFactor(1, 1);  // Tab widget gets most space
+    mainSplitter->setStretchFactor(2, 0);  // Backlinks panel
+    
+    setCentralWidget(mainSplitter);
+    
+    // Create initial tab
+    createNewTab();
+}
     mainSplitter->addWidget(treePanel);
     mainSplitter->addWidget(editorSplitter);
     mainSplitter->setStretchFactor(0, 0);
@@ -474,40 +491,7 @@ void MainWindow::writeSettings()
 
 void MainWindow::newFile()
 {
-    if (currentFolder.isEmpty()) {
-        QMessageBox::information(this, tr("No Folder Open"), 
-            tr("Please open a folder first (File → Open Folder)."));
-        return;
-    }
-    
-    bool ok;
-    QString fileName = QInputDialog::getText(this, tr("New File"),
-                                            tr("File name:"), QLineEdit::Normal,
-                                            "untitled.md", &ok);
-    
-    if (!ok || fileName.isEmpty()) {
-        return;
-    }
-    
-    if (!fileName.endsWith(".md") && !fileName.endsWith(".markdown")) {
-        fileName += ".md";
-    }
-    
-    QString filePath = QDir(currentFolder).filePath(fileName);
-    
-    if (QFile::exists(filePath)) {
-        QMessageBox::warning(this, tr("Error"), tr("File already exists!"));
-        return;
-    }
-    
-    QFile file(filePath);
-    if (!file.open(QIODevice::WriteOnly)) {
-        QMessageBox::warning(this, tr("Error"), tr("Failed to create file!"));
-        return;
-    }
-    file.close();
-    
-    statusBar()->showMessage(tr("Created file: %1").arg(fileName));
+    createNewTab();
 }
 
 void MainWindow::openFolder()
@@ -535,15 +519,48 @@ void MainWindow::openFolder()
 
 void MainWindow::save()
 {
-    if (currentFilePath.isEmpty()) {
-        saveAs();
+    TabEditor *tab = currentTabEditor();
+    if (!tab) {
         return;
     }
     
-    saveFile(currentFilePath);
+    if (tab->filePath().isEmpty()) {
+        saveAs();
+    } else {
+        if (tab->saveFile()) {
+            statusBar()->showMessage(tr("File saved"), 3000);
+        } else {
+            QMessageBox::warning(this, tr("Error"), tr("Could not save file!"));
+        }
+    }
 }
 
 void MainWindow::saveAs()
+{
+    TabEditor *tab = currentTabEditor();
+    if (!tab) {
+        return;
+    }
+    
+    QString filePath = QFileDialog::getSaveFileName(
+        this,
+        tr("Save File"),
+        currentFolder.isEmpty() ? QDir::homePath() : currentFolder,
+        tr("Markdown Files (*.md *.markdown);;All Files (*)")
+    );
+    
+    if (filePath.isEmpty()) {
+        return;
+    }
+    
+    if (tab->saveFileAs(filePath)) {
+        currentFilePath = filePath;
+        linkParser->buildLinkIndex(currentFolder);
+        statusBar()->showMessage(tr("File saved as: %1").arg(QFileInfo(filePath).fileName()), 3000);
+    } else {
+        QMessageBox::warning(this, tr("Error"), tr("Could not save file!"));
+    }
+}
 {
     if (currentFolder.isEmpty()) {
         QMessageBox::information(this, tr("No Folder Open"), 
@@ -603,22 +620,22 @@ void MainWindow::togglePreview()
 
 void MainWindow::toggleBacklinks()
 {
-    backlinksWidget->setVisible(toggleBacklinksAction->isChecked());
+    backlinksPanel->setVisible(toggleBacklinksAction->isChecked());
 }
 
 void MainWindow::onWikiLinkClicked(const QString &linkTarget)
 {
-    if (currentFolder.isEmpty()) {
-        statusBar()->showMessage(tr("No folder open"), 3000);
+    if (currentFilePath.isEmpty()) {
+        statusBar()->showMessage(tr("No file open"), 3000);
         return;
     }
     
-    QString targetPath = linkParser->resolveLinkTarget(linkTarget, currentFolder);
+    QString targetPath = linkParser->resolveLinkTarget(linkTarget, currentFilePath);
     
     if (targetPath.isEmpty()) {
         QMessageBox::StandardButton reply = QMessageBox::question(
             this, tr("Link Not Found"),
-            tr("The file '%1' does not exist.\n\nDo you want to create it?").arg(linkTarget),
+            tr("The file '%1' does not exist in the current directory or its subdirectories.\n\nDo you want to create it?").arg(linkTarget),
             QMessageBox::Yes | QMessageBox::No
         );
         
@@ -628,7 +645,9 @@ void MainWindow::onWikiLinkClicked(const QString &linkTarget)
                 fileName += ".md";
             }
             
-            QString newFilePath = QDir(currentFolder).filePath(fileName);
+            // Create in the same directory as current file
+            QFileInfo currentFileInfo(currentFilePath);
+            QString newFilePath = currentFileInfo.dir().filePath(fileName);
             QFile file(newFilePath);
             if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
                 file.write(QString("# %1\n\n").arg(linkTarget).toUtf8());
@@ -781,6 +800,57 @@ bool MainWindow::saveFile(const QString &filePath)
 }
 
 bool MainWindow::loadFile(const QString &filePath)
+{
+    // Check if file is already open in a tab
+    int existingIndex = findTabIndexByPath(filePath);
+    if (existingIndex >= 0) {
+        tabWidget->setCurrentIndex(existingIndex);
+        return true;
+    }
+    
+    // Load in current tab if it's empty and unmodified
+    TabEditor *tab = currentTabEditor();
+    if (tab && tab->filePath().isEmpty() && !tab->isModified()) {
+        if (tab->loadFile(filePath)) {
+            currentFilePath = filePath;
+            
+            // Update recent files
+            if (!recentFiles.contains(filePath)) {
+                recentFiles.prepend(filePath);
+                if (recentFiles.size() > 10) {
+                    recentFiles.removeLast();
+                }
+            }
+            
+            updateBacklinks();
+            setWindowTitle(QString("%1 - MkEd").arg(QFileInfo(filePath).fileName()));
+            statusBar()->showMessage(tr("Loaded: %1").arg(QFileInfo(filePath).fileName()), 3000);
+            return true;
+        }
+    } else {
+        // Create new tab
+        tab = createNewTab();
+        if (tab->loadFile(filePath)) {
+            currentFilePath = filePath;
+            
+            // Update recent files
+            if (!recentFiles.contains(filePath)) {
+                recentFiles.prepend(filePath);
+                if (recentFiles.size() > 10) {
+                    recentFiles.removeLast();
+                }
+            }
+            
+            updateBacklinks();
+            setWindowTitle(QString("%1 - MkEd").arg(QFileInfo(filePath).fileName()));
+            statusBar()->showMessage(tr("Loaded: %1").arg(QFileInfo(filePath).fileName()), 3000);
+            return true;
+        }
+    }
+    
+    QMessageBox::warning(this, tr("Error"), tr("Could not load file!"));
+    return false;
+}
 {
     statusBar()->showMessage(tr("Opening: %1").arg(filePath));
     
@@ -1096,17 +1166,21 @@ void MainWindow::insertFormula()
 
 void MainWindow::insertWikiLink()
 {
-    if (currentFolder.isEmpty()) {
-        QMessageBox::information(this, tr("No Folder Open"),
-            tr("Please open a folder first to browse files."));
+    if (currentFilePath.isEmpty()) {
+        QMessageBox::information(this, tr("No File Open"),
+            tr("Please open or create a file first."));
         return;
     }
+    
+    // Get directory of current file
+    QFileInfo currentFileInfo(currentFilePath);
+    QDir currentDir = currentFileInfo.dir();
     
     // Show file browser to select target file
     QString targetPath = QFileDialog::getOpenFileName(
         this,
         tr("Select Target File"),
-        currentFolder,
+        currentDir.path(),
         tr("Markdown Files (*.md *.markdown);;All Files (*)")
     );
     
@@ -1144,7 +1218,7 @@ void MainWindow::insertWikiLink()
     QTextCursor cursor = editor->textCursor();
     cursor.insertText(wikiLink);
     
-    statusBar()->showMessage(tr("Wiki link inserted"), 3000);
+    statusBar()->showMessage(tr("Wiki link inserted (relative to current file)"), 3000);
 }
 
 void MainWindow::insertHeader()
@@ -1386,5 +1460,165 @@ void MainWindow::jumpToLine(int lineNumber)
 
 void MainWindow::toggleOutline()
 {
-    outlinePanel->setVisible(toggleOutlineAction->isChecked());
+    TabEditor *tab = currentTabEditor();
+    if (tab) {
+        tab->outline()->setVisible(toggleOutlineAction->isChecked());
+    }
+}
+
+TabEditor* MainWindow::currentTabEditor() const
+{
+    return qobject_cast<TabEditor*>(tabWidget->currentWidget());
+}
+
+TabEditor* MainWindow::createNewTab()
+{
+    TabEditor *tab = new TabEditor(this);
+    
+    // Connect wiki link clicks
+    connect(tab->editor(), &MarkdownEditor::wikiLinkClicked,
+            this, &MainWindow::onWikiLinkClicked);
+    
+    // Connect outline clicks
+    connect(tab->outline(), &OutlinePanel::headerClicked,
+            this, &MainWindow::jumpToLine);
+    
+    // Connect modification signal
+    connect(tab, &TabEditor::modificationChanged,
+            this, [this, tab](bool modified) {
+        int index = tabWidget->indexOf(tab);
+        if (index >= 0) {
+            QString tabText = tab->fileName();
+            if (modified) {
+                tabText += " *";
+            }
+            tabWidget->setTabText(index, tabText);
+        }
+    });
+    
+    // Connect file path changes
+    connect(tab, &TabEditor::filePathChanged,
+            this, [this, tab](const QString &) {
+        int index = tabWidget->indexOf(tab);
+        if (index >= 0) {
+            tabWidget->setTabText(index, tab->fileName());
+            tabWidget->setTabToolTip(index, tab->filePath());
+        }
+    });
+    
+    int index = tabWidget->addTab(tab, tr("Untitled"));
+    tabWidget->setCurrentIndex(index);
+    
+    return tab;
+}
+
+TabEditor* MainWindow::findTabByPath(const QString &filePath) const
+{
+    for (int i = 0; i < tabWidget->count(); ++i) {
+        TabEditor *tab = qobject_cast<TabEditor*>(tabWidget->widget(i));
+        if (tab && tab->filePath() == filePath) {
+            return tab;
+        }
+    }
+    return nullptr;
+}
+
+int MainWindow::findTabIndexByPath(const QString &filePath) const
+{
+    for (int i = 0; i < tabWidget->count(); ++i) {
+        TabEditor *tab = qobject_cast<TabEditor*>(tabWidget->widget(i));
+        if (tab && tab->filePath() == filePath) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+void MainWindow::onTabChanged(int index)
+{
+    TabEditor *tab = qobject_cast<TabEditor*>(tabWidget->widget(index));
+    if (tab) {
+        currentFilePath = tab->filePath();
+        updateBacklinks();
+        
+        // Update window title
+        if (!tab->filePath().isEmpty()) {
+            setWindowTitle(QString("%1 - MkEd").arg(tab->fileName()));
+        } else {
+            setWindowTitle("MkEd");
+        }
+    }
+}
+
+void MainWindow::onTabCloseRequested(int index)
+{
+    TabEditor *tab = qobject_cast<TabEditor*>(tabWidget->widget(index));
+    if (!tab) {
+        return;
+    }
+    
+    // Check if modified
+    if (tab->isModified()) {
+        tabWidget->setCurrentIndex(index);
+        QMessageBox::StandardButton reply = QMessageBox::question(
+            this,
+            tr("Unsaved Changes"),
+            tr("'%1' has unsaved changes. Do you want to save before closing?").arg(tab->fileName()),
+            QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel
+        );
+        
+        if (reply == QMessageBox::Save) {
+            if (tab->filePath().isEmpty()) {
+                QString filePath = QFileDialog::getSaveFileName(
+                    this,
+                    tr("Save File"),
+                    currentFolder,
+                    tr("Markdown Files (*.md *.markdown);;All Files (*)")
+                );
+                
+                if (filePath.isEmpty()) {
+                    return;
+                }
+                
+                if (!tab->saveFileAs(filePath)) {
+                    QMessageBox::warning(this, tr("Error"), tr("Could not save file!"));
+                    return;
+                }
+            } else {
+                if (!tab->saveFile()) {
+                    QMessageBox::warning(this, tr("Error"), tr("Could not save file!"));
+                    return;
+                }
+            }
+        } else if (reply == QMessageBox::Cancel) {
+            return;
+        }
+    }
+    
+    tabWidget->removeTab(index);
+    delete tab;
+    
+    // Create new tab if all closed
+    if (tabWidget->count() == 0) {
+        createNewTab();
+    }
+}
+
+void MainWindow::closeCurrentTab()
+{
+    int index = tabWidget->currentIndex();
+    if (index >= 0) {
+        onTabCloseRequested(index);
+    }
+}
+
+void MainWindow::closeAllTabs()
+{
+    while (tabWidget->count() > 0) {
+        onTabCloseRequested(0);
+        if (tabWidget->count() > 0 && qobject_cast<TabEditor*>(tabWidget->widget(0))->isModified()) {
+            // User cancelled, stop closing
+            break;
+        }
+    }
 }

@@ -10,7 +10,9 @@ class QSplitter;
 class QWidget;
 class QTimer;
 class QListWidget;
+class QTabWidget;
 class FileSystemTreeView;
+class TabEditor;
 class MarkdownEditor;
 class MarkdownPreview;
 class LinkParser;
@@ -72,6 +74,10 @@ private slots:
     void insertTable();
     void quickOpen();
     void jumpToLine(int lineNumber);
+    void onTabChanged(int index);
+    void onTabCloseRequested(int index);
+    void closeCurrentTab();
+    void closeAllTabs();
 
 private:
     void createActions();
@@ -82,6 +88,11 @@ private:
     bool maybeSave();
     bool saveFile(const QString &filePath);
     bool loadFile(const QString &filePath);
+    
+    TabEditor* currentTabEditor() const;
+    TabEditor* createNewTab();
+    TabEditor* findTabByPath(const QString &filePath) const;
+    int findTabIndexByPath(const QString &filePath) const;
 
     QMenu *fileMenu;
     QMenu *editMenu;
@@ -117,6 +128,8 @@ private:
     QAction *findReplaceAction;
     QAction *searchInFilesAction;
     QAction *quickOpenAction;
+    QAction *closeTabAction;
+    QAction *closeAllTabsAction;
     QAction *toggleTreeViewAction;
     QAction *togglePreviewAction;
     QAction *toggleBacklinksAction;
@@ -129,16 +142,12 @@ private:
     QAction *aboutQtAction;
 
     QSplitter *mainSplitter;
-    QSplitter *editorSplitter;
-    QSplitter *rightSplitter;
     QWidget *treePanel;
     QWidget *editorPanel;
-    QWidget *previewPanel;
+    QTabWidget *tabWidget;
     QWidget *backlinksPanel;
     
     FileSystemTreeView *treeView;
-    MarkdownEditor *editor;
-    MarkdownPreview *preview;
     QListWidget *backlinksView;
     LinkParser *linkParser;
     

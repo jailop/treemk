@@ -25,6 +25,7 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 set(SOURCES
     src/main.cpp
     src/mainwindow.cpp
+    src/tabeditor.cpp
     src/filesystemtreeview.cpp
     src/markdowneditor.cpp
     src/markdownhighlighter.cpp
@@ -40,6 +41,7 @@ set(SOURCES
 # Header files
 set(HEADERS
     include/mainwindow.h
+    include/tabeditor.h
     include/filesystemtreeview.h
     include/markdowneditor.h
     include/markdownhighlighter.h
