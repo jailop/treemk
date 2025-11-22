@@ -7,6 +7,7 @@
 MarkdownHighlighter::MarkdownHighlighter(QTextDocument *parent)
     : QSyntaxHighlighter(parent)
     , currentColorScheme("light")
+    , codeSyntaxEnabled(false)
 {
     setupFormats();
 }
@@ -226,12 +227,66 @@ void MarkdownHighlighter::setupFormats()
         blockLatexFormat.setBackground(QColor(245, 235, 245));
     }
     blockLatexFormat.setFontWeight(QFont::Bold);
+    
+    // Code syntax highlighting formats
+    QColor keywordColor, stringColor, commentColor, numberColor, functionColor, typeColor;
+    
+    if (currentColorScheme == "dark") {
+        keywordColor = QColor(198, 120, 221);   // Purple
+        stringColor = QColor(152, 195, 121);    // Green
+        commentColor = QColor(92, 99, 112);     // Gray
+        numberColor = QColor(209, 154, 102);    // Orange
+        functionColor = QColor(97, 175, 239);   // Blue
+        typeColor = QColor(229, 192, 123);      // Yellow
+    } else if (currentColorScheme == "solarized-light") {
+        keywordColor = QColor(133, 153, 0);     // Green
+        stringColor = QColor(42, 161, 152);     // Cyan
+        commentColor = QColor(147, 161, 161);   // Gray
+        numberColor = QColor(203, 75, 22);      // Orange
+        functionColor = QColor(38, 139, 210);   // Blue
+        typeColor = QColor(181, 137, 0);        // Yellow
+    } else if (currentColorScheme == "solarized-dark") {
+        keywordColor = QColor(133, 153, 0);     // Green
+        stringColor = QColor(42, 161, 152);     // Cyan
+        commentColor = QColor(88, 110, 117);    // Gray
+        numberColor = QColor(203, 75, 22);      // Orange
+        functionColor = QColor(38, 139, 210);   // Blue
+        typeColor = QColor(181, 137, 0);        // Yellow
+    } else { // light
+        keywordColor = QColor(0, 0, 255);       // Blue
+        stringColor = QColor(0, 128, 0);        // Green
+        commentColor = QColor(128, 128, 128);   // Gray
+        numberColor = QColor(255, 140, 0);      // Orange
+        functionColor = QColor(139, 0, 139);    // Purple
+        typeColor = QColor(0, 128, 128);        // Teal
+    }
+    
+    codeKeywordFormat.setForeground(keywordColor);
+    codeKeywordFormat.setFontWeight(QFont::Bold);
+    
+    codeStringFormat.setForeground(stringColor);
+    
+    codeCommentFormat.setForeground(commentColor);
+    codeCommentFormat.setFontItalic(true);
+    
+    codeNumberFormat.setForeground(numberColor);
+    
+    codeFunctionFormat.setForeground(functionColor);
+    
+    codeTypeFormat.setForeground(typeColor);
+    codeTypeFormat.setFontWeight(QFont::Bold);
 }
 
 void MarkdownHighlighter::setColorScheme(const QString &scheme)
 {
     currentColorScheme = scheme;
     setupFormats();
+    rehighlight();
+}
+
+void MarkdownHighlighter::setCodeSyntaxEnabled(bool enabled)
+{
+    codeSyntaxEnabled = enabled;
     rehighlight();
 }
 
@@ -248,7 +303,43 @@ void MarkdownHighlighter::setRootPath(const QString &path)
 
 void MarkdownHighlighter::highlightBlock(const QString &text)
 {
-    // Apply all highlighting rules
+    // Check if we're starting or ending a code block
+    int previousState = previousBlockState();
+    bool inCodeBlock = (previousState == InCodeBlock);
+    
+    // Check if this line contains a code fence
+    QRegularExpression codeFencePattern("^```(\\w+)?");
+    QRegularExpressionMatch fenceMatch = codeFencePattern.match(text);
+    
+    if (fenceMatch.hasMatch()) {
+        // Toggle code block state
+        if (!inCodeBlock) {
+            // Starting a code block - extract language
+            currentCodeLanguage = fenceMatch.captured(1).toLower();
+        } else {
+            // Ending a code block
+            currentCodeLanguage.clear();
+        }
+        inCodeBlock = !inCodeBlock;
+        setCurrentBlockState(inCodeBlock ? InCodeBlock : Normal);
+        // Apply code format to the fence line
+        setFormat(0, text.length(), codeFormat);
+        return;
+    }
+    
+    // Set the block state
+    setCurrentBlockState(inCodeBlock ? InCodeBlock : Normal);
+    
+    // If we're inside a code block, apply code formatting with syntax highlighting
+    if (inCodeBlock) {
+        setFormat(0, text.length(), codeFormat);
+        if (codeSyntaxEnabled) {
+            highlightCodeLine(text, currentCodeLanguage);
+        }
+        return;
+    }
+    
+    // Apply all highlighting rules (only when not in code block)
     for (const HighlightingRule &rule : std::as_const(highlightingRules)) {
         QRegularExpressionMatchIterator matchIterator = rule.pattern.globalMatch(text);
         while (matchIterator.hasNext()) {
@@ -351,4 +442,263 @@ bool MarkdownHighlighter::checkWikiLinkExists(const QString &linkText) const
     }
     
     return false;
+}
+
+void MarkdownHighlighter::highlightCodeLine(const QString &text, const QString &language)
+{
+    if (language.isEmpty() || text.trimmed().isEmpty()) {
+        return;
+    }
+    
+    // Python syntax highlighting
+    if (language == "python" || language == "py") {
+        // Python keywords
+        QStringList keywords = {
+            "\\bdef\\b", "\\bclass\\b", "\\bif\\b", "\\belif\\b", "\\belse\\b",
+            "\\bfor\\b", "\\bwhile\\b", "\\bin\\b", "\\breturn\\b", "\\bimport\\b",
+            "\\bfrom\\b", "\\bas\\b", "\\btry\\b", "\\bexcept\\b", "\\bfinally\\b",
+            "\\bwith\\b", "\\braise\\b", "\\bassert\\b", "\\bbreak\\b", "\\bcontinue\\b",
+            "\\bpass\\b", "\\byield\\b", "\\blambda\\b", "\\band\\b", "\\bor\\b",
+            "\\bnot\\b", "\\bis\\b", "\\bNone\\b", "\\bTrue\\b", "\\bFalse\\b",
+            "\\basync\\b", "\\bawait\\b", "\\bglobal\\b", "\\bnonlocal\\b"
+        };
+        
+        for (const QString &pattern : keywords) {
+            QRegularExpression re(pattern);
+            QRegularExpressionMatchIterator it = re.globalMatch(text);
+            while (it.hasNext()) {
+                QRegularExpressionMatch match = it.next();
+                setFormat(match.capturedStart(), match.capturedLength(), codeKeywordFormat);
+            }
+        }
+        
+        // Python strings (single and double quotes, including triple quotes)
+        QRegularExpression stringPattern("('''[^']*'''|\"\"\"[^\"]*\"\"\"|'[^']*'|\"[^\"]*\")");
+        QRegularExpressionMatchIterator stringIt = stringPattern.globalMatch(text);
+        while (stringIt.hasNext()) {
+            QRegularExpressionMatch match = stringIt.next();
+            setFormat(match.capturedStart(), match.capturedLength(), codeStringFormat);
+        }
+        
+        // Python comments
+        int commentStart = text.indexOf('#');
+        if (commentStart >= 0) {
+            setFormat(commentStart, text.length() - commentStart, codeCommentFormat);
+        }
+        
+        // Numbers
+        QRegularExpression numberPattern("\\b\\d+(\\.\\d+)?\\b");
+        QRegularExpressionMatchIterator numIt = numberPattern.globalMatch(text);
+        while (numIt.hasNext()) {
+            QRegularExpressionMatch match = numIt.next();
+            setFormat(match.capturedStart(), match.capturedLength(), codeNumberFormat);
+        }
+        
+        // Function calls
+        QRegularExpression funcPattern("\\b([a-zA-Z_][a-zA-Z0-9_]*)\\s*(?=\\()");
+        QRegularExpressionMatchIterator funcIt = funcPattern.globalMatch(text);
+        while (funcIt.hasNext()) {
+            QRegularExpressionMatch match = funcIt.next();
+            setFormat(match.capturedStart(1), match.capturedLength(1), codeFunctionFormat);
+        }
+    }
+    // JavaScript/TypeScript syntax highlighting
+    else if (language == "javascript" || language == "js" || language == "typescript" || language == "ts") {
+        QStringList keywords = {
+            "\\bvar\\b", "\\blet\\b", "\\bconst\\b", "\\bfunction\\b", "\\bclass\\b",
+            "\\bif\\b", "\\belse\\b", "\\bfor\\b", "\\bwhile\\b", "\\bdo\\b",
+            "\\breturn\\b", "\\bimport\\b", "\\bexport\\b", "\\btry\\b", "\\bcatch\\b",
+            "\\bfinally\\b", "\\bthrow\\b", "\\bnew\\b", "\\bthis\\b", "\\bsuper\\b",
+            "\\bbreak\\b", "\\bcontinue\\b", "\\bswitch\\b", "\\bcase\\b", "\\bdefault\\b",
+            "\\btrue\\b", "\\bfalse\\b", "\\bnull\\b", "\\bundefined\\b", "\\basync\\b",
+            "\\bawait\\b", "\\bof\\b", "\\bin\\b", "\\btypeof\\b", "\\binstanceof\\b"
+        };
+        
+        for (const QString &pattern : keywords) {
+            QRegularExpression re(pattern);
+            QRegularExpressionMatchIterator it = re.globalMatch(text);
+            while (it.hasNext()) {
+                QRegularExpressionMatch match = it.next();
+                setFormat(match.capturedStart(), match.capturedLength(), codeKeywordFormat);
+            }
+        }
+        
+        // Strings
+        QRegularExpression stringPattern("(`[^`]*`|'[^']*'|\"[^\"]*\")");
+        QRegularExpressionMatchIterator stringIt = stringPattern.globalMatch(text);
+        while (stringIt.hasNext()) {
+            QRegularExpressionMatch match = stringIt.next();
+            setFormat(match.capturedStart(), match.capturedLength(), codeStringFormat);
+        }
+        
+        // Single-line comments
+        int commentStart = text.indexOf("//");
+        if (commentStart >= 0) {
+            setFormat(commentStart, text.length() - commentStart, codeCommentFormat);
+        }
+        
+        // Multi-line comments (simplified)
+        QRegularExpression multiCommentPattern("/\\*.*\\*/");
+        QRegularExpressionMatchIterator multiIt = multiCommentPattern.globalMatch(text);
+        while (multiIt.hasNext()) {
+            QRegularExpressionMatch match = multiIt.next();
+            setFormat(match.capturedStart(), match.capturedLength(), codeCommentFormat);
+        }
+        
+        // Numbers
+        QRegularExpression numberPattern("\\b\\d+(\\.\\d+)?\\b");
+        QRegularExpressionMatchIterator numIt = numberPattern.globalMatch(text);
+        while (numIt.hasNext()) {
+            QRegularExpressionMatch match = numIt.next();
+            setFormat(match.capturedStart(), match.capturedLength(), codeNumberFormat);
+        }
+        
+        // Function calls
+        QRegularExpression funcPattern("\\b([a-zA-Z_$][a-zA-Z0-9_$]*)\\s*(?=\\()");
+        QRegularExpressionMatchIterator funcIt = funcPattern.globalMatch(text);
+        while (funcIt.hasNext()) {
+            QRegularExpressionMatch match = funcIt.next();
+            setFormat(match.capturedStart(1), match.capturedLength(1), codeFunctionFormat);
+        }
+    }
+    // C/C++ syntax highlighting
+    else if (language == "c" || language == "cpp" || language == "c++" || language == "cc") {
+        QStringList keywords = {
+            "\\bif\\b", "\\belse\\b", "\\bfor\\b", "\\bwhile\\b", "\\bdo\\b",
+            "\\breturn\\b", "\\bbreak\\b", "\\bcontinue\\b", "\\bswitch\\b", "\\bcase\\b",
+            "\\bdefault\\b", "\\btrue\\b", "\\bfalse\\b", "\\bnullptr\\b", "\\bNULL\\b",
+            "\\bconst\\b", "\\bstatic\\b", "\\bextern\\b", "\\bvolatile\\b", "\\bregister\\b",
+            "\\bauto\\b", "\\btypedef\\b", "\\bstruct\\b", "\\bunion\\b", "\\benum\\b",
+            "\\bclass\\b", "\\bnamespace\\b", "\\busing\\b", "\\btemplate\\b", "\\btypename\\b",
+            "\\bpublic\\b", "\\bprivate\\b", "\\bprotected\\b", "\\bvirtual\\b", "\\binline\\b",
+            "\\btry\\b", "\\bcatch\\b", "\\bthrow\\b", "\\bnew\\b", "\\bdelete\\b"
+        };
+        
+        QStringList types = {
+            "\\bint\\b", "\\bchar\\b", "\\bfloat\\b", "\\bdouble\\b", "\\bvoid\\b",
+            "\\blong\\b", "\\bshort\\b", "\\bunsigned\\b", "\\bsigned\\b", "\\bbool\\b",
+            "\\bsize_t\\b", "\\bwchar_t\\b"
+        };
+        
+        for (const QString &pattern : keywords) {
+            QRegularExpression re(pattern);
+            QRegularExpressionMatchIterator it = re.globalMatch(text);
+            while (it.hasNext()) {
+                QRegularExpressionMatch match = it.next();
+                setFormat(match.capturedStart(), match.capturedLength(), codeKeywordFormat);
+            }
+        }
+        
+        for (const QString &pattern : types) {
+            QRegularExpression re(pattern);
+            QRegularExpressionMatchIterator it = re.globalMatch(text);
+            while (it.hasNext()) {
+                QRegularExpressionMatch match = it.next();
+                setFormat(match.capturedStart(), match.capturedLength(), codeTypeFormat);
+            }
+        }
+        
+        // Strings
+        QRegularExpression stringPattern("(\"[^\"]*\"|'[^']*')");
+        QRegularExpressionMatchIterator stringIt = stringPattern.globalMatch(text);
+        while (stringIt.hasNext()) {
+            QRegularExpressionMatch match = stringIt.next();
+            setFormat(match.capturedStart(), match.capturedLength(), codeStringFormat);
+        }
+        
+        // Single-line comments
+        int commentStart = text.indexOf("//");
+        if (commentStart >= 0) {
+            setFormat(commentStart, text.length() - commentStart, codeCommentFormat);
+        }
+        
+        // Preprocessor directives
+        if (text.trimmed().startsWith("#")) {
+            setFormat(0, text.length(), codeTypeFormat);
+        }
+        
+        // Numbers
+        QRegularExpression numberPattern("\\b\\d+(\\.\\d+)?[fFuUlL]*\\b");
+        QRegularExpressionMatchIterator numIt = numberPattern.globalMatch(text);
+        while (numIt.hasNext()) {
+            QRegularExpressionMatch match = numIt.next();
+            setFormat(match.capturedStart(), match.capturedLength(), codeNumberFormat);
+        }
+        
+        // Function calls
+        QRegularExpression funcPattern("\\b([a-zA-Z_][a-zA-Z0-9_]*)\\s*(?=\\()");
+        QRegularExpressionMatchIterator funcIt = funcPattern.globalMatch(text);
+        while (funcIt.hasNext()) {
+            QRegularExpressionMatch match = funcIt.next();
+            setFormat(match.capturedStart(1), match.capturedLength(1), codeFunctionFormat);
+        }
+    }
+    // Java syntax highlighting
+    else if (language == "java") {
+        QStringList keywords = {
+            "\\bif\\b", "\\belse\\b", "\\bfor\\b", "\\bwhile\\b", "\\bdo\\b",
+            "\\breturn\\b", "\\bbreak\\b", "\\bcontinue\\b", "\\bswitch\\b", "\\bcase\\b",
+            "\\bdefault\\b", "\\btrue\\b", "\\bfalse\\b", "\\bnull\\b",
+            "\\bpublic\\b", "\\bprivate\\b", "\\bprotected\\b", "\\bstatic\\b", "\\bfinal\\b",
+            "\\bclass\\b", "\\binterface\\b", "\\bextends\\b", "\\bimplements\\b",
+            "\\bnew\\b", "\\bthis\\b", "\\bsuper\\b", "\\bpackage\\b", "\\bimport\\b",
+            "\\btry\\b", "\\bcatch\\b", "\\bfinally\\b", "\\bthrow\\b", "\\bthrows\\b",
+            "\\babstract\\b", "\\bsynchronized\\b", "\\bvolatile\\b", "\\btransient\\b"
+        };
+        
+        QStringList types = {
+            "\\bint\\b", "\\bchar\\b", "\\bfloat\\b", "\\bdouble\\b", "\\bvoid\\b",
+            "\\blong\\b", "\\bshort\\b", "\\bbyte\\b", "\\bboolean\\b",
+            "\\bString\\b", "\\bInteger\\b", "\\bBoolean\\b", "\\bDouble\\b"
+        };
+        
+        for (const QString &pattern : keywords) {
+            QRegularExpression re(pattern);
+            QRegularExpressionMatchIterator it = re.globalMatch(text);
+            while (it.hasNext()) {
+                QRegularExpressionMatch match = it.next();
+                setFormat(match.capturedStart(), match.capturedLength(), codeKeywordFormat);
+            }
+        }
+        
+        for (const QString &pattern : types) {
+            QRegularExpression re(pattern);
+            QRegularExpressionMatchIterator it = re.globalMatch(text);
+            while (it.hasNext()) {
+                QRegularExpressionMatch match = it.next();
+                setFormat(match.capturedStart(), match.capturedLength(), codeTypeFormat);
+            }
+        }
+        
+        // Strings
+        QRegularExpression stringPattern("(\"[^\"]*\"|'[^']*')");
+        QRegularExpressionMatchIterator stringIt = stringPattern.globalMatch(text);
+        while (stringIt.hasNext()) {
+            QRegularExpressionMatch match = stringIt.next();
+            setFormat(match.capturedStart(), match.capturedLength(), codeStringFormat);
+        }
+        
+        // Single-line comments
+        int commentStart = text.indexOf("//");
+        if (commentStart >= 0) {
+            setFormat(commentStart, text.length() - commentStart, codeCommentFormat);
+        }
+        
+        // Numbers
+        QRegularExpression numberPattern("\\b\\d+(\\.\\d+)?[fFdDlL]*\\b");
+        QRegularExpressionMatchIterator numIt = numberPattern.globalMatch(text);
+        while (numIt.hasNext()) {
+            QRegularExpressionMatch match = numIt.next();
+            setFormat(match.capturedStart(), match.capturedLength(), codeNumberFormat);
+        }
+        
+        // Function/method calls
+        QRegularExpression funcPattern("\\b([a-zA-Z_][a-zA-Z0-9_]*)\\s*(?=\\()");
+        QRegularExpressionMatchIterator funcIt = funcPattern.globalMatch(text);
+        while (funcIt.hasNext()) {
+            QRegularExpressionMatch match = funcIt.next();
+            setFormat(match.capturedStart(1), match.capturedLength(1), codeFunctionFormat);
+        }
+    }
+    // Add more languages as needed
 }

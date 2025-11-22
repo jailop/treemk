@@ -578,6 +578,34 @@ void MainWindow::readSettings()
         
         statusBar()->showMessage(tr("Opened folder: %1").arg(lastFolder));
     }
+    
+    // Restore open files from last session (if enabled in preferences)
+    bool restoreSession = settings->value("general/restoreSession", true).toBool();
+    QStringList openFiles = settings->value("session/openFiles").toStringList();
+    int activeTabIndex = settings->value("session/activeTab", -1).toInt();
+    
+    if (restoreSession && !openFiles.isEmpty()) {
+        // Close the default empty tab if it exists and is empty
+        if (tabWidget->count() == 1) {
+            TabEditor *firstTab = qobject_cast<TabEditor*>(tabWidget->widget(0));
+            if (firstTab && firstTab->filePath().isEmpty() && !firstTab->editor()->isModified()) {
+                tabWidget->removeTab(0);
+                delete firstTab;
+            }
+        }
+        
+        // Open each file from the session
+        for (const QString &filePath : openFiles) {
+            if (QFileInfo::exists(filePath)) {
+                loadFile(filePath);
+            }
+        }
+        
+        // Restore the active tab
+        if (activeTabIndex >= 0 && activeTabIndex < tabWidget->count()) {
+            tabWidget->setCurrentIndex(activeTabIndex);
+        }
+    }
 }
 
 void MainWindow::writeSettings()
@@ -588,6 +616,20 @@ void MainWindow::writeSettings()
     settings->setValue("treeVisible", treePanel->isVisible());
     settings->setValue("lastFolder", currentFolder);
     settings->setValue("recentFolders", recentFolders);
+    
+    // Save open files
+    QStringList openFiles;
+    int activeTabIndex = tabWidget->currentIndex();
+    
+    for (int i = 0; i < tabWidget->count(); ++i) {
+        TabEditor *tab = qobject_cast<TabEditor*>(tabWidget->widget(i));
+        if (tab && !tab->filePath().isEmpty()) {
+            openFiles.append(tab->filePath());
+        }
+    }
+    
+    settings->setValue("session/openFiles", openFiles);
+    settings->setValue("session/activeTab", activeTabIndex);
 }
 
 void MainWindow::newFile()
@@ -1202,6 +1244,12 @@ void MainWindow::applySettings()
             // Update highlighter color scheme
             if (tab->editor()->highlighter()) {
                 tab->editor()->highlighter()->setColorScheme(editorScheme);
+            }
+            
+            // Apply code syntax highlighting setting
+            bool codeSyntaxEnabled = settings.value("editor/enableCodeSyntax", false).toBool();
+            if (tab->editor()->highlighter()) {
+                tab->editor()->highlighter()->setCodeSyntaxEnabled(codeSyntaxEnabled);
             }
         }
     }

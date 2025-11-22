@@ -14,6 +14,7 @@ public:
     
     void setRootPath(const QString &path);
     void setColorScheme(const QString &scheme);
+    void setCodeSyntaxEnabled(bool enabled);
 
 public slots:
     void updateColorScheme();
@@ -56,7 +57,23 @@ private:
     
     QString rootPath;
     QString currentColorScheme;
+    QString currentCodeLanguage;
+    bool codeSyntaxEnabled;
     bool checkWikiLinkExists(const QString &linkText) const;
+    void highlightCodeLine(const QString &text, const QString &language);
+    
+    enum BlockState {
+        Normal = -1,
+        InCodeBlock = 1
+    };
+    
+    // Code syntax formats
+    QTextCharFormat codeKeywordFormat;
+    QTextCharFormat codeStringFormat;
+    QTextCharFormat codeCommentFormat;
+    QTextCharFormat codeNumberFormat;
+    QTextCharFormat codeFunctionFormat;
+    QTextCharFormat codeTypeFormat;
 };
 
 #endif // MARKDOWNHIGHLIGHTER_H

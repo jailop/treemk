@@ -66,15 +66,25 @@ void MarkdownPreview::setMarkdownContent(const QString &markdown)
     
     QString styleSheet = getStyleSheet(currentTheme);
     
+    // Choose highlight.js theme based on current theme
+    QString highlightTheme = "github.min.css";
+    if (currentTheme == "dark") {
+        highlightTheme = "github-dark.min.css";
+    } else if (currentTheme == "sepia") {
+        highlightTheme = "github.min.css"; // Use light theme for sepia
+    }
+    
     QString fullHtml = QString(
         "<!DOCTYPE html>"
         "<html>"
         "<head>"
         "<meta charset=\"UTF-8\">"
         "<link rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css\">"
+        "<link rel=\"stylesheet\" href=\"https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/%1\">"
         "<script src=\"https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js\"></script>"
         "<script src=\"https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js\"></script>"
-        "<style>%1</style>"
+        "<script src=\"https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js\"></script>"
+        "<style>%2</style>"
         "<script>"
         "document.addEventListener('DOMContentLoaded', function() {"
         "  renderMathInElement(document.body, {"
@@ -84,12 +94,15 @@ void MarkdownPreview::setMarkdownContent(const QString &markdown)
         "    ],"
         "    throwOnError: false"
         "  });"
+        "  document.querySelectorAll('pre code').forEach((block) => {"
+        "    hljs.highlightElement(block);"
+        "  });"
         "});"
         "</script>"
         "</head>"
-        "<body>%2</body>"
+        "<body>%3</body>"
         "</html>"
-    ).arg(styleSheet, html);
+    ).arg(highlightTheme, styleSheet, html);
     
     // Use setHtml with baseUrl to allow loading local images
     QUrl baseUrl = QUrl::fromLocalFile(basePath + "/");
@@ -159,16 +172,24 @@ QString MarkdownPreview::convertMarkdownToHtml(const QString &markdown)
     QStringList outputLines;
     bool inCodeBlock = false;
     QString codeBlockContent;
+    QString codeLanguage;
     
     for (const QString &line : lines) {
         // Code blocks
         if (line.startsWith("```")) {
             if (inCodeBlock) {
-                outputLines.append("<pre><code>" + codeBlockContent + "</code></pre>");
+                // Closing fence - add the code block with language class
+                QString langClass = codeLanguage.isEmpty() ? "" : QString(" class=\"language-%1\"").arg(codeLanguage);
+                outputLines.append("<pre><code" + langClass + ">" + codeBlockContent + "</code></pre>");
                 codeBlockContent.clear();
+                codeLanguage.clear();
                 inCodeBlock = false;
             } else {
+                // Opening fence - extract language if present
                 inCodeBlock = true;
+                if (line.length() > 3) {
+                    codeLanguage = line.mid(3).trimmed();
+                }
             }
             continue;
         }

@@ -98,6 +98,9 @@ void SettingsDialog::setupEditorTab()
     highlightCurrentLineCheckBox = new QCheckBox(tr("Highlight current line"));
     behaviorLayout->addRow(highlightCurrentLineCheckBox);
 
+    enableCodeSyntaxCheckBox = new QCheckBox(tr("Enable syntax highlighting in code blocks"));
+    behaviorLayout->addRow(enableCodeSyntaxCheckBox);
+
     layout->addWidget(behaviorGroup);
     layout->addStretch();
 
@@ -211,6 +214,9 @@ void SettingsDialog::setupGeneralTab()
     confirmDeleteCheckBox = new QCheckBox(tr("Confirm before deleting files"));
     behaviorLayout->addWidget(confirmDeleteCheckBox);
 
+    restoreSessionCheckBox = new QCheckBox(tr("Restore open files on startup"));
+    behaviorLayout->addWidget(restoreSessionCheckBox);
+
     layout->addWidget(behaviorGroup);
     layout->addStretch();
 
@@ -311,6 +317,7 @@ void SettingsDialog::loadSettings()
     wordWrapCheckBox->setChecked(settings.value("editor/wordWrap", true).toBool());
     showLineNumbersCheckBox->setChecked(settings.value("editor/showLineNumbers", true).toBool());
     highlightCurrentLineCheckBox->setChecked(settings.value("editor/highlightCurrentLine", true).toBool());
+    enableCodeSyntaxCheckBox->setChecked(settings.value("editor/enableCodeSyntax", false).toBool());
 
     // Preview settings
     QString theme = settings.value("previewTheme", "light").toString();
@@ -329,6 +336,7 @@ void SettingsDialog::loadSettings()
     defaultFolderLineEdit->setText(settings.value("general/defaultFolder", "").toString());
     confirmDeleteCheckBox->setChecked(settings.value("general/confirmDelete", true).toBool());
     openLastFolderCheckBox->setChecked(settings.value("general/openLastFolder", true).toBool());
+    restoreSessionCheckBox->setChecked(settings.value("general/restoreSession", true).toBool());
 
     // Wiki links settings
     QString linkFormat = settings.value("wikiLinks/format", "double-bracket").toString();
@@ -360,6 +368,7 @@ void SettingsDialog::saveSettings()
     settings.setValue("editor/wordWrap", wordWrapCheckBox->isChecked());
     settings.setValue("editor/showLineNumbers", showLineNumbersCheckBox->isChecked());
     settings.setValue("editor/highlightCurrentLine", highlightCurrentLineCheckBox->isChecked());
+    settings.setValue("editor/enableCodeSyntax", enableCodeSyntaxCheckBox->isChecked());
 
     // Preview settings
     settings.setValue("previewTheme", themeComboBox->currentData().toString());
@@ -373,6 +382,7 @@ void SettingsDialog::saveSettings()
     settings.setValue("general/defaultFolder", defaultFolderLineEdit->text());
     settings.setValue("general/confirmDelete", confirmDeleteCheckBox->isChecked());
     settings.setValue("general/openLastFolder", openLastFolderCheckBox->isChecked());
+    settings.setValue("general/restoreSession", restoreSessionCheckBox->isChecked());
 
     // Wiki links settings
     settings.setValue("wikiLinks/format", wikiLinkFormatComboBox->currentData().toString());

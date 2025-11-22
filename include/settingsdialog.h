@@ -51,6 +51,7 @@ private:
     QCheckBox *wordWrapCheckBox;
     QCheckBox *showLineNumbersCheckBox;
     QCheckBox *highlightCurrentLineCheckBox;
+    QCheckBox *enableCodeSyntaxCheckBox;
 
     // Preview settings
     QComboBox *themeComboBox;
@@ -66,6 +67,7 @@ private:
     QPushButton *browseFolderButton;
     QCheckBox *confirmDeleteCheckBox;
     QCheckBox *openLastFolderCheckBox;
+    QCheckBox *restoreSessionCheckBox;
 
     // Wiki links settings
     QComboBox *wikiLinkFormatComboBox;
