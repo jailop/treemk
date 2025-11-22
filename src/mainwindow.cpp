@@ -140,6 +140,12 @@ void MainWindow::createActions()
     insertWikiLinkAction->setToolTip(tr("Insert a wiki-style link"));
     connect(insertWikiLinkAction, &QAction::triggered, this, &MainWindow::insertWikiLink);
     
+    attachDocumentAction = new QAction(QIcon::fromTheme("mail-attachment"), tr("Attach &Document..."), this);
+    attachDocumentAction->setShortcut(QKeySequence(tr("Ctrl+Shift+A")));
+    attachDocumentAction->setStatusTip(tr("Attach a document file"));
+    attachDocumentAction->setToolTip(tr("Attach a document"));
+    connect(attachDocumentAction, &QAction::triggered, this, &MainWindow::attachDocument);
+    
     insertHeaderAction = new QAction(QIcon::fromTheme("format-text-bold"), tr("Insert &Header"), this);
     insertHeaderAction->setShortcut(QKeySequence(tr("Ctrl+1")));
     insertHeaderAction->setStatusTip(tr("Insert a header"));
@@ -403,6 +409,7 @@ void MainWindow::createMenus()
     
     insertMenu = menuBar()->addMenu(tr("&Insert"));
     insertMenu->addAction(insertImageAction);
+    insertMenu->addAction(attachDocumentAction);
     insertMenu->addAction(insertFormulaAction);
     insertMenu->addSeparator();
     insertMenu->addAction(insertWikiLinkAction);
@@ -466,6 +473,7 @@ void MainWindow::createToolbar()
     // Insert operations
     mainToolbar->addAction(insertLinkAction);
     mainToolbar->addAction(insertImageAction);
+    mainToolbar->addAction(attachDocumentAction);
     mainToolbar->addAction(insertTableAction);
     mainToolbar->addSeparator();
     
@@ -761,10 +769,24 @@ void MainWindow::saveAs()
         return;
     }
     
+    QString defaultDir;
+    QString selectedPath = treeView->currentFilePath();
+    
+    if (!selectedPath.isEmpty()) {
+        QFileInfo fileInfo(selectedPath);
+        defaultDir = fileInfo.isDir() ? selectedPath : fileInfo.absolutePath();
+    } else if (!treeView->rootPath().isEmpty()) {
+        defaultDir = treeView->rootPath();
+    } else if (!currentFolder.isEmpty()) {
+        defaultDir = currentFolder;
+    } else {
+        defaultDir = QDir::homePath();
+    }
+    
     QString filePath = QFileDialog::getSaveFileName(
         this,
         tr("Save File"),
-        currentFolder.isEmpty() ? QDir::homePath() : currentFolder,
+        defaultDir,
         tr("Markdown Files (*.md *.markdown);;All Files (*)")
     );
     
@@ -1377,6 +1399,107 @@ void MainWindow::insertImage()
     cursor.insertText(imageMarkdown);
     
     statusBar()->showMessage(tr("Image inserted"), 3000);
+}
+
+void MainWindow::attachDocument()
+{
+    TabEditor *tab = currentTabEditor();
+    if (!tab) return;
+    
+    // Check if current file is saved
+    if (currentFilePath.isEmpty()) {
+        QMessageBox::warning(this, tr("Attach Document"),
+                           tr("Please save the current document first before attaching files."));
+        return;
+    }
+    
+    QString documentPath = QFileDialog::getOpenFileName(
+        this,
+        tr("Select Document to Attach"),
+        currentFolder.isEmpty() ? QDir::homePath() : currentFolder,
+        tr("All Files (*);;PDF Files (*.pdf);;Word Documents (*.doc *.docx);;Text Files (*.txt);;Spreadsheets (*.xls *.xlsx *.ods);;Presentations (*.ppt *.pptx *.odp);;Audio Files (*.mp3 *.wav *.ogg *.m4a *.flac *.aac);;Video Files (*.mp4 *.webm *.ogv *.avi *.mov *.mkv)")
+    );
+    
+    if (documentPath.isEmpty()) {
+        return;
+    }
+    
+    QFileInfo docInfo(documentPath);
+    QFileInfo currentFileInfo(currentFilePath);
+    QDir currentDir = currentFileInfo.absoluteDir();
+    QString baseName = currentFileInfo.baseName();
+    
+    // Sanitize the base name for safe folder creation
+    QString attachmentsDirName = baseName;
+    attachmentsDirName.replace(QRegularExpression("[<>:\"/\\\\|?*]"), "_");
+    if (attachmentsDirName.isEmpty()) {
+        attachmentsDirName = "attachments";
+    }
+    
+    // Create attachments directory if it doesn't exist
+    QString attachmentsDirPath = currentDir.filePath(attachmentsDirName);
+    QDir attachmentsDir(attachmentsDirPath);
+    
+    if (!attachmentsDir.exists()) {
+        if (!currentDir.mkdir(attachmentsDirName)) {
+            QMessageBox::warning(this, tr("Error"), 
+                               tr("Failed to create attachments directory '%1'.").arg(attachmentsDirName));
+            return;
+        }
+    }
+    
+    // Copy the document to the attachments directory
+    QString destFileName = docInfo.fileName();
+    QString destPath = attachmentsDir.filePath(destFileName);
+    
+    // Check if file already exists
+    if (QFile::exists(destPath)) {
+        QMessageBox::StandardButton reply = QMessageBox::question(this, 
+            tr("File Exists"),
+            tr("File '%1' already exists in the attachments folder. Overwrite?").arg(destFileName),
+            QMessageBox::Yes | QMessageBox::No);
+        
+        if (reply != QMessageBox::Yes) {
+            return;
+        }
+        QFile::remove(destPath);
+    }
+    
+    // Copy the file
+    if (!QFile::copy(documentPath, destPath)) {
+        QMessageBox::warning(this, tr("Error"), 
+                           tr("Failed to copy document to attachments folder."));
+        return;
+    }
+    
+    // Get description from user
+    bool ok;
+    QString linkText = QInputDialog::getText(
+        this,
+        tr("Document Link Text"),
+        tr("Enter link text for the document (optional):"),
+        QLineEdit::Normal,
+        docInfo.baseName(),
+        &ok
+    );
+    
+    if (!ok) {
+        return;
+    }
+    
+    if (linkText.isEmpty()) {
+        linkText = destFileName;
+    }
+    
+    // Create relative path for the link
+    QString relativePath = attachmentsDirName + "/" + destFileName;
+    
+    // Insert Markdown link syntax
+    QString linkMarkdown = QString("[%1](%2)").arg(linkText, relativePath);
+    QTextCursor cursor = tab->editor()->textCursor();
+    cursor.insertText(linkMarkdown);
+    
+    statusBar()->showMessage(tr("Document attached: %1").arg(destFileName), 3000);
 }
 
 void MainWindow::insertFormula()

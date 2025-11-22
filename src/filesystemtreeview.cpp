@@ -91,6 +91,10 @@ void FileSystemTreeView::createContextMenu()
     pasteAction->setShortcut(QKeySequence::Paste);
     connect(pasteAction, &QAction::triggered, this, &FileSystemTreeView::pasteItem);
     
+    refreshAction = new QAction(tr("Refresh"), this);
+    refreshAction->setShortcut(QKeySequence::Refresh);
+    connect(refreshAction, &QAction::triggered, this, &FileSystemTreeView::refreshDirectory);
+    
     contextMenu->addAction(newFileAction);
     contextMenu->addAction(newFolderAction);
     contextMenu->addSeparator();
@@ -100,6 +104,8 @@ void FileSystemTreeView::createContextMenu()
     contextMenu->addAction(cutAction);
     contextMenu->addAction(copyAction);
     contextMenu->addAction(pasteAction);
+    contextMenu->addSeparator();
+    contextMenu->addAction(refreshAction);
     
     addAction(newFileAction);
     addAction(newFolderAction);
@@ -108,6 +114,7 @@ void FileSystemTreeView::createContextMenu()
     addAction(cutAction);
     addAction(copyAction);
     addAction(pasteAction);
+    addAction(refreshAction);
 }
 
 void FileSystemTreeView::setupFileSystemWatcher()
@@ -486,5 +493,25 @@ void FileSystemTreeView::addDirectoriesToWatcher(const QString &path)
     
     foreach (const QFileInfo &fileInfo, dir.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot)) {
         addDirectoriesToWatcher(fileInfo.filePath());
+    }
+}
+
+void FileSystemTreeView::refreshDirectory()
+{
+    if (currentRootPath.isEmpty()) {
+        return;
+    }
+    
+    QString savedPath = currentFilePath();
+    QModelIndex currentIdx = currentIndex();
+    
+    setRootPath(currentRootPath);
+    
+    if (!savedPath.isEmpty() && QFile::exists(savedPath)) {
+        QModelIndex idx = fileSystemModel->index(savedPath);
+        if (idx.isValid()) {
+            setCurrentIndex(idx);
+            scrollTo(idx);
+        }
     }
 }

@@ -257,16 +257,105 @@ QString MarkdownPreview::convertMarkdownToHtml(const QString &markdown)
         processedLine.replace(QRegularExpression("!\\[([^\\]]*)\\]\\(([^\\)]+)\\)"),
                              "<img src=\"\\2\" alt=\"\\1\" style=\"max-width: 100%; height: auto;\" />");
         
-        // Links [text](url)
-        processedLine.replace(QRegularExpression("\\[([^\\]]+)\\]\\(([^\\)]+)\\)"), 
-                             "<a href=\"\\2\">\\1</a>");
+        // Links [text](url) - detect and render media files
+        QRegularExpression linkPattern("\\[([^\\]]+)\\]\\(([^\\)]+)\\)");
+        QRegularExpressionMatchIterator linkIt = linkPattern.globalMatch(processedLine);
+        QList<QPair<int, int>> replacements;
+        QStringList replacementTexts;
+        
+        while (linkIt.hasNext()) {
+            QRegularExpressionMatch linkMatch = linkIt.next();
+            QString linkText = linkMatch.captured(1);
+            QString linkUrl = linkMatch.captured(2);
+            QString lowerUrl = linkUrl.toLower();
+            QString replacement;
+            
+            // Check for audio files
+            if (lowerUrl.endsWith(".mp3") || lowerUrl.endsWith(".wav") || 
+                lowerUrl.endsWith(".ogg") || lowerUrl.endsWith(".m4a") ||
+                lowerUrl.endsWith(".flac") || lowerUrl.endsWith(".aac")) {
+                replacement = QString("<div style=\"margin: 10px 0;\">"
+                                    "<p>%1</p>"
+                                    "<audio controls style=\"width: 100%; max-width: 600px;\">"
+                                    "<source src=\"%2\">"
+                                    "Your browser does not support the audio element."
+                                    "</audio></div>").arg(linkText.toHtmlEscaped(), linkUrl);
+            }
+            // Check for video files
+            else if (lowerUrl.endsWith(".mp4") || lowerUrl.endsWith(".webm") || 
+                     lowerUrl.endsWith(".ogv") || lowerUrl.endsWith(".avi") ||
+                     lowerUrl.endsWith(".mov") || lowerUrl.endsWith(".mkv")) {
+                replacement = QString("<div style=\"margin: 10px 0;\">"
+                                    "<p>%1</p>"
+                                    "<video controls style=\"width: 100%; max-width: 800px;\">"
+                                    "<source src=\"%2\">"
+                                    "Your browser does not support the video element."
+                                    "</video></div>").arg(linkText.toHtmlEscaped(), linkUrl);
+            }
+            // Regular link
+            else {
+                replacement = QString("<a href=\"%2\">%1</a>").arg(linkText, linkUrl);
+            }
+            
+            replacements.append(qMakePair(linkMatch.capturedStart(), linkMatch.capturedLength()));
+            replacementTexts.append(replacement);
+        }
+        
+        // Apply replacements in reverse order to maintain positions
+        for (int i = replacements.size() - 1; i >= 0; --i) {
+            processedLine.replace(replacements[i].first, replacements[i].second, replacementTexts[i]);
+        }
         
         // Note: Wiki links are now processed separately in processWikiLinks()
         // to handle inclusions properly
         
-        // URLs
-        processedLine.replace(QRegularExpression("(https?://[^\\s]+)"), 
-                             "<a href=\"\\1\">\\1</a>");
+        // URLs - detect and render media URLs
+        QRegularExpression urlPattern("(https?://[^\\s]+)");
+        QRegularExpressionMatchIterator urlIt = urlPattern.globalMatch(processedLine);
+        QList<QPair<int, int>> urlReplacements;
+        QStringList urlReplacementTexts;
+        
+        while (urlIt.hasNext()) {
+            QRegularExpressionMatch urlMatch = urlIt.next();
+            QString url = urlMatch.captured(1);
+            QString lowerUrl = url.toLower();
+            QString replacement;
+            
+            // Check for audio URLs
+            if (lowerUrl.endsWith(".mp3") || lowerUrl.endsWith(".wav") || 
+                lowerUrl.endsWith(".ogg") || lowerUrl.endsWith(".m4a") ||
+                lowerUrl.endsWith(".flac") || lowerUrl.endsWith(".aac")) {
+                replacement = QString("<div style=\"margin: 10px 0;\">"
+                                    "<p><a href=\"%1\">%1</a></p>"
+                                    "<audio controls style=\"width: 100%; max-width: 600px;\">"
+                                    "<source src=\"%1\">"
+                                    "Your browser does not support the audio element."
+                                    "</audio></div>").arg(url);
+            }
+            // Check for video URLs
+            else if (lowerUrl.endsWith(".mp4") || lowerUrl.endsWith(".webm") || 
+                     lowerUrl.endsWith(".ogv") || lowerUrl.endsWith(".avi") ||
+                     lowerUrl.endsWith(".mov") || lowerUrl.endsWith(".mkv")) {
+                replacement = QString("<div style=\"margin: 10px 0;\">"
+                                    "<p><a href=\"%1\">%1</a></p>"
+                                    "<video controls style=\"width: 100%; max-width: 800px;\">"
+                                    "<source src=\"%1\">"
+                                    "Your browser does not support the video element."
+                                    "</video></div>").arg(url);
+            }
+            // Regular URL link
+            else {
+                replacement = QString("<a href=\"%1\">%1</a>").arg(url);
+            }
+            
+            urlReplacements.append(qMakePair(urlMatch.capturedStart(), urlMatch.capturedLength()));
+            urlReplacementTexts.append(replacement);
+        }
+        
+        // Apply URL replacements in reverse order to maintain positions
+        for (int i = urlReplacements.size() - 1; i >= 0; --i) {
+            processedLine.replace(urlReplacements[i].first, urlReplacements[i].second, urlReplacementTexts[i]);
+        }
         
         // Paragraph wrapping for non-empty, non-header, non-list lines
         if (!processedLine.isEmpty() && 

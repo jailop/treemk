@@ -66,6 +66,7 @@ private slots:
     void insertImage();
     void insertFormula();
     void insertWikiLink();
+    void attachDocument();
     void insertHeader();
     void insertBold();
     void insertItalic();
@@ -125,6 +126,7 @@ private:
     QAction *insertImageAction;
     QAction *insertFormulaAction;
     QAction *insertWikiLinkAction;
+    QAction *attachDocumentAction;
     QAction *insertHeaderAction;
     QAction *insertBoldAction;
     QAction *insertItalicAction;

@@ -320,15 +320,33 @@ QString MarkdownEditor::saveImageFromClipboard(const QImage &image)
         return QString();
     }
     
-    // Get the directory of the current file
+    // Get the directory and base name of the current file
     QFileInfo fileInfo(m_currentFilePath);
     QDir fileDir = fileInfo.absoluteDir();
+    QString baseName = fileInfo.baseName();
+    
+    // Sanitize the base name for safe folder creation (Unix and Windows)
+    QString imagesDirName = baseName;
+    imagesDirName.replace(QRegularExpression("[<>:\"/\\\\|?*]"), "_");
+    if (imagesDirName.isEmpty()) {
+        imagesDirName = "images";
+    }
+    QString imagesDirPath = fileDir.filePath(imagesDirName);
+    QDir imagesDir(imagesDirPath);
+    
+    if (!imagesDir.exists()) {
+        if (!fileDir.mkdir(imagesDirName)) {
+            QMessageBox::warning(this, tr("Cannot Create Directory"), 
+                               tr("Failed to create directory '%1'.").arg(imagesDirName));
+            return QString();
+        }
+    }
     
     // Find the next available number in sequence
     int nextNumber = 1;
     QRegularExpression imagePattern("^image_(\\d+)\\.png$");
     
-    QStringList existingFiles = fileDir.entryList(QStringList() << "image_*.png", QDir::Files);
+    QStringList existingFiles = imagesDir.entryList(QStringList() << "image_*.png", QDir::Files);
     for (const QString &file : existingFiles) {
         QRegularExpressionMatch match = imagePattern.match(file);
         if (match.hasMatch()) {
@@ -359,7 +377,7 @@ QString MarkdownEditor::saveImageFromClipboard(const QImage &image)
     }
     
     // Check if file already exists
-    QString fullPath = fileDir.filePath(fileName);
+    QString fullPath = imagesDir.filePath(fileName);
     if (QFileInfo::exists(fullPath)) {
         QMessageBox::StandardButton reply = QMessageBox::question(this, 
             tr("File Exists"),
@@ -373,7 +391,7 @@ QString MarkdownEditor::saveImageFromClipboard(const QImage &image)
     
     // Save the image
     if (image.save(fullPath, "PNG")) {
-        return fileName; // Return relative path
+        return imagesDirName + "/" + fileName; // Return relative path with subdirectory
     }
     
     QMessageBox::warning(this, tr("Save Failed"), 

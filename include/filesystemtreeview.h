@@ -37,6 +37,7 @@ private slots:
     void cutItem();
     void copyItem();
     void pasteItem();
+    void refreshDirectory();
 
 private:
     void setupModel();
@@ -56,6 +57,7 @@ private:
     QAction *cutAction;
     QAction *copyAction;
     QAction *pasteAction;
+    QAction *refreshAction;
     
     QString clipboardPath;
     bool clipboardIsCut;
