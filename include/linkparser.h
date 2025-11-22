@@ -11,10 +11,11 @@ struct WikiLink
     QString displayText;
     int startPos;
     int length;
+    bool isInclusion;
     
-    WikiLink() : startPos(0), length(0) {}
-    WikiLink(const QString &target, const QString &display, int start, int len)
-        : targetFile(target), displayText(display), startPos(start), length(len) {}
+    WikiLink() : startPos(0), length(0), isInclusion(false) {}
+    WikiLink(const QString &target, const QString &display, int start, int len, bool inclusion = false)
+        : targetFile(target), displayText(display), startPos(start), length(len), isInclusion(inclusion) {}
 };
 
 class LinkParser

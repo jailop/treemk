@@ -6,45 +6,102 @@
 
 MarkdownHighlighter::MarkdownHighlighter(QTextDocument *parent)
     : QSyntaxHighlighter(parent)
+    , currentColorScheme("light")
 {
+    setupFormats();
+}
+
+void MarkdownHighlighter::setupFormats()
+{
+    highlightingRules.clear();
     HighlightingRule rule;
     
+    // Determine colors based on scheme
+    QColor headerColor, textColor, codeColor, linkColor, listColor, quoteColor, latexColor;
+    QColor codeBg, wikiLinkColor, brokenLinkColor;
+    
+    if (currentColorScheme == "dark") {
+        headerColor = QColor(100, 149, 237); // Cornflower blue
+        textColor = QColor(220, 220, 220);
+        codeColor = QColor(206, 145, 120);
+        linkColor = QColor(42, 161, 255);
+        listColor = QColor(152, 195, 121);
+        quoteColor = QColor(128, 128, 128);
+        latexColor = QColor(229, 192, 123);
+        codeBg = QColor(45, 45, 45);
+        wikiLinkColor = QColor(156, 220, 254);
+        brokenLinkColor = QColor(240, 113, 120);
+    } else if (currentColorScheme == "solarized-light") {
+        headerColor = QColor(38, 139, 210); // blue
+        textColor = QColor(101, 123, 131);
+        codeColor = QColor(220, 50, 47); // red
+        linkColor = QColor(38, 139, 210);
+        listColor = QColor(133, 153, 0); // green
+        quoteColor = QColor(147, 161, 161);
+        latexColor = QColor(203, 75, 22); // orange
+        codeBg = QColor(238, 232, 213);
+        wikiLinkColor = QColor(42, 161, 152); // cyan
+        brokenLinkColor = QColor(211, 54, 130); // magenta
+    } else if (currentColorScheme == "solarized-dark") {
+        headerColor = QColor(38, 139, 210); // blue
+        textColor = QColor(131, 148, 150);
+        codeColor = QColor(220, 50, 47); // red
+        linkColor = QColor(38, 139, 210);
+        listColor = QColor(133, 153, 0); // green
+        quoteColor = QColor(88, 110, 117);
+        latexColor = QColor(203, 75, 22); // orange
+        codeBg = QColor(7, 54, 66);
+        wikiLinkColor = QColor(42, 161, 152); // cyan
+        brokenLinkColor = QColor(211, 54, 130); // magenta
+    } else { // light
+        headerColor = QColor(0, 0, 139);
+        textColor = QColor(0, 0, 0);
+        codeColor = QColor(139, 0, 0);
+        linkColor = QColor(0, 0, 255);
+        listColor = QColor(0, 100, 0);
+        quoteColor = QColor(128, 128, 128);
+        latexColor = QColor(139, 69, 19);
+        codeBg = QColor(240, 240, 240);
+        wikiLinkColor = QColor(0, 128, 128);
+        brokenLinkColor = QColor(178, 34, 34);
+    }
+    
     // Headers (H1-H6)
-    h1Format.setForeground(QColor(0, 0, 139));
+    h1Format.setForeground(headerColor);
     h1Format.setFontWeight(QFont::Bold);
     h1Format.setFontPointSize(18);
     rule.pattern = QRegularExpression("^#{1}\\s+.*$");
     rule.format = h1Format;
     highlightingRules.append(rule);
     
-    h2Format.setForeground(QColor(0, 0, 139));
+    h2Format.setForeground(headerColor);
     h2Format.setFontWeight(QFont::Bold);
     h2Format.setFontPointSize(16);
     rule.pattern = QRegularExpression("^#{2}\\s+.*$");
     rule.format = h2Format;
     highlightingRules.append(rule);
     
-    h3Format.setForeground(QColor(0, 0, 139));
+    h3Format.setForeground(headerColor);
     h3Format.setFontWeight(QFont::Bold);
     h3Format.setFontPointSize(14);
     rule.pattern = QRegularExpression("^#{3}\\s+.*$");
     rule.format = h3Format;
     highlightingRules.append(rule);
     
-    h4Format.setForeground(QColor(0, 0, 139));
+    h4Format.setForeground(headerColor);
     h4Format.setFontWeight(QFont::Bold);
     h4Format.setFontPointSize(12);
     rule.pattern = QRegularExpression("^#{4}\\s+.*$");
     rule.format = h4Format;
     highlightingRules.append(rule);
     
-    h5Format.setForeground(QColor(0, 0, 139));
+    h5Format.setForeground(headerColor);
     h5Format.setFontWeight(QFont::Bold);
     rule.pattern = QRegularExpression("^#{5}\\s+.*$");
     rule.format = h5Format;
     highlightingRules.append(rule);
     
-    h6Format.setForeground(QColor(0, 0, 139));
+    h6Format.setForeground(headerColor);
     h6Format.setFontWeight(QFont::Bold);
     rule.pattern = QRegularExpression("^#{6}\\s+.*$");
     rule.format = h6Format;
@@ -52,50 +109,50 @@ MarkdownHighlighter::MarkdownHighlighter(QTextDocument *parent)
     
     // Bold text **text** or __text__
     boldFormat.setFontWeight(QFont::Bold);
-    boldFormat.setForeground(QColor(0, 0, 0));
+    boldFormat.setForeground(textColor);
     rule.pattern = QRegularExpression("(\\*\\*|__)(.*?)(\\*\\*|__)");
     rule.format = boldFormat;
     highlightingRules.append(rule);
     
     // Italic text *text* or _text_
     italicFormat.setFontItalic(true);
-    italicFormat.setForeground(QColor(0, 0, 0));
+    italicFormat.setForeground(textColor);
     rule.pattern = QRegularExpression("(\\*|_)(.*?)(\\*|_)");
     rule.format = italicFormat;
     highlightingRules.append(rule);
     
     // Inline code `code`
-    inlineCodeFormat.setForeground(QColor(139, 0, 0));
-    inlineCodeFormat.setBackground(QColor(240, 240, 240));
+    inlineCodeFormat.setForeground(codeColor);
+    inlineCodeFormat.setBackground(codeBg);
     inlineCodeFormat.setFontFamilies({QString("Monospace")});
     rule.pattern = QRegularExpression("`[^`]+`");
     rule.format = inlineCodeFormat;
     highlightingRules.append(rule);
     
     // Code blocks ```
-    codeFormat.setForeground(QColor(139, 0, 0));
-    codeFormat.setBackground(QColor(240, 240, 240));
+    codeFormat.setForeground(codeColor);
+    codeFormat.setBackground(codeBg);
     codeFormat.setFontFamilies({QString("Monospace")});
     rule.pattern = QRegularExpression("^```.*$");
     rule.format = codeFormat;
     highlightingRules.append(rule);
     
     // Links [text](url)
-    linkFormat.setForeground(QColor(0, 0, 255));
+    linkFormat.setForeground(linkColor);
     linkFormat.setFontUnderline(true);
     rule.pattern = QRegularExpression("\\[([^\\]]+)\\]\\(([^\\)]+)\\)");
     rule.format = linkFormat;
     highlightingRules.append(rule);
     
     // URLs
-    urlFormat.setForeground(QColor(0, 0, 255));
+    urlFormat.setForeground(linkColor);
     urlFormat.setFontUnderline(true);
     rule.pattern = QRegularExpression("https?://[^\\s]+");
     rule.format = urlFormat;
     highlightingRules.append(rule);
     
     // Unordered lists
-    listFormat.setForeground(QColor(0, 100, 0));
+    listFormat.setForeground(listColor);
     listFormat.setFontWeight(QFont::Bold);
     rule.pattern = QRegularExpression("^\\s*[-*+]\\s+");
     rule.format = listFormat;
@@ -107,36 +164,80 @@ MarkdownHighlighter::MarkdownHighlighter(QTextDocument *parent)
     highlightingRules.append(rule);
     
     // Blockquotes
-    blockquoteFormat.setForeground(QColor(100, 100, 100));
+    blockquoteFormat.setForeground(quoteColor);
     blockquoteFormat.setFontItalic(true);
     rule.pattern = QRegularExpression("^>+\\s+.*$");
     rule.format = blockquoteFormat;
     highlightingRules.append(rule);
     
     // Horizontal rules
-    horizontalRuleFormat.setForeground(QColor(150, 150, 150));
+    horizontalRuleFormat.setForeground(quoteColor);
     horizontalRuleFormat.setFontWeight(QFont::Bold);
     rule.pattern = QRegularExpression("^([-*_]\\s*){3,}$");
     rule.format = horizontalRuleFormat;
     highlightingRules.append(rule);
     
     // Wiki links - will be handled separately in highlightBlock for validation
-    wikiLinkFormat.setForeground(QColor(0, 128, 0));
+    wikiLinkFormat.setForeground(wikiLinkColor);
     wikiLinkFormat.setFontWeight(QFont::Bold);
     wikiLinkFormat.setFontUnderline(true);
     
-    brokenWikiLinkFormat.setForeground(QColor(255, 0, 0));
+    brokenWikiLinkFormat.setForeground(brokenLinkColor);
     brokenWikiLinkFormat.setFontWeight(QFont::Bold);
     brokenWikiLinkFormat.setFontUnderline(true);
     
+    // Inclusion links - use distinct styling
+    QColor inclusionColor = currentColorScheme == "dark" ? QColor(129, 250, 183) : QColor(34, 139, 34);
+    inclusionLinkFormat.setForeground(inclusionColor);
+    inclusionLinkFormat.setFontWeight(QFont::Bold);
+    inclusionLinkFormat.setFontUnderline(true);
+    if (currentColorScheme == "dark") {
+        inclusionLinkFormat.setBackground(QColor(30, 60, 40));
+    } else {
+        inclusionLinkFormat.setBackground(QColor(230, 255, 230));
+    }
+    
+    brokenInclusionLinkFormat.setForeground(brokenLinkColor);
+    brokenInclusionLinkFormat.setFontWeight(QFont::Bold);
+    brokenInclusionLinkFormat.setFontUnderline(true);
+    if (currentColorScheme == "dark") {
+        brokenInclusionLinkFormat.setBackground(QColor(60, 30, 30));
+    } else {
+        brokenInclusionLinkFormat.setBackground(QColor(255, 230, 230));
+    }
+    
     // LaTeX formulas - inline $...$
-    inlineLatexFormat.setForeground(QColor(128, 0, 128));
-    inlineLatexFormat.setBackground(QColor(250, 240, 250));
+    inlineLatexFormat.setForeground(latexColor);
+    if (currentColorScheme == "dark") {
+        inlineLatexFormat.setBackground(QColor(60, 50, 60));
+    } else if (currentColorScheme.startsWith("solarized")) {
+        inlineLatexFormat.setBackground(QColor(238, 232, 213));
+    } else {
+        inlineLatexFormat.setBackground(QColor(250, 240, 250));
+    }
     
     // LaTeX formulas - block $$...$$
-    blockLatexFormat.setForeground(QColor(100, 0, 100));
-    blockLatexFormat.setBackground(QColor(245, 235, 245));
+    blockLatexFormat.setForeground(latexColor);
+    if (currentColorScheme == "dark") {
+        blockLatexFormat.setBackground(QColor(60, 50, 60));
+    } else if (currentColorScheme.startsWith("solarized")) {
+        blockLatexFormat.setBackground(QColor(238, 232, 213));
+    } else {
+        blockLatexFormat.setBackground(QColor(245, 235, 245));
+    }
     blockLatexFormat.setFontWeight(QFont::Bold);
+}
+
+void MarkdownHighlighter::setColorScheme(const QString &scheme)
+{
+    currentColorScheme = scheme;
+    setupFormats();
+    rehighlight();
+}
+
+void MarkdownHighlighter::updateColorScheme()
+{
+    rehighlight();
 }
 
 void MarkdownHighlighter::setRootPath(const QString &path)
@@ -157,7 +258,25 @@ void MarkdownHighlighter::highlightBlock(const QString &text)
     }
     
     // Handle wiki links separately for validation
-    QRegularExpression wikiLinkPattern("\\[\\[([^\\]|]+)(\\|([^\\]]+))?\\]\\]");
+    // First handle inclusion links [[!target]] or [[!target|display]]
+    QRegularExpression inclusionPattern("\\[\\[!([^\\]|]+)(\\|([^\\]]+))?\\]\\]");
+    QRegularExpressionMatchIterator inclusionIterator = inclusionPattern.globalMatch(text);
+    
+    while (inclusionIterator.hasNext()) {
+        QRegularExpressionMatch match = inclusionIterator.next();
+        QString linkTarget = match.captured(1);
+        
+        bool exists = checkWikiLinkExists(linkTarget);
+        
+        if (exists) {
+            setFormat(match.capturedStart(), match.capturedLength(), inclusionLinkFormat);
+        } else {
+            setFormat(match.capturedStart(), match.capturedLength(), brokenInclusionLinkFormat);
+        }
+    }
+    
+    // Then handle regular wiki links [[target]] or [[target|display]]
+    QRegularExpression wikiLinkPattern("\\[\\[([^\\]|!]+)(\\|([^\\]]+))?\\]\\]");
     QRegularExpressionMatchIterator wikiMatchIterator = wikiLinkPattern.globalMatch(text);
     
     while (wikiMatchIterator.hasNext()) {

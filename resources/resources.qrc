@@ -4,5 +4,10 @@
         <file>icons/export-pdf.svg</file>
         <file>icons/export-docx.svg</file>
         <file>icons/export-text.svg</file>
+        <file>icons/code-block.svg</file>
+        <file>icons/list-bullet.svg</file>
+        <file>icons/list-numbered.svg</file>
+        <file>icons/blockquote.svg</file>
+        <file>icons/horizontal-rule.svg</file>
     </qresource>
 </RCC>

@@ -22,6 +22,8 @@ public:
     int getAutoSaveInterval() const;
     bool getAutoSaveEnabled() const;
     QString getDefaultTheme() const;
+    QString getAppTheme() const;
+    QString getEditorColorScheme() const;
 
 signals:
     void settingsChanged();
@@ -37,6 +39,7 @@ private:
     void setupPreviewTab();
     void setupGeneralTab();
     void setupWikiLinksTab();
+    void setupAppearanceTab();
     void loadSettings();
     
     QTabWidget *tabWidget;
@@ -69,6 +72,10 @@ private:
     QCheckBox *relativeLinkPathsCheckBox;
     QCheckBox *autoCompleteLinksCheckBox;
     QCheckBox *showBacklinksCheckBox;
+    
+    // Appearance settings
+    QComboBox *appThemeComboBox;
+    QComboBox *editorColorSchemeComboBox;
     
     QPushButton *saveButton;
     QPushButton *cancelButton;

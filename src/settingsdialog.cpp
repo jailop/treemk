@@ -35,6 +35,7 @@ void SettingsDialog::setupUI()
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
     
     tabWidget = new QTabWidget(this);
+    setupAppearanceTab();
     setupEditorTab();
     setupPreviewTab();
     setupGeneralTab();
@@ -51,7 +52,7 @@ void SettingsDialog::setupUI()
     connect(buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
     connect(buttonBox->button(QDialogButtonBox::Apply), &QPushButton::clicked,
             this, [this]() {
-                QSettings settings("MkEd", "MkEd");
+                QSettings settings("TreeMk", "TreeMk");
                 saveSettings();
                 emit settingsChanged();
             });
@@ -259,9 +260,48 @@ void SettingsDialog::setupWikiLinksTab()
     tabWidget->addTab(wikiTab, tr("Wiki Links"));
 }
 
+void SettingsDialog::setupAppearanceTab()
+{
+    QWidget *appearanceTab = new QWidget();
+    QVBoxLayout *layout = new QVBoxLayout(appearanceTab);
+
+    // Application theme group
+    QGroupBox *appThemeGroup = new QGroupBox(tr("Application Theme"));
+    QFormLayout *appThemeLayout = new QFormLayout(appThemeGroup);
+
+    appThemeComboBox = new QComboBox();
+    appThemeComboBox->addItem(tr("System Default"), "system");
+    appThemeComboBox->addItem(tr("Light"), "light");
+    appThemeComboBox->addItem(tr("Dark"), "dark");
+    appThemeLayout->addRow(tr("Theme:"), appThemeComboBox);
+    
+    QLabel *themeNote = new QLabel(tr("Note: Application restart may be required for theme changes to fully apply."));
+    themeNote->setWordWrap(true);
+    themeNote->setStyleSheet("color: gray; font-size: 9pt;");
+    appThemeLayout->addRow(themeNote);
+
+    layout->addWidget(appThemeGroup);
+
+    // Editor color scheme group
+    QGroupBox *editorSchemeGroup = new QGroupBox(tr("Editor Color Scheme"));
+    QFormLayout *editorSchemeLayout = new QFormLayout(editorSchemeGroup);
+
+    editorColorSchemeComboBox = new QComboBox();
+    editorColorSchemeComboBox->addItem(tr("Light"), "light");
+    editorColorSchemeComboBox->addItem(tr("Dark"), "dark");
+    editorColorSchemeComboBox->addItem(tr("Solarized Light"), "solarized-light");
+    editorColorSchemeComboBox->addItem(tr("Solarized Dark"), "solarized-dark");
+    editorSchemeLayout->addRow(tr("Color Scheme:"), editorColorSchemeComboBox);
+
+    layout->addWidget(editorSchemeGroup);
+    layout->addStretch();
+
+    tabWidget->addTab(appearanceTab, tr("Appearance"));
+}
+
 void SettingsDialog::loadSettings()
 {
-    QSettings settings("MkEd", "MkEd");
+    QSettings settings("TreeMk", "TreeMk");
     
     // Editor settings
     QString fontFamily = settings.value("editor/font", "Monospace").toString();
@@ -298,11 +338,20 @@ void SettingsDialog::loadSettings()
     relativeLinkPathsCheckBox->setChecked(settings.value("wikiLinks/relativePaths", true).toBool());
     autoCompleteLinksCheckBox->setChecked(settings.value("wikiLinks/autoComplete", true).toBool());
     showBacklinksCheckBox->setChecked(settings.value("wikiLinks/showBacklinks", true).toBool());
+    
+    // Appearance settings
+    QString appTheme = settings.value("appearance/appTheme", "system").toString();
+    int appThemeIndex = appThemeComboBox->findData(appTheme);
+    if (appThemeIndex >= 0) appThemeComboBox->setCurrentIndex(appThemeIndex);
+    
+    QString editorScheme = settings.value("appearance/editorColorScheme", "light").toString();
+    int editorSchemeIndex = editorColorSchemeComboBox->findData(editorScheme);
+    if (editorSchemeIndex >= 0) editorColorSchemeComboBox->setCurrentIndex(editorSchemeIndex);
 }
 
 void SettingsDialog::saveSettings()
 {
-    QSettings settings("MkEd", "MkEd");
+    QSettings settings("TreeMk", "TreeMk");
     
     // Editor settings
     settings.setValue("editor/font", fontComboBox->currentFont().family());
@@ -330,10 +379,13 @@ void SettingsDialog::saveSettings()
     settings.setValue("wikiLinks/relativePaths", relativeLinkPathsCheckBox->isChecked());
     settings.setValue("wikiLinks/autoComplete", autoCompleteLinksCheckBox->isChecked());
     settings.setValue("wikiLinks/showBacklinks", showBacklinksCheckBox->isChecked());
+    
+    // Appearance settings
+    settings.setValue("appearance/appTheme", appThemeComboBox->currentData().toString());
+    settings.setValue("appearance/editorColorScheme", editorColorSchemeComboBox->currentData().toString());
 
     settings.sync();
     emit settingsChanged();
-    accept();
 }
 
 void SettingsDialog::onBrowseDefaultFolder()
@@ -375,4 +427,14 @@ bool SettingsDialog::getAutoSaveEnabled() const
 QString SettingsDialog::getDefaultTheme() const
 {
     return themeComboBox->currentData().toString();
+}
+
+QString SettingsDialog::getAppTheme() const
+{
+    return appThemeComboBox->currentData().toString();
+}
+
+QString SettingsDialog::getEditorColorScheme() const
+{
+    return editorColorSchemeComboBox->currentData().toString();
 }

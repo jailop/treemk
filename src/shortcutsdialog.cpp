@@ -59,7 +59,8 @@ void ShortcutsDialog::setupUI()
     // Navigation
     addShortcut(tr("Navigation"), tr("Quick Open"), tr("Ctrl+P"));
     addShortcut(tr("Navigation"), tr("Go to Line"), tr("Ctrl+G"));
-    addShortcut(tr("Navigation"), tr("Follow Link"), tr("Ctrl+Click"));
+    addShortcut(tr("Navigation"), tr("Follow Link (Mouse)"), tr("Ctrl+Click"));
+    addShortcut(tr("Navigation"), tr("Follow Link (Keyboard)"), tr("Ctrl+Enter"));
     
     // View operations
     addShortcut(tr("View"), tr("Toggle Tree View"), tr("Ctrl+\\"));

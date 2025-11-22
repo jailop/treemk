@@ -13,20 +13,21 @@ QVector<WikiLink> LinkParser::parseLinks(const QString &text)
 {
     QVector<WikiLink> links;
     
-    // Pattern for [[target]] or [[target|display]]
-    QRegularExpression wikiLinkPattern("\\[\\[([^\\]|]+)(\\|([^\\]]+))?\\]\\]");
+    // Pattern for [[!target]] or [[!target|display]] or [[target]] or [[target|display]]
+    QRegularExpression wikiLinkPattern("\\[\\[(!)?([^\\]|]+)(\\|([^\\]]+))?\\]\\]");
     QRegularExpressionMatchIterator matchIterator = wikiLinkPattern.globalMatch(text);
     
     while (matchIterator.hasNext()) {
         QRegularExpressionMatch match = matchIterator.next();
-        QString target = match.captured(1).trimmed();
-        QString display = match.captured(3).trimmed();
+        bool isInclusion = !match.captured(1).isEmpty();
+        QString target = match.captured(2).trimmed();
+        QString display = match.captured(4).trimmed();
         
         if (display.isEmpty()) {
             display = target;
         }
         
-        WikiLink link(target, display, match.capturedStart(), match.capturedLength());
+        WikiLink link(target, display, match.capturedStart(), match.capturedLength(), isInclusion);
         links.append(link);
     }
     

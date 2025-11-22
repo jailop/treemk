@@ -15,12 +15,13 @@
 #include <QMimeData>
 #include <QUrl>
 #include <QFileInfo>
+#include <QKeyEvent>
 
 MarkdownEditor::MarkdownEditor(QWidget *parent)
     : QPlainTextEdit(parent)
 {
     lineNumberArea = new LineNumberArea(this);
-    highlighter = new MarkdownHighlighter(document());
+    m_highlighter = new MarkdownHighlighter(document());
     
     setupEditor();
     
@@ -54,7 +55,7 @@ void MarkdownEditor::setModified(bool modified)
 
 MarkdownHighlighter* MarkdownEditor::getHighlighter() const
 {
-    return highlighter;
+    return m_highlighter;
 }
 
 QString MarkdownEditor::getLinkAtPosition(int position) const
@@ -84,18 +85,39 @@ QString MarkdownEditor::getLinkAtPosition(int position) const
 
 void MarkdownEditor::mousePressEvent(QMouseEvent *event)
 {
-    if (event->modifiers() & Qt::ControlModifier) {
+    if (event->button() == Qt::LeftButton && (event->modifiers() & Qt::ControlModifier)) {
         QTextCursor cursor = cursorForPosition(event->pos());
         int position = cursor.position();
         
         QString linkTarget = getLinkAtPosition(position);
         if (!linkTarget.isEmpty()) {
             emit wikiLinkClicked(linkTarget);
+            event->accept();
             return;
         }
     }
     
     QPlainTextEdit::mousePressEvent(event);
+}
+
+void MarkdownEditor::keyPressEvent(QKeyEvent *event)
+{
+    // Ctrl+Enter or Ctrl+Return to open wiki-link at cursor
+    if ((event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter) && 
+        (event->modifiers() & Qt::ControlModifier)) {
+        
+        QTextCursor cursor = textCursor();
+        int position = cursor.position();
+        
+        QString linkTarget = getLinkAtPosition(position);
+        if (!linkTarget.isEmpty()) {
+            emit wikiLinkClicked(linkTarget);
+            event->accept();
+            return;
+        }
+    }
+    
+    QPlainTextEdit::keyPressEvent(event);
 }
 
 void MarkdownEditor::dragEnterEvent(QDragEnterEvent *event)

@@ -11,6 +11,7 @@
 #include "quickopendialog.h"
 #include "outlinepanel.h"
 #include "shortcutsdialog.h"
+#include "thememanager.h"
 #include <QApplication>
 #include <QMenuBar>
 #include <QToolBar>
@@ -40,10 +41,10 @@
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
-    settings = new QSettings("MkEd", "MkEd", this);
+    settings = new QSettings("TreeMk", "TreeMk", this);
     linkParser = new LinkParser();
     
-    setWindowTitle("MkEd - Markdown Editor");
+    setWindowTitle("TreeMk - Markdown Editor");
     setWindowIcon(QIcon::fromTheme("text-editor"));
     
     // Setup progress bar in status bar
@@ -163,29 +164,34 @@ void MainWindow::createActions()
     insertCodeAction->setToolTip(tr("Insert inline code"));
     connect(insertCodeAction, &QAction::triggered, this, &MainWindow::insertCode);
     
-    insertCodeBlockAction = new QAction(tr("Code &Block"), this);
+    insertCodeBlockAction = new QAction(QIcon(":/icons/icons/code-block.svg"), tr("Code &Block"), this);
     insertCodeBlockAction->setShortcut(QKeySequence(tr("Ctrl+Shift+C")));
     insertCodeBlockAction->setStatusTip(tr("Insert code block"));
+    insertCodeBlockAction->setToolTip(tr("Insert code block"));
     connect(insertCodeBlockAction, &QAction::triggered, this, &MainWindow::insertCodeBlock);
     
-    insertListAction = new QAction(tr("Bulleted &List"), this);
+    insertListAction = new QAction(QIcon(":/icons/icons/list-bullet.svg"), tr("Bulleted &List"), this);
     insertListAction->setShortcut(QKeySequence(tr("Ctrl+Shift+8")));
     insertListAction->setStatusTip(tr("Insert bulleted list"));
+    insertListAction->setToolTip(tr("Insert bulleted list"));
     connect(insertListAction, &QAction::triggered, this, &MainWindow::insertList);
     
-    insertNumberedListAction = new QAction(tr("&Numbered List"), this);
+    insertNumberedListAction = new QAction(QIcon(":/icons/icons/list-numbered.svg"), tr("&Numbered List"), this);
     insertNumberedListAction->setShortcut(QKeySequence(tr("Ctrl+Shift+7")));
     insertNumberedListAction->setStatusTip(tr("Insert numbered list"));
+    insertNumberedListAction->setToolTip(tr("Insert numbered list"));
     connect(insertNumberedListAction, &QAction::triggered, this, &MainWindow::insertNumberedList);
     
-    insertBlockquoteAction = new QAction(tr("Block&quote"), this);
+    insertBlockquoteAction = new QAction(QIcon(":/icons/icons/blockquote.svg"), tr("Block&quote"), this);
     insertBlockquoteAction->setShortcut(QKeySequence(tr("Ctrl+Shift+.")));
     insertBlockquoteAction->setStatusTip(tr("Insert blockquote"));
+    insertBlockquoteAction->setToolTip(tr("Insert blockquote"));
     connect(insertBlockquoteAction, &QAction::triggered, this, &MainWindow::insertBlockquote);
     
-    insertHorizontalRuleAction = new QAction(tr("Horizontal &Rule"), this);
+    insertHorizontalRuleAction = new QAction(QIcon(":/icons/icons/horizontal-rule.svg"), tr("Horizontal &Rule"), this);
     insertHorizontalRuleAction->setShortcut(QKeySequence(tr("Ctrl+Shift+-")));
     insertHorizontalRuleAction->setStatusTip(tr("Insert horizontal rule"));
+    insertHorizontalRuleAction->setToolTip(tr("Insert horizontal rule"));
     connect(insertHorizontalRuleAction, &QAction::triggered, this, &MainWindow::insertHorizontalRule);
     
     insertLinkAction = new QAction(QIcon::fromTheme("insert-link"), tr("Insert Lin&k..."), this);
@@ -347,7 +353,7 @@ void MainWindow::createActions()
 
     aboutAction = new QAction(tr("&About"), this);
     aboutAction->setStatusTip(tr("Show the application's About box"));
-    aboutAction->setToolTip(tr("About MkEd"));
+    aboutAction->setToolTip(tr("About TreeMk"));
     connect(aboutAction, &QAction::triggered, this, &MainWindow::about);
 
     aboutQtAction = new QAction(tr("About &Qt"), this);
@@ -361,6 +367,9 @@ void MainWindow::createMenus()
     fileMenu = menuBar()->addMenu(tr("&File"));
     fileMenu->addAction(newAction);
     fileMenu->addAction(openFolderAction);
+    fileMenu->addSeparator();
+    recentFoldersMenu = fileMenu->addMenu(tr("Recent &Folders"));
+    populateRecentFoldersMenu();
     fileMenu->addSeparator();
     fileMenu->addAction(saveAction);
     fileMenu->addAction(saveAsAction);
@@ -552,6 +561,9 @@ void MainWindow::readSettings()
     treePanel->setVisible(treeVisible);
     toggleTreeViewAction->setChecked(treeVisible);
     
+    // Load recent folders
+    recentFolders = settings->value("recentFolders").toStringList();
+    
     QString lastFolder = settings->value("lastFolder").toString();
     if (!lastFolder.isEmpty() && QDir(lastFolder).exists()) {
         treeView->setRootPath(lastFolder);
@@ -575,6 +587,7 @@ void MainWindow::writeSettings()
     settings->setValue("mainSplitter", mainSplitter->saveState());
     settings->setValue("treeVisible", treePanel->isVisible());
     settings->setValue("lastFolder", currentFolder);
+    settings->setValue("recentFolders", recentFolders);
 }
 
 void MainWindow::newFile()
@@ -590,7 +603,7 @@ void MainWindow::openFolder()
         currentFolder.isEmpty() ? QDir::homePath() : currentFolder,
         QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks
     );
-    
+
     if (!folder.isEmpty()) {
         treeView->setRootPath(folder);
         currentFolder = folder;
@@ -602,8 +615,83 @@ void MainWindow::openFolder()
         
         linkParser->buildLinkIndex(folder);
         
+        updateRecentFolders(folder);
+        
         statusBar()->showMessage(tr("Opened folder: %1").arg(folder));
     }
+}
+
+void MainWindow::openRecentFolder()
+{
+    QAction *action = qobject_cast<QAction*>(sender());
+    if (!action) {
+        return;
+    }
+    
+    QString folder = action->data().toString();
+    if (!QDir(folder).exists()) {
+        QMessageBox::warning(this, tr("Folder Not Found"),
+                           tr("The folder '%1' no longer exists.").arg(folder));
+        recentFolders.removeAll(folder);
+        populateRecentFoldersMenu();
+        return;
+    }
+    
+    treeView->setRootPath(folder);
+    currentFolder = folder;
+    
+    TabEditor *tab = currentTabEditor();
+    if (tab && tab->editor()->getHighlighter()) {
+        tab->editor()->getHighlighter()->setRootPath(folder);
+    }
+    
+    linkParser->buildLinkIndex(folder);
+    
+    updateRecentFolders(folder);
+    
+    statusBar()->showMessage(tr("Opened folder: %1").arg(folder));
+}
+
+void MainWindow::clearRecentFolders()
+{
+    recentFolders.clear();
+    populateRecentFoldersMenu();
+}
+
+void MainWindow::updateRecentFolders(const QString &folder)
+{
+    recentFolders.removeAll(folder);
+    recentFolders.prepend(folder);
+    
+    // Keep only the last 10 folders
+    while (recentFolders.size() > 10) {
+        recentFolders.removeLast();
+    }
+    
+    populateRecentFoldersMenu();
+}
+
+void MainWindow::populateRecentFoldersMenu()
+{
+    recentFoldersMenu->clear();
+    
+    if (recentFolders.isEmpty()) {
+        QAction *noFoldersAction = recentFoldersMenu->addAction(tr("No Recent Folders"));
+        noFoldersAction->setEnabled(false);
+        return;
+    }
+    
+    for (const QString &folder : recentFolders) {
+        if (QDir(folder).exists()) {
+            QAction *action = recentFoldersMenu->addAction(folder);
+            action->setData(folder);
+            connect(action, &QAction::triggered, this, &MainWindow::openRecentFolder);
+        }
+    }
+    
+    recentFoldersMenu->addSeparator();
+    QAction *clearAction = recentFoldersMenu->addAction(tr("Clear Recent Folders"));
+    connect(clearAction, &QAction::triggered, this, &MainWindow::clearRecentFolders);
 }
 
 void MainWindow::save()
@@ -653,8 +741,8 @@ void MainWindow::saveAs()
 
 void MainWindow::about()
 {
-    QMessageBox::about(this, tr("About MkEd"),
-        tr("<h2>MkEd - Markdown Editor</h2>"
+    QMessageBox::about(this, tr("About TreeMk"),
+        tr("<h2>TreeMk - Markdown Editor</h2>"
            "<p>Version 0.1.0</p>"
            "<p>A feature-rich Markdown text editor built with Qt 6, "
            "designed for organizing and managing interconnected notes.</p>"
@@ -703,12 +791,13 @@ void MainWindow::toggleBacklinks()
 
 void MainWindow::onWikiLinkClicked(const QString &linkTarget)
 {
-    if (currentFilePath.isEmpty()) {
+    TabEditor *currentTab = currentTabEditor();
+    if (!currentTab || currentTab->filePath().isEmpty()) {
         statusBar()->showMessage(tr("No file open"), 3000);
         return;
     }
     
-    QString targetPath = linkParser->resolveLinkTarget(linkTarget, currentFilePath);
+    QString targetPath = linkParser->resolveLinkTarget(linkTarget, currentTab->filePath());
     
     if (targetPath.isEmpty()) {
         QMessageBox::StandardButton reply = QMessageBox::question(
@@ -724,7 +813,7 @@ void MainWindow::onWikiLinkClicked(const QString &linkTarget)
             }
             
             // Create in the same directory as current file
-            QFileInfo currentFileInfo(currentFilePath);
+            QFileInfo currentFileInfo(currentTab->filePath());
             QString newFilePath = currentFileInfo.dir().filePath(fileName);
             QFile file(newFilePath);
             if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
@@ -734,10 +823,16 @@ void MainWindow::onWikiLinkClicked(const QString &linkTarget)
             }
         }
     } else {
-        if (!maybeSave()) {
-            return;
+        // Check if file is already open in a tab
+        TabEditor *existingTab = findTabByPath(targetPath);
+        if (existingTab) {
+            // Switch to existing tab
+            int index = tabWidget->indexOf(existingTab);
+            tabWidget->setCurrentIndex(index);
+        } else {
+            // Open in new tab
+            loadFile(targetPath);
         }
-        loadFile(targetPath);
     }
 }
 
@@ -875,7 +970,7 @@ bool MainWindow::loadFile(const QString &filePath)
             }
             
             updateBacklinks();
-            setWindowTitle(QString("%1 - MkEd").arg(QFileInfo(filePath).fileName()));
+            setWindowTitle(QString("%1 - TreeMk").arg(QFileInfo(filePath).fileName()));
             statusBar()->showMessage(tr("Loaded: %1").arg(QFileInfo(filePath).fileName()), 3000);
             return true;
         }
@@ -894,7 +989,7 @@ bool MainWindow::loadFile(const QString &filePath)
             }
             
             updateBacklinks();
-            setWindowTitle(QString("%1 - MkEd").arg(QFileInfo(filePath).fileName()));
+            setWindowTitle(QString("%1 - TreeMk").arg(QFileInfo(filePath).fileName()));
             statusBar()->showMessage(tr("Loaded: %1").arg(QFileInfo(filePath).fileName()), 3000);
             return true;
         }
@@ -1087,7 +1182,29 @@ void MainWindow::openSettings()
 
 void MainWindow::applySettings()
 {
-    QSettings settings("MkEd", "MkEd");
+    QSettings settings("TreeMk", "TreeMk");
+    
+    // Apply application theme
+    QString appTheme = settings.value("appearance/appTheme", "system").toString();
+    ThemeManager::instance()->setAppTheme(appTheme);
+    
+    // Apply editor color scheme to all tabs
+    QString editorScheme = settings.value("appearance/editorColorScheme", "light").toString();
+    ThemeManager::instance()->setEditorColorScheme(editorScheme);
+    
+    for (int i = 0; i < tabWidget->count(); ++i) {
+        TabEditor *tab = qobject_cast<TabEditor*>(tabWidget->widget(i));
+        if (tab && tab->editor()) {
+            // Apply editor color scheme
+            tab->editor()->setPalette(ThemeManager::instance()->getEditorPalette());
+            tab->editor()->setStyleSheet(ThemeManager::instance()->getEditorStyleSheet());
+            
+            // Update highlighter color scheme
+            if (tab->editor()->highlighter()) {
+                tab->editor()->highlighter()->setColorScheme(editorScheme);
+            }
+        }
+    }
     
     // Apply auto-save settings
     if (settings.value("autoSaveEnabled", true).toBool()) {
@@ -1581,8 +1698,12 @@ TabEditor* MainWindow::createNewTab()
 {
     TabEditor *tab = new TabEditor(this);
     
-    // Connect wiki link clicks
+    // Connect wiki link clicks from editor
     connect(tab->editor(), &MarkdownEditor::wikiLinkClicked,
+            this, &MainWindow::onWikiLinkClicked);
+    
+    // Connect wiki link clicks from preview
+    connect(tab->preview(), &MarkdownPreview::wikiLinkClicked,
             this, &MainWindow::onWikiLinkClicked);
     
     // Connect outline clicks
@@ -1649,9 +1770,9 @@ void MainWindow::onTabChanged(int index)
         
         // Update window title
         if (!tab->filePath().isEmpty()) {
-            setWindowTitle(QString("%1 - MkEd").arg(tab->fileName()));
+            setWindowTitle(QString("%1 - TreeMk").arg(tab->fileName()));
         } else {
-            setWindowTitle("MkEd");
+            setWindowTitle("TreeMk");
         }
     }
 }

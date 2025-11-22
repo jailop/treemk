@@ -22,6 +22,7 @@ public:
     void setModified(bool modified);
     
     MarkdownHighlighter* getHighlighter() const;
+    MarkdownHighlighter* highlighter() const { return getHighlighter(); }
     
     QString getLinkAtPosition(int position) const;
 
@@ -31,6 +32,7 @@ signals:
 protected:
     void resizeEvent(QResizeEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
+    void keyPressEvent(QKeyEvent *event) override;
     void dragEnterEvent(QDragEnterEvent *event) override;
     void dragMoveEvent(QDragMoveEvent *event) override;
     void dropEvent(QDropEvent *event) override;
@@ -44,7 +46,7 @@ private:
     void setupEditor();
     
     LineNumberArea *lineNumberArea;
-    MarkdownHighlighter *highlighter;
+    MarkdownHighlighter *m_highlighter;
 };
 
 class LineNumberArea : public QWidget

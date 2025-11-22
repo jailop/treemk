@@ -13,6 +13,10 @@ public:
     explicit MarkdownHighlighter(QTextDocument *parent = nullptr);
     
     void setRootPath(const QString &path);
+    void setColorScheme(const QString &scheme);
+
+public slots:
+    void updateColorScheme();
 
 protected:
     void highlightBlock(const QString &text) override;
@@ -23,6 +27,8 @@ private:
         QRegularExpression pattern;
         QTextCharFormat format;
     };
+    
+    void setupFormats();
     
     QVector<HighlightingRule> highlightingRules;
     
@@ -43,10 +49,13 @@ private:
     QTextCharFormat horizontalRuleFormat;
     QTextCharFormat wikiLinkFormat;
     QTextCharFormat brokenWikiLinkFormat;
+    QTextCharFormat inclusionLinkFormat;
+    QTextCharFormat brokenInclusionLinkFormat;
     QTextCharFormat inlineLatexFormat;
     QTextCharFormat blockLatexFormat;
     
     QString rootPath;
+    QString currentColorScheme;
     bool checkWikiLinkExists(const QString &linkText) const;
 };
 

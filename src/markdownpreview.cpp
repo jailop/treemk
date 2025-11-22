@@ -2,11 +2,35 @@
 #include <QRegularExpression>
 #include <QTextDocument>
 #include <QDir>
+#include <QWebEngineProfile>
+#include <QWebEnginePage>
+#include <QUrl>
+
+// Custom page class to intercept link navigation
+class WikiLinkPage : public QWebEnginePage {
+public:
+    WikiLinkPage(MarkdownPreview *parent) : QWebEnginePage(parent), preview(parent) {}
+    
+protected:
+    bool acceptNavigationRequest(const QUrl &url, NavigationType type, bool isMainFrame) override {
+        if (url.scheme() == "wiki") {
+            emit preview->wikiLinkClicked(url.path());
+            return false;
+        }
+        return QWebEnginePage::acceptNavigationRequest(url, type, isMainFrame);
+    }
+    
+private:
+    MarkdownPreview *preview;
+};
 
 MarkdownPreview::MarkdownPreview(QWidget *parent)
     : QWebEngineView(parent), currentTheme("light"), basePath(QDir::homePath()), latexEnabled(true)
 {
     setContextMenuPolicy(Qt::NoContextMenu);
+    
+    // Set custom page to intercept link clicks
+    setPage(new WikiLinkPage(this));
 }
 
 MarkdownPreview::~MarkdownPreview()
@@ -26,6 +50,9 @@ void MarkdownPreview::setLatexEnabled(bool enabled)
 void MarkdownPreview::setMarkdownContent(const QString &markdown)
 {
     QString html = convertMarkdownToHtml(markdown);
+    
+    // Process wiki links (including inclusions)
+    html = processWikiLinks(html);
     
     if (latexEnabled) {
         html = processLatexFormulas(html);
@@ -161,13 +188,8 @@ QString MarkdownPreview::convertMarkdownToHtml(const QString &markdown)
         processedLine.replace(QRegularExpression("!\\[([^\\]]*)\\]\\(([^\\)]+)\\)"),
                              "<img src=\"\\2\" alt=\"\\1\" style=\"max-width: 100%; height: auto;\" />");
         
-        // Wiki links [[link]]
-        processedLine.replace(QRegularExpression("\\[\\[([^\\]|]+)\\]\\]"), 
-                             "<a href=\"#\" class=\"wiki-link\">\\1</a>");
-        
-        // Wiki links with display text [[link|text]]
-        processedLine.replace(QRegularExpression("\\[\\[([^\\]|]+)\\|([^\\]]+)\\]\\]"), 
-                             "<a href=\"#\" class=\"wiki-link\">\\2</a>");
+        // Note: Wiki links are now processed separately in processWikiLinks()
+        // to handle inclusions properly
         
         // URLs
         processedLine.replace(QRegularExpression("(https?://[^\\s]+)"), 
@@ -329,4 +351,99 @@ QString MarkdownPreview::processLatexFormulas(const QString &html)
     // We just need to make sure the delimiters are preserved in the HTML
     // The actual rendering happens in the JavaScript
     return html;
+}
+
+QString MarkdownPreview::processWikiLinks(const QString &html)
+{
+    QString result = html;
+    
+    // Process inclusion links first [[!target]] or [[!target|display]]
+    QRegularExpression inclusionPattern("\\[\\[!([^\\]|]+)(\\|([^\\]]+))?\\]\\]");
+    QRegularExpressionMatchIterator inclusionIt = inclusionPattern.globalMatch(result);
+    
+    // Collect matches in reverse order to avoid position shifts
+    QList<QRegularExpressionMatch> inclusionMatches;
+    while (inclusionIt.hasNext()) {
+        inclusionMatches.prepend(inclusionIt.next());
+    }
+    
+    for (const QRegularExpressionMatch &match : inclusionMatches) {
+        QString target = match.captured(1).trimmed();
+        QString display = match.captured(3).trimmed();
+        if (display.isEmpty()) {
+            display = target;
+        }
+        
+        QString includedContent = resolveAndIncludeFile(target, display);
+        result.replace(match.capturedStart(), match.capturedLength(), includedContent);
+    }
+    
+    // Process regular wiki links [[link]] or [[link|text]]
+    // Use wiki: scheme to handle clicks
+    result.replace(QRegularExpression("\\[\\[([^\\]|!]+)\\]\\]"), 
+                   "<a href=\"wiki:\\1\" class=\"wiki-link\">\\1</a>");
+    
+    result.replace(QRegularExpression("\\[\\[([^\\]|!]+)\\|([^\\]]+)\\]\\]"), 
+                   "<a href=\"wiki:\\1\" class=\"wiki-link\">\\2</a>");
+    
+    return result;
+}
+
+QString MarkdownPreview::resolveAndIncludeFile(const QString &linkTarget, const QString &displayText)
+{
+    // Resolve the file path relative to basePath
+    QDir baseDir(basePath);
+    QString cleanTarget = linkTarget.trimmed();
+    
+    // Try different file extensions
+    QStringList possibleFiles;
+    possibleFiles << cleanTarget + ".md"
+                  << cleanTarget + ".markdown"
+                  << cleanTarget;
+    
+    QString resolvedPath;
+    for (const QString &fileName : possibleFiles) {
+        QString fullPath = baseDir.filePath(fileName);
+        if (QFileInfo::exists(fullPath)) {
+            resolvedPath = fullPath;
+            break;
+        }
+    }
+    
+    if (resolvedPath.isEmpty()) {
+        // File not found, return error message
+        return QString("<div class=\"inclusion-error\" style=\"border: 1px solid #ff6b6b; "
+                      "background-color: #ffe0e0; padding: 10px; margin: 10px 0; border-radius: 5px;\">"
+                      "<strong>Inclusion Error:</strong> File not found: %1"
+                      "</div>").arg(linkTarget.toHtmlEscaped());
+    }
+    
+    // Read file content
+    QFile file(resolvedPath);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        return QString("<div class=\"inclusion-error\" style=\"border: 1px solid #ff6b6b; "
+                      "background-color: #ffe0e0; padding: 10px; margin: 10px 0; border-radius: 5px;\">"
+                      "<strong>Inclusion Error:</strong> Cannot read file: %1"
+                      "</div>").arg(linkTarget.toHtmlEscaped());
+    }
+    
+    QTextStream in(&file);
+    in.setEncoding(QStringConverter::Utf8);
+    QString content = in.readAll();
+    file.close();
+    
+    // Convert the included markdown to HTML
+    QString includedHtml = convertMarkdownToHtml(content);
+    
+    // Wrap the included content in a styled div with optional title
+    QString wrappedContent = QString(
+        "<div class=\"included-content\" style=\"border-left: 3px solid #4ade80; "
+        "padding-left: 15px; margin: 20px 0;\">"
+        "<div class=\"inclusion-title\" style=\"font-weight: bold; color: #0a8a0a; "
+        "margin-bottom: 10px;\">%1</div>"
+        "%2"
+        "</div>"
+    ).arg(displayText.toHtmlEscaped(), includedHtml);
+    
+    return wrappedContent;
 }

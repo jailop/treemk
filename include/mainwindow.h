@@ -37,6 +37,8 @@ protected:
 private slots:
     void newFile();
     void openFolder();
+    void openRecentFolder();
+    void clearRecentFolders();
     void save();
     void saveAs();
     void about();
@@ -94,6 +96,8 @@ private:
     void createLayout();
     void readSettings();
     void writeSettings();
+    void updateRecentFolders(const QString &folder);
+    void populateRecentFoldersMenu();
     bool maybeSave();
     bool saveFile(const QString &filePath);
     bool loadFile(const QString &filePath);
@@ -108,6 +112,7 @@ private:
     QMenu *insertMenu;
     QMenu *viewMenu;
     QMenu *helpMenu;
+    QMenu *recentFoldersMenu;
 
     QAction *newAction;
     QAction *openFolderAction;
@@ -169,6 +174,7 @@ private:
     LinkParser *linkParser;
     
     QStringList recentFiles;
+    QStringList recentFolders;
     QString currentFolder;
     QString currentFilePath;
     QTimer *autoSaveTimer;

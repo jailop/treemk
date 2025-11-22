@@ -1,21 +1,29 @@
-# MkEd - Markdown Editor
+# TreeMk - Markdown Editor
 
-A feature-rich Markdown text editor built with Qt 6, designed for organizing and managing interconnected notes.
+A wiki-Markdown text editor built with Qt, designed for organizing and managing interconnected notes.
 
 ## Features
 
 - File system tree view for note organization
-- Wiki-style linking between notes
+- Wiki-style linking between notes with `[[note]]` syntax
+  - Click wiki-links in the preview to navigate to linked files
+  - Ctrl+Click wiki-links in the editor to navigate to linked files
+  - Ctrl+Enter keyboard shortcut to open wiki-link at cursor position
+  - Automatically open files in new tabs or switch to existing tabs
+- File inclusion with `[[!note]]` syntax - embeds content of linked file in preview
 - Markdown preview with syntax highlighting
 - Image embedding support
-- LaTeX formula rendering
-- And more...
+- LaTeX formula rendering (inline `$...$` and block `$$...$$`)
+- Multi-tab editing
+- Search and navigation tools
+- Export to HTML, PDF, and DOCX (with Pandoc)
 
 ## Requirements
 
 - Qt 6.2 or higher
 - CMake 3.16 or higher
 - C++17 compatible compiler
+- Pandoc (for export features)
 
 ### Qt Modules Required
 
@@ -40,61 +48,5 @@ cmake ..
 cmake --build .
 
 # Run
-./MkEd
+./TreeMk
 ```
-
-### Windows
-
-```bash
-# Create build directory
-mkdir build
-cd build
-
-# Configure with CMake (adjust generator as needed)
-cmake -G "MinGW Makefiles" ..
-# or
-cmake -G "Visual Studio 17 2022" ..
-
-# Build
-cmake --build .
-
-# Run
-./MkEd.exe
-```
-
-## Installation
-
-After building:
-
-```bash
-cd build
-sudo cmake --install .
-```
-
-## Development
-
-### Project Structure
-
-```
-mked/
-├── src/           # Source files (.cpp)
-├── include/       # Header files (.h)
-├── resources/     # Resources (icons, stylesheets, etc.)
-├── docs/          # Documentation
-├── tests/         # Test files
-└── CMakeLists.txt # Build configuration
-```
-
-## License
-
-[To be determined]
-
-## Contributing
-
-Contributions are welcome! Please read the contributing guidelines before submitting pull requests.
-
-## Documentation
-
-For more information, see:
-- [Project Description](docs/description.md)
-- [Development Tasks](docs/tasks.md)

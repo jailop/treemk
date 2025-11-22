@@ -16,10 +16,15 @@ public:
     void setBasePath(const QString &path);
     void setLatexEnabled(bool enabled);
 
+signals:
+    void wikiLinkClicked(const QString &linkTarget);
+
 private:
     QString convertMarkdownToHtml(const QString &markdown);
     QString getStyleSheet(const QString &theme);
     QString processLatexFormulas(const QString &html);
+    QString processWikiLinks(const QString &html);
+    QString resolveAndIncludeFile(const QString &linkTarget, const QString &displayText);
     
     QString currentTheme;
     QString basePath;
