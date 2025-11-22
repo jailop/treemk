@@ -16,6 +16,12 @@
 #include <QUrl>
 #include <QFileInfo>
 #include <QKeyEvent>
+#include <QClipboard>
+#include <QImage>
+#include <QDir>
+#include <QDateTime>
+#include <QInputDialog>
+#include <QMessageBox>
 
 MarkdownEditor::MarkdownEditor(QWidget *parent)
     : QPlainTextEdit(parent)
@@ -278,4 +284,99 @@ void MarkdownEditor::lineNumberAreaPaintEvent(QPaintEvent *event)
         bottom = top + qRound(blockBoundingRect(block).height());
         ++blockNumber;
     }
+}
+
+void MarkdownEditor::setCurrentFilePath(const QString &filePath)
+{
+    m_currentFilePath = filePath;
+}
+
+void MarkdownEditor::insertFromMimeData(const QMimeData *source)
+{
+    // Check if clipboard contains an image
+    if (source->hasImage()) {
+        QImage image = qvariant_cast<QImage>(source->imageData());
+        if (!image.isNull()) {
+            QString imagePath = saveImageFromClipboard(image);
+            if (!imagePath.isEmpty()) {
+                // Insert markdown image syntax
+                QTextCursor cursor = textCursor();
+                cursor.insertText(QString("![image](%1)").arg(imagePath));
+                return;
+            }
+        }
+    }
+    
+    // Default behavior for other content
+    QPlainTextEdit::insertFromMimeData(source);
+}
+
+QString MarkdownEditor::saveImageFromClipboard(const QImage &image)
+{
+    // Check if we have a current file path
+    if (m_currentFilePath.isEmpty()) {
+        QMessageBox::warning(this, tr("Cannot Save Image"), 
+                           tr("Please save the document first before pasting images."));
+        return QString();
+    }
+    
+    // Get the directory of the current file
+    QFileInfo fileInfo(m_currentFilePath);
+    QDir fileDir = fileInfo.absoluteDir();
+    
+    // Find the next available number in sequence
+    int nextNumber = 1;
+    QRegularExpression imagePattern("^image_(\\d+)\\.png$");
+    
+    QStringList existingFiles = fileDir.entryList(QStringList() << "image_*.png", QDir::Files);
+    for (const QString &file : existingFiles) {
+        QRegularExpressionMatch match = imagePattern.match(file);
+        if (match.hasMatch()) {
+            int num = match.captured(1).toInt();
+            if (num >= nextNumber) {
+                nextNumber = num + 1;
+            }
+        }
+    }
+    
+    // Suggest filename
+    QString suggestedName = QString("image_%1.png").arg(nextNumber, 3, 10, QChar('0'));
+    
+    // Ask user for filename
+    bool ok;
+    QString fileName = QInputDialog::getText(this, tr("Save Image"),
+                                            tr("Enter image filename:"),
+                                            QLineEdit::Normal,
+                                            suggestedName, &ok);
+    
+    if (!ok || fileName.isEmpty()) {
+        return QString(); // User cancelled
+    }
+    
+    // Ensure .png extension
+    if (!fileName.endsWith(".png", Qt::CaseInsensitive)) {
+        fileName += ".png";
+    }
+    
+    // Check if file already exists
+    QString fullPath = fileDir.filePath(fileName);
+    if (QFileInfo::exists(fullPath)) {
+        QMessageBox::StandardButton reply = QMessageBox::question(this, 
+            tr("File Exists"),
+            tr("File '%1' already exists. Overwrite?").arg(fileName),
+            QMessageBox::Yes | QMessageBox::No);
+        
+        if (reply != QMessageBox::Yes) {
+            return QString(); // User chose not to overwrite
+        }
+    }
+    
+    // Save the image
+    if (image.save(fullPath, "PNG")) {
+        return fileName; // Return relative path
+    }
+    
+    QMessageBox::warning(this, tr("Save Failed"), 
+                        tr("Failed to save image to '%1'.").arg(fileName));
+    return QString();
 }

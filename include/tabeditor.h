@@ -46,6 +46,7 @@ public slots:
 
 private slots:
     void onDocumentModified();
+    void syncPreviewScroll();
 
 private:
     void setupUI();

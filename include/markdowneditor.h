@@ -25,6 +25,8 @@ public:
     MarkdownHighlighter* highlighter() const { return getHighlighter(); }
     
     QString getLinkAtPosition(int position) const;
+    
+    void setCurrentFilePath(const QString &filePath);
 
 signals:
     void wikiLinkClicked(const QString &linkTarget);
@@ -36,6 +38,7 @@ protected:
     void dragEnterEvent(QDragEnterEvent *event) override;
     void dragMoveEvent(QDragMoveEvent *event) override;
     void dropEvent(QDropEvent *event) override;
+    void insertFromMimeData(const QMimeData *source) override;
 
 private slots:
     void updateLineNumberAreaWidth(int newBlockCount);
@@ -44,9 +47,11 @@ private slots:
 
 private:
     void setupEditor();
+    QString saveImageFromClipboard(const QImage &image);
     
     LineNumberArea *lineNumberArea;
     MarkdownHighlighter *m_highlighter;
+    QString m_currentFilePath;
 };
 
 class LineNumberArea : public QWidget

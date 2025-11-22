@@ -15,6 +15,7 @@ public:
     void setTheme(const QString &theme);
     void setBasePath(const QString &path);
     void setLatexEnabled(bool enabled);
+    void scrollToPercentage(double percentage);
 
 signals:
     void wikiLinkClicked(const QString &linkTarget);

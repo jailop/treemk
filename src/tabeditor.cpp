@@ -8,6 +8,7 @@
 #include <QFile>
 #include <QTextStream>
 #include <QFileInfo>
+#include <QScrollBar>
 
 TabEditor::TabEditor(QWidget *parent)
     : QWidget(parent)
@@ -35,6 +36,12 @@ void TabEditor::setupUI()
     // Editor
     m_editor = new MarkdownEditor(this);
     connect(m_editor, &MarkdownEditor::textChanged, this, &TabEditor::onDocumentModified);
+    
+    // Connect editor scroll to preview scroll
+    connect(m_editor->verticalScrollBar(), &QScrollBar::valueChanged,
+            this, &TabEditor::syncPreviewScroll);
+    connect(m_editor, &MarkdownEditor::cursorPositionChanged,
+            this, &TabEditor::syncPreviewScroll);
     
     // Right side: preview and outline
     QWidget *rightWidget = new QWidget(this);
@@ -92,6 +99,7 @@ bool TabEditor::loadFile(const QString &filePath)
     
     m_editor->setPlainText(content);
     m_filePath = filePath;
+    m_editor->setCurrentFilePath(filePath);
     m_isModified = false;
     
     updatePreview();
@@ -124,6 +132,7 @@ bool TabEditor::saveFileAs(const QString &filePath)
     file.close();
     
     m_filePath = filePath;
+    m_editor->setCurrentFilePath(filePath);
     m_isModified = false;
     
     emit filePathChanged(filePath);
@@ -156,6 +165,9 @@ void TabEditor::updatePreview()
     
     m_preview->setMarkdownContent(markdown);
     m_outline->updateOutline(markdown);
+    
+    // Sync scroll position after preview refresh
+    syncPreviewScroll();
 }
 
 void TabEditor::onDocumentModified()
@@ -166,4 +178,21 @@ void TabEditor::onDocumentModified()
     
     // Restart preview timer
     m_previewTimer->start();
+}
+
+void TabEditor::syncPreviewScroll()
+{
+    QScrollBar *scrollBar = m_editor->verticalScrollBar();
+    
+    // Calculate the scroll percentage
+    int maximum = scrollBar->maximum();
+    if (maximum == 0) {
+        return; // No scrolling needed
+    }
+    
+    int value = scrollBar->value();
+    double percentage = static_cast<double>(value) / maximum;
+    
+    // Sync the preview scroll position
+    m_preview->scrollToPercentage(percentage);
 }

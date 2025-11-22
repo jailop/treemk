@@ -101,6 +101,13 @@ void MarkdownPreview::setTheme(const QString &theme)
     currentTheme = theme;
 }
 
+void MarkdownPreview::scrollToPercentage(double percentage)
+{
+    // Use JavaScript to scroll the preview to a specific percentage
+    QString script = QString("window.scrollTo(0, document.body.scrollHeight * %1);").arg(percentage);
+    page()->runJavaScript(script);
+}
+
 QString MarkdownPreview::convertMarkdownToHtml(const QString &markdown)
 {
     QString html = markdown;
