@@ -11,6 +11,8 @@ class QWidget;
 class QTimer;
 class QListWidget;
 class QTabWidget;
+class QToolBar;
+class QProgressBar;
 class FileSystemTreeView;
 class TabEditor;
 class MarkdownEditor;
@@ -82,10 +84,12 @@ private slots:
     void exportToPdf();
     void exportToDocx();
     void exportToPlainText();
+    void showKeyboardShortcuts();
 
 private:
     void createActions();
     void createMenus();
+    void createToolbar();
     void createLayout();
     void readSettings();
     void writeSettings();
@@ -148,7 +152,11 @@ private:
     QAction *settingsAction;
     QAction *aboutAction;
     QAction *aboutQtAction;
+    QAction *keyboardShortcutsAction;
 
+    QToolBar *mainToolbar;
+    QProgressBar *progressBar;
+    
     QSplitter *mainSplitter;
     QWidget *treePanel;
     QWidget *editorPanel;

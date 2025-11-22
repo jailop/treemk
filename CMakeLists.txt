@@ -36,6 +36,7 @@ set(SOURCES
     src/formuladialog.cpp
     src/quickopendialog.cpp
     src/outlinepanel.cpp
+    src/shortcutsdialog.cpp
 )
 
 # Header files
@@ -52,12 +53,19 @@ set(HEADERS
     include/formuladialog.h
     include/quickopendialog.h
     include/outlinepanel.h
+    include/shortcutsdialog.h
+)
+
+# Resource files
+set(RESOURCES
+    resources/resources.qrc
 )
 
 # Create executable
 add_executable(${PROJECT_NAME} 
     ${SOURCES}
     ${HEADERS}
+    ${RESOURCES}
 )
 
 # Link Qt libraries

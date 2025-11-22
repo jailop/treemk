@@ -10,8 +10,11 @@
 #include "formuladialog.h"
 #include "quickopendialog.h"
 #include "outlinepanel.h"
+#include "shortcutsdialog.h"
 #include <QApplication>
 #include <QMenuBar>
+#include <QToolBar>
+#include <QProgressBar>
 #include <QActionGroup>
 #include <QMessageBox>
 #include <QCloseEvent>
@@ -43,11 +46,17 @@ MainWindow::MainWindow(QWidget *parent)
     setWindowTitle("MkEd - Markdown Editor");
     setWindowIcon(QIcon::fromTheme("text-editor"));
     
+    // Setup progress bar in status bar
+    progressBar = new QProgressBar(this);
+    progressBar->setMaximumWidth(200);
+    progressBar->setVisible(false);
+    statusBar()->addPermanentWidget(progressBar);
     statusBar()->showMessage(tr("Ready"));
     
     createLayout();
     createActions();
     createMenus();
+    createToolbar();
     
     readSettings();
 }
@@ -68,75 +77,90 @@ void MainWindow::closeEvent(QCloseEvent *event)
 
 void MainWindow::createActions()
 {
-    newAction = new QAction(tr("&New"), this);
+    newAction = new QAction(QIcon::fromTheme("document-new"), tr("&New"), this);
     newAction->setShortcuts(QKeySequence::New);
     newAction->setStatusTip(tr("Create a new file"));
+    newAction->setToolTip(tr("Create a new file"));
     connect(newAction, &QAction::triggered, this, &MainWindow::newFile);
 
-    openFolderAction = new QAction(tr("Open &Folder..."), this);
+    openFolderAction = new QAction(QIcon::fromTheme("folder-open"), tr("Open &Folder..."), this);
     openFolderAction->setShortcut(QKeySequence(tr("Ctrl+Shift+O")));
     openFolderAction->setStatusTip(tr("Open a folder"));
+    openFolderAction->setToolTip(tr("Open a folder"));
     connect(openFolderAction, &QAction::triggered, this, &MainWindow::openFolder);
 
-    saveAction = new QAction(tr("&Save"), this);
+    saveAction = new QAction(QIcon::fromTheme("document-save"), tr("&Save"), this);
     saveAction->setShortcuts(QKeySequence::Save);
     saveAction->setStatusTip(tr("Save the document"));
+    saveAction->setToolTip(tr("Save the document"));
     connect(saveAction, &QAction::triggered, this, &MainWindow::save);
 
-    saveAsAction = new QAction(tr("Save &As..."), this);
+    saveAsAction = new QAction(QIcon::fromTheme("document-save-as"), tr("Save &As..."), this);
     saveAsAction->setShortcuts(QKeySequence::SaveAs);
     saveAsAction->setStatusTip(tr("Save the document under a new name"));
+    saveAsAction->setToolTip(tr("Save document with a new name"));
     connect(saveAsAction, &QAction::triggered, this, &MainWindow::saveAs);
     
-    exportHtmlAction = new QAction(tr("Export to &HTML..."), this);
+    exportHtmlAction = new QAction(QIcon(":/icons/icons/export-html.svg"), tr("Export to &HTML..."), this);
     exportHtmlAction->setStatusTip(tr("Export the document to HTML format"));
+    exportHtmlAction->setToolTip(tr("Export to HTML"));
     connect(exportHtmlAction, &QAction::triggered, this, &MainWindow::exportToHtml);
     
-    exportPdfAction = new QAction(tr("Export to &PDF..."), this);
+    exportPdfAction = new QAction(QIcon(":/icons/icons/export-pdf.svg"), tr("Export to &PDF..."), this);
     exportPdfAction->setStatusTip(tr("Export the document to PDF format"));
+    exportPdfAction->setToolTip(tr("Export to PDF"));
     connect(exportPdfAction, &QAction::triggered, this, &MainWindow::exportToPdf);
     
-    exportDocxAction = new QAction(tr("Export to &Word..."), this);
+    exportDocxAction = new QAction(QIcon(":/icons/icons/export-docx.svg"), tr("Export to &Word..."), this);
     exportDocxAction->setStatusTip(tr("Export the document to Microsoft Word format"));
+    exportDocxAction->setToolTip(tr("Export to Word"));
     connect(exportDocxAction, &QAction::triggered, this, &MainWindow::exportToDocx);
     
-    exportPlainTextAction = new QAction(tr("Export to Plain &Text..."), this);
+    exportPlainTextAction = new QAction(QIcon(":/icons/icons/export-text.svg"), tr("Export to Plain &Text..."), this);
     exportPlainTextAction->setStatusTip(tr("Export the document to plain text format"));
+    exportPlainTextAction->setToolTip(tr("Export to plain text"));
     connect(exportPlainTextAction, &QAction::triggered, this, &MainWindow::exportToPlainText);
     
-    insertImageAction = new QAction(tr("Insert &Image..."), this);
+    insertImageAction = new QAction(QIcon::fromTheme("insert-image"), tr("Insert &Image..."), this);
     insertImageAction->setShortcut(QKeySequence(tr("Ctrl+Shift+I")));
     insertImageAction->setStatusTip(tr("Insert an image into the document"));
+    insertImageAction->setToolTip(tr("Insert an image"));
     connect(insertImageAction, &QAction::triggered, this, &MainWindow::insertImage);
     
-    insertFormulaAction = new QAction(tr("Insert &Formula..."), this);
+    insertFormulaAction = new QAction(QIcon::fromTheme("preferences-desktop-font"), tr("Insert &Formula..."), this);
     insertFormulaAction->setShortcut(QKeySequence(tr("Ctrl+Shift+M")));
     insertFormulaAction->setStatusTip(tr("Insert a LaTeX formula"));
+    insertFormulaAction->setToolTip(tr("Insert a LaTeX formula"));
     connect(insertFormulaAction, &QAction::triggered, this, &MainWindow::insertFormula);
     
-    insertWikiLinkAction = new QAction(tr("Insert &Wiki Link..."), this);
+    insertWikiLinkAction = new QAction(QIcon::fromTheme("insert-link"), tr("Insert &Wiki Link..."), this);
     insertWikiLinkAction->setShortcut(QKeySequence(tr("Ctrl+K")));
     insertWikiLinkAction->setStatusTip(tr("Insert a wiki-style link"));
+    insertWikiLinkAction->setToolTip(tr("Insert a wiki-style link"));
     connect(insertWikiLinkAction, &QAction::triggered, this, &MainWindow::insertWikiLink);
     
-    insertHeaderAction = new QAction(tr("Insert &Header"), this);
+    insertHeaderAction = new QAction(QIcon::fromTheme("format-text-bold"), tr("Insert &Header"), this);
     insertHeaderAction->setShortcut(QKeySequence(tr("Ctrl+1")));
     insertHeaderAction->setStatusTip(tr("Insert a header"));
+    insertHeaderAction->setToolTip(tr("Insert a header"));
     connect(insertHeaderAction, &QAction::triggered, this, &MainWindow::insertHeader);
     
-    insertBoldAction = new QAction(tr("&Bold"), this);
+    insertBoldAction = new QAction(QIcon::fromTheme("format-text-bold"), tr("&Bold"), this);
     insertBoldAction->setShortcut(QKeySequence::Bold);
     insertBoldAction->setStatusTip(tr("Make text bold"));
+    insertBoldAction->setToolTip(tr("Make text bold"));
     connect(insertBoldAction, &QAction::triggered, this, &MainWindow::insertBold);
     
-    insertItalicAction = new QAction(tr("&Italic"), this);
+    insertItalicAction = new QAction(QIcon::fromTheme("format-text-italic"), tr("&Italic"), this);
     insertItalicAction->setShortcut(QKeySequence::Italic);
     insertItalicAction->setStatusTip(tr("Make text italic"));
+    insertItalicAction->setToolTip(tr("Make text italic"));
     connect(insertItalicAction, &QAction::triggered, this, &MainWindow::insertItalic);
     
-    insertCodeAction = new QAction(tr("Inline &Code"), this);
+    insertCodeAction = new QAction(QIcon::fromTheme("text-x-generic"), tr("Inline &Code"), this);
     insertCodeAction->setShortcut(QKeySequence(tr("Ctrl+`")));
     insertCodeAction->setStatusTip(tr("Insert inline code"));
+    insertCodeAction->setToolTip(tr("Insert inline code"));
     connect(insertCodeAction, &QAction::triggered, this, &MainWindow::insertCode);
     
     insertCodeBlockAction = new QAction(tr("Code &Block"), this);
@@ -164,14 +188,16 @@ void MainWindow::createActions()
     insertHorizontalRuleAction->setStatusTip(tr("Insert horizontal rule"));
     connect(insertHorizontalRuleAction, &QAction::triggered, this, &MainWindow::insertHorizontalRule);
     
-    insertLinkAction = new QAction(tr("Insert Lin&k..."), this);
+    insertLinkAction = new QAction(QIcon::fromTheme("insert-link"), tr("Insert Lin&k..."), this);
     insertLinkAction->setShortcut(QKeySequence(tr("Ctrl+L")));
     insertLinkAction->setStatusTip(tr("Insert hyperlink"));
+    insertLinkAction->setToolTip(tr("Insert hyperlink"));
     connect(insertLinkAction, &QAction::triggered, this, &MainWindow::insertLink);
     
-    insertTableAction = new QAction(tr("Insert &Table"), this);
+    insertTableAction = new QAction(QIcon::fromTheme("insert-table"), tr("Insert &Table"), this);
     insertTableAction->setShortcut(QKeySequence(tr("Ctrl+Shift+T")));
     insertTableAction->setStatusTip(tr("Insert table"));
+    insertTableAction->setToolTip(tr("Insert table"));
     connect(insertTableAction, &QAction::triggered, this, &MainWindow::insertTable);
     
     closeTabAction = new QAction(tr("&Close Tab"), this);
@@ -189,68 +215,77 @@ void MainWindow::createActions()
     exitAction->setStatusTip(tr("Exit the application"));
     connect(exitAction, &QAction::triggered, this, &QWidget::close);
 
-    undoAction = new QAction(tr("&Undo"), this);
+    undoAction = new QAction(QIcon::fromTheme("edit-undo"), tr("&Undo"), this);
     undoAction->setShortcuts(QKeySequence::Undo);
     undoAction->setStatusTip(tr("Undo the last operation"));
+    undoAction->setToolTip(tr("Undo"));
     undoAction->setEnabled(false);
     connect(undoAction, &QAction::triggered, this, [this]() {
         TabEditor *tab = currentTabEditor();
         if (tab) tab->editor()->undo();
     });
 
-    redoAction = new QAction(tr("&Redo"), this);
+    redoAction = new QAction(QIcon::fromTheme("edit-redo"), tr("&Redo"), this);
     redoAction->setShortcuts(QKeySequence::Redo);
     redoAction->setStatusTip(tr("Redo the last operation"));
+    redoAction->setToolTip(tr("Redo"));
     redoAction->setEnabled(false);
     connect(redoAction, &QAction::triggered, this, [this]() {
         TabEditor *tab = currentTabEditor();
         if (tab) tab->editor()->redo();
     });
 
-    cutAction = new QAction(tr("Cu&t"), this);
+    cutAction = new QAction(QIcon::fromTheme("edit-cut"), tr("Cu&t"), this);
     cutAction->setShortcuts(QKeySequence::Cut);
     cutAction->setStatusTip(tr("Cut the current selection"));
+    cutAction->setToolTip(tr("Cut"));
     cutAction->setEnabled(false);
     connect(cutAction, &QAction::triggered, this, [this]() {
         TabEditor *tab = currentTabEditor();
         if (tab) tab->editor()->cut();
     });
 
-    copyAction = new QAction(tr("&Copy"), this);
+    copyAction = new QAction(QIcon::fromTheme("edit-copy"), tr("&Copy"), this);
     copyAction->setShortcuts(QKeySequence::Copy);
     copyAction->setStatusTip(tr("Copy the current selection"));
+    copyAction->setToolTip(tr("Copy"));
     copyAction->setEnabled(false);
     connect(copyAction, &QAction::triggered, this, [this]() {
         TabEditor *tab = currentTabEditor();
         if (tab) tab->editor()->copy();
     });
 
-    pasteAction = new QAction(tr("&Paste"), this);
+    pasteAction = new QAction(QIcon::fromTheme("edit-paste"), tr("&Paste"), this);
     pasteAction->setShortcuts(QKeySequence::Paste);
     pasteAction->setStatusTip(tr("Paste the clipboard contents"));
+    pasteAction->setToolTip(tr("Paste"));
     connect(pasteAction, &QAction::triggered, this, [this]() {
         TabEditor *tab = currentTabEditor();
         if (tab) tab->editor()->paste();
     });
     
-    findAction = new QAction(tr("&Find..."), this);
+    findAction = new QAction(QIcon::fromTheme("edit-find"), tr("&Find..."), this);
     findAction->setShortcuts(QKeySequence::Find);
     findAction->setStatusTip(tr("Find text"));
+    findAction->setToolTip(tr("Find"));
     connect(findAction, &QAction::triggered, this, &MainWindow::find);
     
-    findReplaceAction = new QAction(tr("Find and &Replace..."), this);
+    findReplaceAction = new QAction(QIcon::fromTheme("edit-find-replace"), tr("Find and &Replace..."), this);
     findReplaceAction->setShortcut(QKeySequence(tr("Ctrl+H")));
     findReplaceAction->setStatusTip(tr("Find and replace text"));
+    findReplaceAction->setToolTip(tr("Find and replace"));
     connect(findReplaceAction, &QAction::triggered, this, &MainWindow::findAndReplace);
     
-    searchInFilesAction = new QAction(tr("Search in &Files..."), this);
+    searchInFilesAction = new QAction(QIcon::fromTheme("system-search"), tr("Search in &Files..."), this);
     searchInFilesAction->setShortcut(QKeySequence(tr("Ctrl+Shift+F")));
     searchInFilesAction->setStatusTip(tr("Search across all files"));
+    searchInFilesAction->setToolTip(tr("Search in all files"));
     connect(searchInFilesAction, &QAction::triggered, this, &MainWindow::searchInFiles);
     
-    quickOpenAction = new QAction(tr("&Quick Open..."), this);
+    quickOpenAction = new QAction(QIcon::fromTheme("document-open-recent"), tr("&Quick Open..."), this);
     quickOpenAction->setShortcut(QKeySequence(tr("Ctrl+P")));
     quickOpenAction->setStatusTip(tr("Quickly open a file"));
+    quickOpenAction->setToolTip(tr("Quick open"));
     connect(quickOpenAction, &QAction::triggered, this, &MainWindow::quickOpen);
 
     toggleTreeViewAction = new QAction(tr("&File Tree"), this);
@@ -302,14 +337,22 @@ void MainWindow::createActions()
     settingsAction = new QAction(tr("&Settings..."), this);
     settingsAction->setShortcut(QKeySequence(tr("Ctrl+,")));
     settingsAction->setStatusTip(tr("Open settings dialog"));
+    settingsAction->setToolTip(tr("Configure application settings"));
     connect(settingsAction, &QAction::triggered, this, &MainWindow::openSettings);
+
+    keyboardShortcutsAction = new QAction(tr("&Keyboard Shortcuts"), this);
+    keyboardShortcutsAction->setStatusTip(tr("Show keyboard shortcuts reference"));
+    keyboardShortcutsAction->setToolTip(tr("Display all available keyboard shortcuts"));
+    connect(keyboardShortcutsAction, &QAction::triggered, this, &MainWindow::showKeyboardShortcuts);
 
     aboutAction = new QAction(tr("&About"), this);
     aboutAction->setStatusTip(tr("Show the application's About box"));
+    aboutAction->setToolTip(tr("About MkEd"));
     connect(aboutAction, &QAction::triggered, this, &MainWindow::about);
 
     aboutQtAction = new QAction(tr("About &Qt"), this);
     aboutQtAction->setStatusTip(tr("Show the Qt library's About box"));
+    aboutQtAction->setToolTip(tr("About Qt Framework"));
     connect(aboutQtAction, &QAction::triggered, qApp, &QApplication::aboutQt);
 }
 
@@ -382,8 +425,51 @@ void MainWindow::createMenus()
     previewThemeMenu->addAction(previewThemeSepiaAction);
 
     helpMenu = menuBar()->addMenu(tr("&Help"));
+    helpMenu->addAction(keyboardShortcutsAction);
+    helpMenu->addSeparator();
     helpMenu->addAction(aboutAction);
     helpMenu->addAction(aboutQtAction);
+}
+
+void MainWindow::createToolbar()
+{
+    mainToolbar = addToolBar(tr("Main Toolbar"));
+    mainToolbar->setObjectName("MainToolbar");
+    mainToolbar->setMovable(false);
+    
+    // File operations
+    mainToolbar->addAction(newAction);
+    mainToolbar->addAction(openFolderAction);
+    mainToolbar->addAction(saveAction);
+    mainToolbar->addSeparator();
+    
+    // Edit operations
+    mainToolbar->addAction(undoAction);
+    mainToolbar->addAction(redoAction);
+    mainToolbar->addSeparator();
+    
+    // Formatting
+    mainToolbar->addAction(insertBoldAction);
+    mainToolbar->addAction(insertItalicAction);
+    mainToolbar->addAction(insertCodeAction);
+    mainToolbar->addSeparator();
+    
+    // Insert operations
+    mainToolbar->addAction(insertLinkAction);
+    mainToolbar->addAction(insertImageAction);
+    mainToolbar->addAction(insertTableAction);
+    mainToolbar->addSeparator();
+    
+    // Export operations
+    mainToolbar->addAction(exportHtmlAction);
+    mainToolbar->addAction(exportPdfAction);
+    mainToolbar->addAction(exportDocxAction);
+    mainToolbar->addAction(exportPlainTextAction);
+    mainToolbar->addSeparator();
+    
+    // Search
+    mainToolbar->addAction(findAction);
+    mainToolbar->addAction(quickOpenAction);
 }
 
 void MainWindow::createLayout()
@@ -581,6 +667,12 @@ void MainWindow::about()
            "<li>LaTeX formula rendering</li>"
            "</ul>"
            "<p>Copyright © 2024</p>"));
+}
+
+void MainWindow::showKeyboardShortcuts()
+{
+    ShortcutsDialog dialog(this);
+    dialog.exec();
 }
 
 void MainWindow::toggleTreeView()
