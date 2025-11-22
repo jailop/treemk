@@ -78,6 +78,10 @@ private slots:
     void onTabCloseRequested(int index);
     void closeCurrentTab();
     void closeAllTabs();
+    void exportToHtml();
+    void exportToPdf();
+    void exportToDocx();
+    void exportToPlainText();
 
 private:
     void createActions();
@@ -104,6 +108,10 @@ private:
     QAction *openFolderAction;
     QAction *saveAction;
     QAction *saveAsAction;
+    QAction *exportHtmlAction;
+    QAction *exportPdfAction;
+    QAction *exportDocxAction;
+    QAction *exportPlainTextAction;
     QAction *insertImageAction;
     QAction *insertFormulaAction;
     QAction *insertWikiLinkAction;

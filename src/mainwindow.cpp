@@ -31,6 +31,8 @@
 #include <QPushButton>
 #include <QTabWidget>
 #include <QListWidget>
+#include <QProcess>
+#include <QFileInfo>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -85,6 +87,22 @@ void MainWindow::createActions()
     saveAsAction->setShortcuts(QKeySequence::SaveAs);
     saveAsAction->setStatusTip(tr("Save the document under a new name"));
     connect(saveAsAction, &QAction::triggered, this, &MainWindow::saveAs);
+    
+    exportHtmlAction = new QAction(tr("Export to &HTML..."), this);
+    exportHtmlAction->setStatusTip(tr("Export the document to HTML format"));
+    connect(exportHtmlAction, &QAction::triggered, this, &MainWindow::exportToHtml);
+    
+    exportPdfAction = new QAction(tr("Export to &PDF..."), this);
+    exportPdfAction->setStatusTip(tr("Export the document to PDF format"));
+    connect(exportPdfAction, &QAction::triggered, this, &MainWindow::exportToPdf);
+    
+    exportDocxAction = new QAction(tr("Export to &Word..."), this);
+    exportDocxAction->setStatusTip(tr("Export the document to Microsoft Word format"));
+    connect(exportDocxAction, &QAction::triggered, this, &MainWindow::exportToDocx);
+    
+    exportPlainTextAction = new QAction(tr("Export to Plain &Text..."), this);
+    exportPlainTextAction->setStatusTip(tr("Export the document to plain text format"));
+    connect(exportPlainTextAction, &QAction::triggered, this, &MainWindow::exportToPlainText);
     
     insertImageAction = new QAction(tr("Insert &Image..."), this);
     insertImageAction->setShortcut(QKeySequence(tr("Ctrl+Shift+I")));
@@ -303,6 +321,12 @@ void MainWindow::createMenus()
     fileMenu->addSeparator();
     fileMenu->addAction(saveAction);
     fileMenu->addAction(saveAsAction);
+    fileMenu->addSeparator();
+    QMenu *exportMenu = fileMenu->addMenu(tr("&Export"));
+    exportMenu->addAction(exportHtmlAction);
+    exportMenu->addAction(exportPdfAction);
+    exportMenu->addAction(exportDocxAction);
+    exportMenu->addAction(exportPlainTextAction);
     fileMenu->addSeparator();
     fileMenu->addAction(closeTabAction);
     fileMenu->addAction(closeAllTabsAction);
@@ -1576,5 +1600,180 @@ void MainWindow::closeAllTabs()
             // User cancelled, stop closing
             break;
         }
+    }
+}
+
+void MainWindow::exportToHtml()
+{
+    TabEditor *tab = currentTabEditor();
+    if (!tab || currentFilePath.isEmpty()) {
+        QMessageBox::warning(this, tr("Export to HTML"),
+                           tr("Please save the document before exporting."));
+        return;
+    }
+    
+    QString outputPath = QFileDialog::getSaveFileName(this,
+        tr("Export to HTML"), 
+        currentFilePath.left(currentFilePath.lastIndexOf('.')) + ".html",
+        tr("HTML Files (*.html)"));
+    
+    if (outputPath.isEmpty()) {
+        return;
+    }
+    
+    // Save current file first
+    if (tab->isModified()) {
+        save();
+    }
+    
+    QProcess process;
+    QStringList args;
+    args << currentFilePath
+         << "-o" << outputPath
+         << "--standalone"
+         << "--mathjax"
+         << "--metadata" << "title=" + QFileInfo(currentFilePath).baseName();
+    
+    process.start("pandoc", args);
+    process.waitForFinished(30000);
+    
+    if (process.exitCode() == 0) {
+        statusBar()->showMessage(tr("Exported to HTML: %1").arg(outputPath), 5000);
+        QMessageBox::information(this, tr("Export Complete"),
+                               tr("Document exported successfully to:\n%1").arg(outputPath));
+    } else {
+        QString errorMsg = process.readAllStandardError();
+        QMessageBox::critical(this, tr("Export Failed"),
+                            tr("Failed to export document:\n%1").arg(errorMsg));
+    }
+}
+
+void MainWindow::exportToPdf()
+{
+    TabEditor *tab = currentTabEditor();
+    if (!tab || currentFilePath.isEmpty()) {
+        QMessageBox::warning(this, tr("Export to PDF"),
+                           tr("Please save the document before exporting."));
+        return;
+    }
+    
+    QString outputPath = QFileDialog::getSaveFileName(this,
+        tr("Export to PDF"), 
+        currentFilePath.left(currentFilePath.lastIndexOf('.')) + ".pdf",
+        tr("PDF Files (*.pdf)"));
+    
+    if (outputPath.isEmpty()) {
+        return;
+    }
+    
+    // Save current file first
+    if (tab->isModified()) {
+        save();
+    }
+    
+    QProcess process;
+    QStringList args;
+    args << currentFilePath
+         << "-o" << outputPath
+         << "--pdf-engine=pdflatex"
+         << "--metadata" << "title=" + QFileInfo(currentFilePath).baseName();
+    
+    process.start("pandoc", args);
+    process.waitForFinished(60000); // PDF generation can take longer
+    
+    if (process.exitCode() == 0) {
+        statusBar()->showMessage(tr("Exported to PDF: %1").arg(outputPath), 5000);
+        QMessageBox::information(this, tr("Export Complete"),
+                               tr("Document exported successfully to:\n%1").arg(outputPath));
+    } else {
+        QString errorMsg = process.readAllStandardError();
+        QMessageBox::critical(this, tr("Export Failed"),
+                            tr("Failed to export document:\n%1\n\nNote: PDF export requires LaTeX to be installed.").arg(errorMsg));
+    }
+}
+
+void MainWindow::exportToDocx()
+{
+    TabEditor *tab = currentTabEditor();
+    if (!tab || currentFilePath.isEmpty()) {
+        QMessageBox::warning(this, tr("Export to Word"),
+                           tr("Please save the document before exporting."));
+        return;
+    }
+    
+    QString outputPath = QFileDialog::getSaveFileName(this,
+        tr("Export to Word"), 
+        currentFilePath.left(currentFilePath.lastIndexOf('.')) + ".docx",
+        tr("Word Files (*.docx)"));
+    
+    if (outputPath.isEmpty()) {
+        return;
+    }
+    
+    // Save current file first
+    if (tab->isModified()) {
+        save();
+    }
+    
+    QProcess process;
+    QStringList args;
+    args << currentFilePath
+         << "-o" << outputPath
+         << "--metadata" << "title=" + QFileInfo(currentFilePath).baseName();
+    
+    process.start("pandoc", args);
+    process.waitForFinished(30000);
+    
+    if (process.exitCode() == 0) {
+        statusBar()->showMessage(tr("Exported to Word: %1").arg(outputPath), 5000);
+        QMessageBox::information(this, tr("Export Complete"),
+                               tr("Document exported successfully to:\n%1").arg(outputPath));
+    } else {
+        QString errorMsg = process.readAllStandardError();
+        QMessageBox::critical(this, tr("Export Failed"),
+                            tr("Failed to export document:\n%1").arg(errorMsg));
+    }
+}
+
+void MainWindow::exportToPlainText()
+{
+    TabEditor *tab = currentTabEditor();
+    if (!tab || currentFilePath.isEmpty()) {
+        QMessageBox::warning(this, tr("Export to Plain Text"),
+                           tr("Please save the document before exporting."));
+        return;
+    }
+    
+    QString outputPath = QFileDialog::getSaveFileName(this,
+        tr("Export to Plain Text"), 
+        currentFilePath.left(currentFilePath.lastIndexOf('.')) + ".txt",
+        tr("Text Files (*.txt)"));
+    
+    if (outputPath.isEmpty()) {
+        return;
+    }
+    
+    // Save current file first
+    if (tab->isModified()) {
+        save();
+    }
+    
+    QProcess process;
+    QStringList args;
+    args << currentFilePath
+         << "-o" << outputPath
+         << "--to" << "plain";
+    
+    process.start("pandoc", args);
+    process.waitForFinished(30000);
+    
+    if (process.exitCode() == 0) {
+        statusBar()->showMessage(tr("Exported to Plain Text: %1").arg(outputPath), 5000);
+        QMessageBox::information(this, tr("Export Complete"),
+                               tr("Document exported successfully to:\n%1").arg(outputPath));
+    } else {
+        QString errorMsg = process.readAllStandardError();
+        QMessageBox::critical(this, tr("Export Failed"),
+                            tr("Failed to export document:\n%1").arg(errorMsg));
     }
 }
