@@ -59,6 +59,7 @@ private slots:
     void updateBacklinks();
     void searchInFiles();
     void openSettings();
+    void applySettings();
     void onSearchResultSelected(const QString &filePath, int lineNumber);
     void insertImage();
     void insertFormula();

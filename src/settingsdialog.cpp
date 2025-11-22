@@ -9,12 +9,18 @@
 #include <QLabel>
 #include <QGroupBox>
 #include <QSettings>
+#include <QTabWidget>
+#include <QLineEdit>
+#include <QFontComboBox>
+#include <QFileDialog>
+#include <QDialogButtonBox>
 
 SettingsDialog::SettingsDialog(QWidget *parent)
     : QDialog(parent)
 {
-    setWindowTitle(tr("Settings"));
-    setMinimumWidth(400);
+    setWindowTitle(tr("Preferences"));
+    setMinimumWidth(600);
+    setMinimumHeight(500);
     
     setupUI();
     loadSettings();
@@ -28,83 +34,332 @@ void SettingsDialog::setupUI()
 {
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
     
-    // Editor settings
-    QGroupBox *editorGroup = new QGroupBox(tr("Editor Settings"), this);
-    QFormLayout *editorLayout = new QFormLayout(editorGroup);
+    tabWidget = new QTabWidget(this);
+    setupEditorTab();
+    setupPreviewTab();
+    setupGeneralTab();
+    setupWikiLinksTab();
     
-    autoSaveEnabledCheck = new QCheckBox(tr("Enable auto-save"), this);
-    editorLayout->addRow(autoSaveEnabledCheck);
+    mainLayout->addWidget(tabWidget);
     
-    autoSaveIntervalSpinBox = new QSpinBox(this);
-    autoSaveIntervalSpinBox->setMinimum(10);
-    autoSaveIntervalSpinBox->setMaximum(600);
-    autoSaveIntervalSpinBox->setSuffix(tr(" seconds"));
-    autoSaveIntervalSpinBox->setValue(60);
-    editorLayout->addRow(tr("Auto-save interval:"), autoSaveIntervalSpinBox);
+    // Dialog buttons
+    QDialogButtonBox *buttonBox = new QDialogButtonBox(
+        QDialogButtonBox::Ok | QDialogButtonBox::Cancel | QDialogButtonBox::Apply,
+        this);
     
-    mainLayout->addWidget(editorGroup);
+    connect(buttonBox, &QDialogButtonBox::accepted, this, &SettingsDialog::saveSettings);
+    connect(buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
+    connect(buttonBox->button(QDialogButtonBox::Apply), &QPushButton::clicked,
+            this, [this]() {
+                QSettings settings("MkEd", "MkEd");
+                saveSettings();
+                emit settingsChanged();
+            });
     
-    // Preview settings
-    QGroupBox *previewGroup = new QGroupBox(tr("Preview Settings"), this);
-    QFormLayout *previewLayout = new QFormLayout(previewGroup);
-    
-    themeComboBox = new QComboBox(this);
+    mainLayout->addWidget(buttonBox);
+}
+
+void SettingsDialog::setupEditorTab()
+{
+    QWidget *editorTab = new QWidget();
+    QVBoxLayout *layout = new QVBoxLayout(editorTab);
+
+    // Font settings group
+    QGroupBox *fontGroup = new QGroupBox(tr("Font Settings"));
+    QFormLayout *fontLayout = new QFormLayout(fontGroup);
+
+    fontComboBox = new QFontComboBox();
+    fontComboBox->setFontFilters(QFontComboBox::MonospacedFonts);
+    fontLayout->addRow(tr("Font:"), fontComboBox);
+
+    fontSizeSpinBox = new QSpinBox();
+    fontSizeSpinBox->setRange(8, 72);
+    fontSizeSpinBox->setSuffix(tr(" pt"));
+    fontLayout->addRow(tr("Font Size:"), fontSizeSpinBox);
+
+    layout->addWidget(fontGroup);
+
+    // Editor behavior group
+    QGroupBox *behaviorGroup = new QGroupBox(tr("Editor Behavior"));
+    QFormLayout *behaviorLayout = new QFormLayout(behaviorGroup);
+
+    tabWidthSpinBox = new QSpinBox();
+    tabWidthSpinBox->setRange(1, 16);
+    tabWidthSpinBox->setSuffix(tr(" spaces"));
+    behaviorLayout->addRow(tr("Tab Width:"), tabWidthSpinBox);
+
+    wordWrapCheckBox = new QCheckBox(tr("Enable word wrap"));
+    behaviorLayout->addRow(wordWrapCheckBox);
+
+    showLineNumbersCheckBox = new QCheckBox(tr("Show line numbers"));
+    behaviorLayout->addRow(showLineNumbersCheckBox);
+
+    highlightCurrentLineCheckBox = new QCheckBox(tr("Highlight current line"));
+    behaviorLayout->addRow(highlightCurrentLineCheckBox);
+
+    layout->addWidget(behaviorGroup);
+    layout->addStretch();
+
+    tabWidget->addTab(editorTab, tr("Editor"));
+}
+
+void SettingsDialog::setupPreviewTab()
+{
+    QWidget *previewTab = new QWidget();
+    QVBoxLayout *layout = new QVBoxLayout(previewTab);
+
+    // Preview appearance group
+    QGroupBox *appearanceGroup = new QGroupBox(tr("Appearance"));
+    QFormLayout *appearanceLayout = new QFormLayout(appearanceGroup);
+
+    themeComboBox = new QComboBox();
     themeComboBox->addItem(tr("Light"), "light");
     themeComboBox->addItem(tr("Dark"), "dark");
     themeComboBox->addItem(tr("Sepia"), "sepia");
-    previewLayout->addRow(tr("Default theme:"), themeComboBox);
+    appearanceLayout->addRow(tr("Theme:"), themeComboBox);
+
+    previewFontSizeSpinBox = new QSpinBox();
+    previewFontSizeSpinBox->setRange(8, 72);
+    previewFontSizeSpinBox->setSuffix(tr(" pt"));
+    appearanceLayout->addRow(tr("Font Size:"), previewFontSizeSpinBox);
+
+    layout->addWidget(appearanceGroup);
+
+    // Custom CSS group
+    QGroupBox *cssGroup = new QGroupBox(tr("Custom Styling"));
+    QVBoxLayout *cssLayout = new QVBoxLayout(cssGroup);
+
+    QLabel *cssLabel = new QLabel(tr("Custom CSS file (leave empty for default):"));
+    cssLayout->addWidget(cssLabel);
+
+    QHBoxLayout *cssFileLayout = new QHBoxLayout();
+    customCSSLineEdit = new QLineEdit();
+    customCSSLineEdit->setPlaceholderText(tr("Path to custom CSS file..."));
+    browseCSSButton = new QPushButton(tr("Browse..."));
+    connect(browseCSSButton, &QPushButton::clicked, this, &SettingsDialog::onBrowseCustomCSS);
     
-    mainLayout->addWidget(previewGroup);
+    cssFileLayout->addWidget(customCSSLineEdit);
+    cssFileLayout->addWidget(browseCSSButton);
+    cssLayout->addLayout(cssFileLayout);
+
+    layout->addWidget(cssGroup);
+
+    // Performance group
+    QGroupBox *performanceGroup = new QGroupBox(tr("Performance"));
+    QFormLayout *performanceLayout = new QFormLayout(performanceGroup);
+
+    previewRefreshRateSpinBox = new QSpinBox();
+    previewRefreshRateSpinBox->setRange(100, 5000);
+    previewRefreshRateSpinBox->setSingleStep(100);
+    previewRefreshRateSpinBox->setSuffix(tr(" ms"));
+    performanceLayout->addRow(tr("Refresh Rate:"), previewRefreshRateSpinBox);
+
+    layout->addWidget(performanceGroup);
+    layout->addStretch();
+
+    tabWidget->addTab(previewTab, tr("Preview"));
+}
+
+void SettingsDialog::setupGeneralTab()
+{
+    QWidget *generalTab = new QWidget();
+    QVBoxLayout *layout = new QVBoxLayout(generalTab);
+
+    // Auto-save group
+    QGroupBox *autoSaveGroup = new QGroupBox(tr("Auto-Save"));
+    QVBoxLayout *autoSaveLayout = new QVBoxLayout(autoSaveGroup);
+
+    autoSaveEnabledCheck = new QCheckBox(tr("Enable auto-save"));
+    autoSaveLayout->addWidget(autoSaveEnabledCheck);
+
+    QFormLayout *autoSaveFormLayout = new QFormLayout();
+    autoSaveIntervalSpinBox = new QSpinBox();
+    autoSaveIntervalSpinBox->setRange(10, 600);
+    autoSaveIntervalSpinBox->setSuffix(tr(" seconds"));
+    autoSaveFormLayout->addRow(tr("Interval:"), autoSaveIntervalSpinBox);
+    autoSaveLayout->addLayout(autoSaveFormLayout);
+
+    layout->addWidget(autoSaveGroup);
+
+    // File locations group
+    QGroupBox *locationsGroup = new QGroupBox(tr("File Locations"));
+    QVBoxLayout *locationsLayout = new QVBoxLayout(locationsGroup);
+
+    QLabel *folderLabel = new QLabel(tr("Default folder for new files:"));
+    locationsLayout->addWidget(folderLabel);
+
+    QHBoxLayout *folderLayout = new QHBoxLayout();
+    defaultFolderLineEdit = new QLineEdit();
+    defaultFolderLineEdit->setPlaceholderText(tr("Leave empty to use last opened folder"));
+    browseFolderButton = new QPushButton(tr("Browse..."));
+    connect(browseFolderButton, &QPushButton::clicked, this, &SettingsDialog::onBrowseDefaultFolder);
     
-    // Buttons
-    mainLayout->addStretch();
-    
-    QHBoxLayout *buttonLayout = new QHBoxLayout();
-    buttonLayout->addStretch();
-    
-    saveButton = new QPushButton(tr("Save"), this);
-    cancelButton = new QPushButton(tr("Cancel"), this);
-    
-    buttonLayout->addWidget(saveButton);
-    buttonLayout->addWidget(cancelButton);
-    
-    mainLayout->addLayout(buttonLayout);
-    
-    // Connect signals
-    connect(saveButton, &QPushButton::clicked, this, &SettingsDialog::saveSettings);
-    connect(cancelButton, &QPushButton::clicked, this, &QDialog::reject);
-    
+    folderLayout->addWidget(defaultFolderLineEdit);
+    folderLayout->addWidget(browseFolderButton);
+    locationsLayout->addLayout(folderLayout);
+
+    layout->addWidget(locationsGroup);
+
+    // Behavior group
+    QGroupBox *behaviorGroup = new QGroupBox(tr("Behavior"));
+    QVBoxLayout *behaviorLayout = new QVBoxLayout(behaviorGroup);
+
+    openLastFolderCheckBox = new QCheckBox(tr("Open last folder on startup"));
+    behaviorLayout->addWidget(openLastFolderCheckBox);
+
+    confirmDeleteCheckBox = new QCheckBox(tr("Confirm before deleting files"));
+    behaviorLayout->addWidget(confirmDeleteCheckBox);
+
+    layout->addWidget(behaviorGroup);
+    layout->addStretch();
+
+    // Connect auto-save checkbox to enable/disable interval spinbox
     connect(autoSaveEnabledCheck, &QCheckBox::toggled, 
             autoSaveIntervalSpinBox, &QSpinBox::setEnabled);
+
+    tabWidget->addTab(generalTab, tr("General"));
+}
+
+void SettingsDialog::setupWikiLinksTab()
+{
+    QWidget *wikiTab = new QWidget();
+    QVBoxLayout *layout = new QVBoxLayout(wikiTab);
+
+    // Link format group
+    QGroupBox *formatGroup = new QGroupBox(tr("Link Format"));
+    QFormLayout *formatLayout = new QFormLayout(formatGroup);
+
+    wikiLinkFormatComboBox = new QComboBox();
+    wikiLinkFormatComboBox->addItem("[[Note]]", "double-bracket");
+    wikiLinkFormatComboBox->addItem("[[Note|Display]]", "with-display");
+    wikiLinkFormatComboBox->addItem("[Display](note.md)", "markdown");
+    formatLayout->addRow(tr("Default Format:"), wikiLinkFormatComboBox);
+
+    layout->addWidget(formatGroup);
+
+    // Link behavior group
+    QGroupBox *behaviorGroup = new QGroupBox(tr("Link Behavior"));
+    QVBoxLayout *behaviorLayout = new QVBoxLayout(behaviorGroup);
+
+    relativeLinkPathsCheckBox = new QCheckBox(tr("Use relative paths for links"));
+    relativeLinkPathsCheckBox->setToolTip(tr("Convert absolute paths to relative when inserting links"));
+    behaviorLayout->addWidget(relativeLinkPathsCheckBox);
+
+    autoCompleteLinksCheckBox = new QCheckBox(tr("Enable auto-completion for wiki links"));
+    autoCompleteLinksCheckBox->setToolTip(tr("Show suggestions when typing [["));
+    behaviorLayout->addWidget(autoCompleteLinksCheckBox);
+
+    showBacklinksCheckBox = new QCheckBox(tr("Show backlinks panel"));
+    showBacklinksCheckBox->setToolTip(tr("Display files that link to the current note"));
+    behaviorLayout->addWidget(showBacklinksCheckBox);
+
+    layout->addWidget(behaviorGroup);
+    layout->addStretch();
+
+    tabWidget->addTab(wikiTab, tr("Wiki Links"));
 }
 
 void SettingsDialog::loadSettings()
 {
     QSettings settings("MkEd", "MkEd");
     
+    // Editor settings
+    QString fontFamily = settings.value("editor/font", "Monospace").toString();
+    fontComboBox->setCurrentFont(QFont(fontFamily));
+    fontSizeSpinBox->setValue(settings.value("editor/fontSize", 12).toInt());
+    tabWidthSpinBox->setValue(settings.value("editor/tabWidth", 4).toInt());
+    wordWrapCheckBox->setChecked(settings.value("editor/wordWrap", true).toBool());
+    showLineNumbersCheckBox->setChecked(settings.value("editor/showLineNumbers", true).toBool());
+    highlightCurrentLineCheckBox->setChecked(settings.value("editor/highlightCurrentLine", true).toBool());
+
+    // Preview settings
+    QString theme = settings.value("previewTheme", "light").toString();
+    int themeIndex = themeComboBox->findData(theme);
+    if (themeIndex >= 0) themeComboBox->setCurrentIndex(themeIndex);
+    
+    previewRefreshRateSpinBox->setValue(settings.value("preview/refreshRate", 500).toInt());
+    previewFontSizeSpinBox->setValue(settings.value("preview/fontSize", 14).toInt());
+    customCSSLineEdit->setText(settings.value("preview/customCSS", "").toString());
+
+    // General settings
     bool autoSaveEnabled = settings.value("autoSaveEnabled", true).toBool();
     autoSaveEnabledCheck->setChecked(autoSaveEnabled);
     autoSaveIntervalSpinBox->setEnabled(autoSaveEnabled);
+    autoSaveIntervalSpinBox->setValue(settings.value("autoSaveInterval", 60).toInt());
+    defaultFolderLineEdit->setText(settings.value("general/defaultFolder", "").toString());
+    confirmDeleteCheckBox->setChecked(settings.value("general/confirmDelete", true).toBool());
+    openLastFolderCheckBox->setChecked(settings.value("general/openLastFolder", true).toBool());
+
+    // Wiki links settings
+    QString linkFormat = settings.value("wikiLinks/format", "double-bracket").toString();
+    int linkFormatIndex = wikiLinkFormatComboBox->findData(linkFormat);
+    if (linkFormatIndex >= 0) wikiLinkFormatComboBox->setCurrentIndex(linkFormatIndex);
     
-    int autoSaveInterval = settings.value("autoSaveInterval", 60).toInt();
-    autoSaveIntervalSpinBox->setValue(autoSaveInterval);
-    
-    QString theme = settings.value("previewTheme", "light").toString();
-    int index = themeComboBox->findData(theme);
-    if (index >= 0) {
-        themeComboBox->setCurrentIndex(index);
-    }
+    relativeLinkPathsCheckBox->setChecked(settings.value("wikiLinks/relativePaths", true).toBool());
+    autoCompleteLinksCheckBox->setChecked(settings.value("wikiLinks/autoComplete", true).toBool());
+    showBacklinksCheckBox->setChecked(settings.value("wikiLinks/showBacklinks", true).toBool());
 }
 
 void SettingsDialog::saveSettings()
 {
     QSettings settings("MkEd", "MkEd");
     
+    // Editor settings
+    settings.setValue("editor/font", fontComboBox->currentFont().family());
+    settings.setValue("editor/fontSize", fontSizeSpinBox->value());
+    settings.setValue("editor/tabWidth", tabWidthSpinBox->value());
+    settings.setValue("editor/wordWrap", wordWrapCheckBox->isChecked());
+    settings.setValue("editor/showLineNumbers", showLineNumbersCheckBox->isChecked());
+    settings.setValue("editor/highlightCurrentLine", highlightCurrentLineCheckBox->isChecked());
+
+    // Preview settings
+    settings.setValue("previewTheme", themeComboBox->currentData().toString());
+    settings.setValue("preview/refreshRate", previewRefreshRateSpinBox->value());
+    settings.setValue("preview/fontSize", previewFontSizeSpinBox->value());
+    settings.setValue("preview/customCSS", customCSSLineEdit->text());
+
+    // General settings
     settings.setValue("autoSaveEnabled", autoSaveEnabledCheck->isChecked());
     settings.setValue("autoSaveInterval", autoSaveIntervalSpinBox->value());
-    settings.setValue("previewTheme", themeComboBox->currentData().toString());
-    
+    settings.setValue("general/defaultFolder", defaultFolderLineEdit->text());
+    settings.setValue("general/confirmDelete", confirmDeleteCheckBox->isChecked());
+    settings.setValue("general/openLastFolder", openLastFolderCheckBox->isChecked());
+
+    // Wiki links settings
+    settings.setValue("wikiLinks/format", wikiLinkFormatComboBox->currentData().toString());
+    settings.setValue("wikiLinks/relativePaths", relativeLinkPathsCheckBox->isChecked());
+    settings.setValue("wikiLinks/autoComplete", autoCompleteLinksCheckBox->isChecked());
+    settings.setValue("wikiLinks/showBacklinks", showBacklinksCheckBox->isChecked());
+
+    settings.sync();
+    emit settingsChanged();
     accept();
+}
+
+void SettingsDialog::onBrowseDefaultFolder()
+{
+    QString folder = QFileDialog::getExistingDirectory(
+        this,
+        tr("Select Default Folder"),
+        defaultFolderLineEdit->text(),
+        QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+    
+    if (!folder.isEmpty()) {
+        defaultFolderLineEdit->setText(folder);
+    }
+}
+
+void SettingsDialog::onBrowseCustomCSS()
+{
+    QString file = QFileDialog::getOpenFileName(
+        this,
+        tr("Select Custom CSS File"),
+        customCSSLineEdit->text(),
+        tr("CSS Files (*.css);;All Files (*)"));
+    
+    if (!file.isEmpty()) {
+        customCSSLineEdit->setText(file);
+    }
 }
 
 int SettingsDialog::getAutoSaveInterval() const

@@ -1077,32 +1077,66 @@ void MainWindow::searchInFiles()
 void MainWindow::openSettings()
 {
     SettingsDialog dialog(this);
+    connect(&dialog, &SettingsDialog::settingsChanged, this, &MainWindow::applySettings);
+    
     if (dialog.exec() == QDialog::Accepted) {
-        // Apply settings
-        if (dialog.getAutoSaveEnabled()) {
-            autoSaveTimer->start(dialog.getAutoSaveInterval() * 1000);
-        } else {
-            autoSaveTimer->stop();
-        }
-        
-        // Apply theme to current tab
-        QString theme = dialog.getDefaultTheme();
-        TabEditor *tab = currentTabEditor();
+        applySettings();
+        statusBar()->showMessage(tr("Settings saved"), 3000);
+    }
+}
+
+void MainWindow::applySettings()
+{
+    QSettings settings("MkEd", "MkEd");
+    
+    // Apply auto-save settings
+    if (settings.value("autoSaveEnabled", true).toBool()) {
+        int interval = settings.value("autoSaveInterval", 60).toInt();
+        autoSaveTimer->start(interval * 1000);
+    } else {
+        autoSaveTimer->stop();
+    }
+    
+    // Apply theme to all tabs
+    QString theme = settings.value("previewTheme", "light").toString();
+    for (int i = 0; i < tabWidget->count(); ++i) {
+        TabEditor *tab = qobject_cast<TabEditor*>(tabWidget->widget(i));
         if (tab) {
             tab->preview()->setTheme(theme);
         }
-        
-        // Update theme action checkboxes
-        if (theme == "dark") {
-            previewThemeDarkAction->setChecked(true);
-        } else if (theme == "sepia") {
-            previewThemeSepiaAction->setChecked(true);
-        } else {
-            previewThemeLightAction->setChecked(true);
-        }
-        
-        statusBar()->showMessage(tr("Settings saved"), 3000);
     }
+    
+    // Update theme action checkboxes
+    if (theme == "dark") {
+        previewThemeDarkAction->setChecked(true);
+    } else if (theme == "sepia") {
+        previewThemeSepiaAction->setChecked(true);
+    } else {
+        previewThemeLightAction->setChecked(true);
+    }
+    
+    // Apply editor settings to all tabs
+    QString fontFamily = settings.value("editor/font", "Monospace").toString();
+    int fontSize = settings.value("editor/fontSize", 12).toInt();
+    int tabWidth = settings.value("editor/tabWidth", 4).toInt();
+    bool wordWrap = settings.value("editor/wordWrap", true).toBool();
+    
+    QFont font(fontFamily, fontSize);
+    
+    for (int i = 0; i < tabWidget->count(); ++i) {
+        TabEditor *tab = qobject_cast<TabEditor*>(tabWidget->widget(i));
+        if (tab && tab->editor()) {
+            tab->editor()->setFont(font);
+            tab->editor()->setTabStopDistance(
+                QFontMetrics(font).horizontalAdvance(' ') * tabWidth);
+            tab->editor()->setLineWrapMode(wordWrap ? 
+                QPlainTextEdit::WidgetWidth : QPlainTextEdit::NoWrap);
+        }
+    }
+    
+    // Apply preview refresh rate
+    int refreshRate = settings.value("preview/refreshRate", 500).toInt();
+    previewUpdateTimer->setInterval(refreshRate);
 }
 
 void MainWindow::onSearchResultSelected(const QString &filePath, int lineNumber)
