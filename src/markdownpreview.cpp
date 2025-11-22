@@ -65,11 +65,10 @@ void MarkdownPreview::setMarkdownContent(const QString &markdown)
         "<html>"
         "<head>"
         "<meta charset=\"UTF-8\">"
-        "<base href=\"file://%1/\">"
         "<link rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css\">"
         "<script src=\"https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js\"></script>"
         "<script src=\"https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js\"></script>"
-        "<style>%2</style>"
+        "<style>%1</style>"
         "<script>"
         "document.addEventListener('DOMContentLoaded', function() {"
         "  renderMathInElement(document.body, {"
@@ -82,11 +81,13 @@ void MarkdownPreview::setMarkdownContent(const QString &markdown)
         "});"
         "</script>"
         "</head>"
-        "<body>%3</body>"
+        "<body>%2</body>"
         "</html>"
-    ).arg(basePath, styleSheet, html);
+    ).arg(styleSheet, html);
     
-    setHtml(fullHtml);
+    // Use setHtml with baseUrl to allow loading local images
+    QUrl baseUrl = QUrl::fromLocalFile(basePath + "/");
+    setHtml(fullHtml, baseUrl);
 }
 
 void MarkdownPreview::setTheme(const QString &theme)
@@ -180,13 +181,13 @@ QString MarkdownPreview::convertMarkdownToHtml(const QString &markdown)
         // Inline code `code`
         processedLine.replace(QRegularExpression("`([^`]+)`"), "<code>\\1</code>");
         
-        // Links [text](url)
-        processedLine.replace(QRegularExpression("\\[([^\\]]+)\\]\\(([^\\)]+)\\)"), 
-                             "<a href=\"\\2\">\\1</a>");
-        
         // Images ![alt](url) - must be before links
         processedLine.replace(QRegularExpression("!\\[([^\\]]*)\\]\\(([^\\)]+)\\)"),
                              "<img src=\"\\2\" alt=\"\\1\" style=\"max-width: 100%; height: auto;\" />");
+        
+        // Links [text](url)
+        processedLine.replace(QRegularExpression("\\[([^\\]]+)\\]\\(([^\\)]+)\\)"), 
+                             "<a href=\"\\2\">\\1</a>");
         
         // Note: Wiki links are now processed separately in processWikiLinks()
         // to handle inclusions properly
