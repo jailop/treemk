@@ -1246,14 +1246,12 @@ void MainWindow::openSettings()
 
 void MainWindow::applySettings()
 {
-    QSettings settings("TreeMk", "TreeMk");
-    
     // Apply application theme
-    QString appTheme = settings.value("appearance/appTheme", "system").toString();
+    QString appTheme = settings->value("appearance/appTheme", "system").toString();
     ThemeManager::instance()->setAppTheme(appTheme);
     
     // Apply editor color scheme to all tabs
-    QString editorScheme = settings.value("appearance/editorColorScheme", "light").toString();
+    QString editorScheme = settings->value("appearance/editorColorScheme", "light").toString();
     ThemeManager::instance()->setEditorColorScheme(editorScheme);
     
     for (int i = 0; i < tabWidget->count(); ++i) {
@@ -1269,7 +1267,7 @@ void MainWindow::applySettings()
             }
             
             // Apply code syntax highlighting setting
-            bool codeSyntaxEnabled = settings.value("editor/enableCodeSyntax", false).toBool();
+            bool codeSyntaxEnabled = settings->value("editor/enableCodeSyntax", false).toBool();
             if (tab->editor()->highlighter()) {
                 tab->editor()->highlighter()->setCodeSyntaxEnabled(codeSyntaxEnabled);
             }
@@ -1277,15 +1275,15 @@ void MainWindow::applySettings()
     }
     
     // Apply auto-save settings
-    if (settings.value("autoSaveEnabled", true).toBool()) {
-        int interval = settings.value("autoSaveInterval", 60).toInt();
+    if (settings->value("autoSaveEnabled", true).toBool()) {
+        int interval = settings->value("autoSaveInterval", 60).toInt();
         autoSaveTimer->start(interval * 1000);
     } else {
         autoSaveTimer->stop();
     }
     
     // Apply theme to all tabs
-    QString theme = settings.value("previewTheme", "light").toString();
+    QString theme = settings->value("previewTheme", "light").toString();
     for (int i = 0; i < tabWidget->count(); ++i) {
         TabEditor *tab = qobject_cast<TabEditor*>(tabWidget->widget(i));
         if (tab) {
@@ -1303,10 +1301,10 @@ void MainWindow::applySettings()
     }
     
     // Apply editor settings to all tabs
-    QString fontFamily = settings.value("editor/font", "Monospace").toString();
-    int fontSize = settings.value("editor/fontSize", 12).toInt();
-    int tabWidth = settings.value("editor/tabWidth", 4).toInt();
-    bool wordWrap = settings.value("editor/wordWrap", true).toBool();
+    QString fontFamily = settings->value("editor/font", "Sans Serif").toString();
+    int fontSize = settings->value("editor/fontSize", 11).toInt();
+    int tabWidth = settings->value("editor/tabWidth", 4).toInt();
+    bool wordWrap = settings->value("editor/wordWrap", true).toBool();
     
     QFont font(fontFamily, fontSize);
     
@@ -1322,7 +1320,7 @@ void MainWindow::applySettings()
     }
     
     // Apply preview refresh rate
-    int refreshRate = settings.value("preview/refreshRate", 500).toInt();
+    int refreshRate = settings->value("preview/refreshRate", 500).toInt();
     previewUpdateTimer->setInterval(refreshRate);
 }
 
@@ -1878,6 +1876,34 @@ TabEditor* MainWindow::currentTabEditor() const
 TabEditor* MainWindow::createNewTab()
 {
     TabEditor *tab = new TabEditor(this);
+    
+    // Apply font settings to new tab
+    QString fontFamily = settings->value("editor/font", "Sans Serif").toString();
+    int fontSize = settings->value("editor/fontSize", 11).toInt();
+    int tabWidth = settings->value("editor/tabWidth", 4).toInt();
+    bool wordWrap = settings->value("editor/wordWrap", true).toBool();
+    
+    QFont font(fontFamily, fontSize);
+    tab->editor()->setFont(font);
+    tab->editor()->setTabStopDistance(
+        QFontMetrics(font).horizontalAdvance(' ') * tabWidth);
+    tab->editor()->setLineWrapMode(wordWrap ? 
+        QPlainTextEdit::WidgetWidth : QPlainTextEdit::NoWrap);
+    
+    // Apply editor color scheme
+    QString editorScheme = settings->value("appearance/editorColorScheme", "light").toString();
+    tab->editor()->setPalette(ThemeManager::instance()->getEditorPalette());
+    tab->editor()->setStyleSheet(ThemeManager::instance()->getEditorStyleSheet());
+    
+    if (tab->editor()->highlighter()) {
+        tab->editor()->highlighter()->setColorScheme(editorScheme);
+        bool codeSyntaxEnabled = settings->value("editor/enableCodeSyntax", false).toBool();
+        tab->editor()->highlighter()->setCodeSyntaxEnabled(codeSyntaxEnabled);
+    }
+    
+    // Apply preview theme
+    QString previewTheme = settings->value("previewTheme", "light").toString();
+    tab->preview()->setTheme(previewTheme);
     
     // Connect wiki link clicks from editor
     connect(tab->editor(), &MarkdownEditor::wikiLinkClicked,

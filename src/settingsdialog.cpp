@@ -70,7 +70,7 @@ void SettingsDialog::setupEditorTab()
     QFormLayout *fontLayout = new QFormLayout(fontGroup);
 
     fontComboBox = new QFontComboBox();
-    fontComboBox->setFontFilters(QFontComboBox::MonospacedFonts);
+    fontComboBox->setFontFilters(QFontComboBox::AllFonts);
     fontLayout->addRow(tr("Font:"), fontComboBox);
 
     fontSizeSpinBox = new QSpinBox();
@@ -310,9 +310,9 @@ void SettingsDialog::loadSettings()
     QSettings settings("TreeMk", "TreeMk");
     
     // Editor settings
-    QString fontFamily = settings.value("editor/font", "Monospace").toString();
+    QString fontFamily = settings.value("editor/font", "Sans Serif").toString();
     fontComboBox->setCurrentFont(QFont(fontFamily));
-    fontSizeSpinBox->setValue(settings.value("editor/fontSize", 12).toInt());
+    fontSizeSpinBox->setValue(settings.value("editor/fontSize", 11).toInt());
     tabWidthSpinBox->setValue(settings.value("editor/tabWidth", 4).toInt());
     wordWrapCheckBox->setChecked(settings.value("editor/wordWrap", true).toBool());
     showLineNumbersCheckBox->setChecked(settings.value("editor/showLineNumbers", true).toBool());

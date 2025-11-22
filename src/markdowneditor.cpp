@@ -186,10 +186,10 @@ void MarkdownEditor::dropEvent(QDropEvent *event)
 
 void MarkdownEditor::setupEditor()
 {
-    QFont font("Monospace");
-    font.setStyleHint(QFont::Monospace);
-    font.setFixedPitch(true);
-    font.setPointSize(10);
+    QFont font;
+    font.setFamily("Sans Serif");
+    font.setStyleHint(QFont::SansSerif);
+    font.setPointSize(11);
     setFont(font);
     
     QFontMetrics metrics(font);
