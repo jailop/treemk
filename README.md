@@ -68,6 +68,35 @@ Requirements:
 - Qt 6 for Windows
 - CMake
 
+#### Using the Deploy Script (Recommended)
+
+The easiest way to build and package TreeMk for distribution:
+
+**PowerShell:**
+```powershell
+.\deploy-windows.ps1 -QtPath "C:\Qt\6.x.x\msvc2022_64"
+```
+
+**Command Prompt:**
+```cmd
+deploy-windows.bat "C:\Qt\6.x.x\msvc2022_64"
+```
+
+This will:
+- Build the project in Release mode
+- Deploy all Qt dependencies using windeployqt
+- Create a distributable folder with installer scripts
+- Generate a ZIP file for easy distribution
+
+The output includes:
+- `treemk.exe` - The application
+- All required Qt libraries
+- `install.bat` - Installs to %LOCALAPPDATA%\TreeMk with desktop shortcuts
+- `uninstall.bat` - Complete uninstaller
+- `README.txt` - User documentation
+
+#### Manual Build
+
 ```bash
 # Create build directory
 mkdir build
