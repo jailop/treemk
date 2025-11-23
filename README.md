@@ -27,6 +27,14 @@ A wiki-Markdown text editor built with Qt, designed for organizing and managing 
 - C++17 compatible compiler
 - Pandoc (for export features)
 
+Pandoc is required to expert notes to formats like HTML, PDF, and DOCX.
+Pandoc needs to be installed separately. For example, using `chocolatey`
+on Windows:
+
+```powershell
+choco install pandoc
+```
+
 ### Qt Modules Required
 
 - Qt6::Core
