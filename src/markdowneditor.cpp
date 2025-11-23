@@ -22,6 +22,7 @@
 #include <QDateTime>
 #include <QInputDialog>
 #include <QMessageBox>
+#include <QDesktopServices>
 
 MarkdownEditor::MarkdownEditor(QWidget *parent)
     : QPlainTextEdit(parent)
@@ -89,15 +90,67 @@ QString MarkdownEditor::getLinkAtPosition(int position) const
     return QString();
 }
 
+QString MarkdownEditor::getExternalLinkAtPosition(int position) const
+{
+    QTextCursor cursor(document());
+    cursor.setPosition(position);
+    
+    QString line = cursor.block().text();
+    int posInBlock = cursor.positionInBlock();
+    
+    // Pattern for [text](url)
+    QRegularExpression markdownLinkPattern("\\[([^\\]]+)\\]\\(([^\\)]+)\\)");
+    QRegularExpressionMatchIterator matchIterator = markdownLinkPattern.globalMatch(line);
+    
+    while (matchIterator.hasNext()) {
+        QRegularExpressionMatch match = matchIterator.next();
+        int start = match.capturedStart();
+        int end = start + match.capturedLength();
+        
+        if (posInBlock >= start && posInBlock <= end) {
+            QString url = match.captured(2).trimmed();
+            // Check if it's an external link (http/https)
+            if (url.startsWith("http://") || url.startsWith("https://")) {
+                return url;
+            }
+        }
+    }
+    
+    // Pattern for plain URLs (http:// or https://)
+    QRegularExpression urlPattern("(https?://[^\\s]+)");
+    QRegularExpressionMatchIterator urlIterator = urlPattern.globalMatch(line);
+    
+    while (urlIterator.hasNext()) {
+        QRegularExpressionMatch match = urlIterator.next();
+        int start = match.capturedStart();
+        int end = start + match.capturedLength();
+        
+        if (posInBlock >= start && posInBlock < end) {
+            return match.captured(1);
+        }
+    }
+    
+    return QString();
+}
+
 void MarkdownEditor::mousePressEvent(QMouseEvent *event)
 {
     if (event->button() == Qt::LeftButton && (event->modifiers() & Qt::ControlModifier)) {
         QTextCursor cursor = cursorForPosition(event->pos());
         int position = cursor.position();
         
+        // Try wiki link first
         QString linkTarget = getLinkAtPosition(position);
         if (!linkTarget.isEmpty()) {
             emit wikiLinkClicked(linkTarget);
+            event->accept();
+            return;
+        }
+        
+        // Try external link
+        QString externalUrl = getExternalLinkAtPosition(position);
+        if (!externalUrl.isEmpty()) {
+            QDesktopServices::openUrl(QUrl(externalUrl));
             event->accept();
             return;
         }
@@ -115,9 +168,18 @@ void MarkdownEditor::keyPressEvent(QKeyEvent *event)
         QTextCursor cursor = textCursor();
         int position = cursor.position();
         
+        // Try wiki link first
         QString linkTarget = getLinkAtPosition(position);
         if (!linkTarget.isEmpty()) {
             emit wikiLinkClicked(linkTarget);
+            event->accept();
+            return;
+        }
+        
+        // Try external link
+        QString externalUrl = getExternalLinkAtPosition(position);
+        if (!externalUrl.isEmpty()) {
+            QDesktopServices::openUrl(QUrl(externalUrl));
             event->accept();
             return;
         }

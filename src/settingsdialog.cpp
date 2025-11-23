@@ -21,7 +21,6 @@ SettingsDialog::SettingsDialog(QWidget *parent)
     setWindowTitle(tr("Preferences"));
     setMinimumWidth(600);
     setMinimumHeight(500);
-    
     setupUI();
     loadSettings();
 }
@@ -45,16 +44,19 @@ void SettingsDialog::setupUI()
     
     // Dialog buttons
     QDialogButtonBox *buttonBox = new QDialogButtonBox(
-        QDialogButtonBox::Ok | QDialogButtonBox::Cancel | QDialogButtonBox::Apply,
+        QDialogButtonBox::Ok | 
+        QDialogButtonBox::Cancel | 
+        QDialogButtonBox::Apply,
         this);
     
-    connect(buttonBox, &QDialogButtonBox::accepted, this, &SettingsDialog::saveSettings);
+    connect(buttonBox, &QDialogButtonBox::accepted, 
+            this, &SettingsDialog::saveSettings);
     connect(buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
     connect(buttonBox->button(QDialogButtonBox::Apply), &QPushButton::clicked,
             this, [this]() {
                 QSettings settings("TreeMk", "TreeMk");
                 saveSettings();
-                emit settingsChanged();
+                // emit settingsChanged();
             });
     
     mainLayout->addWidget(buttonBox);
@@ -366,13 +368,17 @@ void SettingsDialog::saveSettings()
     settings.setValue("editor/fontSize", fontSizeSpinBox->value());
     settings.setValue("editor/tabWidth", tabWidthSpinBox->value());
     settings.setValue("editor/wordWrap", wordWrapCheckBox->isChecked());
-    settings.setValue("editor/showLineNumbers", showLineNumbersCheckBox->isChecked());
-    settings.setValue("editor/highlightCurrentLine", highlightCurrentLineCheckBox->isChecked());
-    settings.setValue("editor/enableCodeSyntax", enableCodeSyntaxCheckBox->isChecked());
+    settings.setValue("editor/showLineNumbers", 
+            showLineNumbersCheckBox->isChecked());
+    settings.setValue("editor/highlightCurrentLine", 
+            highlightCurrentLineCheckBox->isChecked());
+    settings.setValue("editor/enableCodeSyntax", 
+            enableCodeSyntaxCheckBox->isChecked());
 
     // Preview settings
     settings.setValue("previewTheme", themeComboBox->currentData().toString());
-    settings.setValue("preview/refreshRate", previewRefreshRateSpinBox->value());
+    settings.setValue("preview/refreshRate", 
+            previewRefreshRateSpinBox->value());
     settings.setValue("preview/fontSize", previewFontSizeSpinBox->value());
     settings.setValue("preview/customCSS", customCSSLineEdit->text());
 
@@ -380,22 +386,31 @@ void SettingsDialog::saveSettings()
     settings.setValue("autoSaveEnabled", autoSaveEnabledCheck->isChecked());
     settings.setValue("autoSaveInterval", autoSaveIntervalSpinBox->value());
     settings.setValue("general/defaultFolder", defaultFolderLineEdit->text());
-    settings.setValue("general/confirmDelete", confirmDeleteCheckBox->isChecked());
-    settings.setValue("general/openLastFolder", openLastFolderCheckBox->isChecked());
-    settings.setValue("general/restoreSession", restoreSessionCheckBox->isChecked());
+    settings.setValue("general/confirmDelete", 
+            confirmDeleteCheckBox->isChecked());
+    settings.setValue("general/openLastFolder", 
+            openLastFolderCheckBox->isChecked());
+    settings.setValue("general/restoreSession", 
+            restoreSessionCheckBox->isChecked());
 
     // Wiki links settings
-    settings.setValue("wikiLinks/format", wikiLinkFormatComboBox->currentData().toString());
-    settings.setValue("wikiLinks/relativePaths", relativeLinkPathsCheckBox->isChecked());
-    settings.setValue("wikiLinks/autoComplete", autoCompleteLinksCheckBox->isChecked());
-    settings.setValue("wikiLinks/showBacklinks", showBacklinksCheckBox->isChecked());
+    settings.setValue("wikiLinks/format", 
+            wikiLinkFormatComboBox->currentData().toString());
+    settings.setValue("wikiLinks/relativePaths", 
+            relativeLinkPathsCheckBox->isChecked());
+    settings.setValue("wikiLinks/autoComplete", 
+            autoCompleteLinksCheckBox->isChecked());
+    settings.setValue("wikiLinks/showBacklinks", 
+            showBacklinksCheckBox->isChecked());
     
     // Appearance settings
-    settings.setValue("appearance/appTheme", appThemeComboBox->currentData().toString());
-    settings.setValue("appearance/editorColorScheme", editorColorSchemeComboBox->currentData().toString());
+    settings.setValue("appearance/appTheme", 
+            appThemeComboBox->currentData().toString());
+    settings.setValue("appearance/editorColorScheme", 
+            editorColorSchemeComboBox->currentData().toString());
 
     settings.sync();
-    emit settingsChanged();
+    // emit settingsChanged();
 }
 
 void SettingsDialog::onBrowseDefaultFolder()

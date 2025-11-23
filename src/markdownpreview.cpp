@@ -7,6 +7,12 @@
 #include <QWebEngineSettings>
 #include <QUrl>
 #include <QMap>
+#include <QDesktopServices>
+#include <QMenu>
+#include <QAction>
+#include <QContextMenuEvent>
+#include <QShortcut>
+#include <QKeySequence>
 
 // Custom page class to intercept link navigation
 class WikiLinkPage : public QWebEnginePage {
@@ -19,6 +25,11 @@ protected:
             emit preview->wikiLinkClicked(url.path());
             return false;
         }
+        // Open external links (http/https) in system browser
+        if (url.scheme() == "http" || url.scheme() == "https") {
+            QDesktopServices::openUrl(url);
+            return false;
+        }
         return QWebEnginePage::acceptNavigationRequest(url, type, isMainFrame);
     }
     
@@ -29,7 +40,7 @@ private:
 MarkdownPreview::MarkdownPreview(QWidget *parent)
     : QWebEngineView(parent), currentTheme("light"), basePath(QDir::homePath()), latexEnabled(true)
 {
-    setContextMenuPolicy(Qt::NoContextMenu);
+    setContextMenuPolicy(Qt::CustomContextMenu);
     
     // Set custom page to intercept link clicks
     WikiLinkPage *wikiPage = new WikiLinkPage(this);
@@ -37,6 +48,13 @@ MarkdownPreview::MarkdownPreview(QWidget *parent)
     
     // Allow loading remote content (KaTeX CDN) from local HTML
     page()->settings()->setAttribute(QWebEngineSettings::LocalContentCanAccessRemoteUrls, true);
+    
+    // Connect context menu
+    connect(this, &QWidget::customContextMenuRequested, this, &MarkdownPreview::showContextMenu);
+    
+    // Add F5 shortcut for reload
+    QShortcut *reloadShortcut = new QShortcut(QKeySequence(Qt::Key_F5), this);
+    connect(reloadShortcut, &QShortcut::activated, this, &MarkdownPreview::reloadPreview);
 }
 
 MarkdownPreview::~MarkdownPreview()
@@ -171,7 +189,7 @@ QString MarkdownPreview::convertMarkdownToHtml(const QString &markdown)
     QStringList lines = html.split('\n');
     QStringList outputLines;
     bool inCodeBlock = false;
-    bool inTable = false;
+    // bool inTable = false;
     QString codeBlockContent;
     QString codeLanguage;
     QString currentParagraph;
@@ -717,4 +735,19 @@ QString MarkdownPreview::resolveAndIncludeFile(const QString &linkTarget, const 
     ).arg(displayText.toHtmlEscaped(), includedHtml);
     
     return wrappedContent;
+}
+
+void MarkdownPreview::showContextMenu(const QPoint &pos)
+{
+    QMenu contextMenu(this);
+    
+    QAction *reloadAction = contextMenu.addAction(tr("Reload"));
+    connect(reloadAction, &QAction::triggered, this, &MarkdownPreview::reloadPreview);
+    
+    contextMenu.exec(mapToGlobal(pos));
+}
+
+void MarkdownPreview::reloadPreview()
+{
+    reload();
 }

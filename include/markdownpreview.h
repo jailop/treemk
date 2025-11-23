@@ -20,6 +20,10 @@ public:
 signals:
     void wikiLinkClicked(const QString &linkTarget);
 
+private slots:
+    void showContextMenu(const QPoint &pos);
+    void reloadPreview();
+
 private:
     QString convertMarkdownToHtml(const QString &markdown);
     QString getStyleSheet(const QString &theme);

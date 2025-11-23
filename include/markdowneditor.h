@@ -25,6 +25,7 @@ public:
     MarkdownHighlighter* highlighter() const { return getHighlighter(); }
     
     QString getLinkAtPosition(int position) const;
+    QString getExternalLinkAtPosition(int position) const;
     
     void setCurrentFilePath(const QString &filePath);
 

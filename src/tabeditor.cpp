@@ -44,6 +44,7 @@ void TabEditor::setupUI()
     
     // Preview only (outline is now in main window)
     m_preview = new MarkdownPreview(this);
+    m_preview->setMinimumWidth(200);
     
     m_splitter->addWidget(m_editor);
     m_splitter->addWidget(m_preview);

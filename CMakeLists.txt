@@ -14,13 +14,15 @@ set(CMAKE_AUTOUIC ON)
 if(WIN32)
     set(CMAKE_WIN32_EXECUTABLE ON)
 endif()
-
 if(APPLE)
     set(MACOSX_BUNDLE_BUNDLE_NAME "TreeMk")
-    set(MACOSX_BUNDLE_GUI_IDENTIFIER "com.treemk.app")
+    set(MACOSX_BUNDLE_GUI_IDENTIFIER "dev.datainquiry.treemk")
     set(MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION})
     set(MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION})
     set(MACOSX_BUNDLE_ICON_FILE "treemk.icns")
+endif()
+if (UNIX AND NOT APPLE)
+    add_compile_options(-Wall -g)
 endif()
 
 # Find Qt6 packages

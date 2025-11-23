@@ -234,13 +234,12 @@ void FileSystemTreeView::mouseDoubleClickEvent(QMouseEvent *event)
 void FileSystemTreeView::contextMenuEvent(QContextMenuEvent *event)
 {
     QModelIndex index = indexAt(event->pos());
-    
     bool hasSelection = index.isValid();
-    bool isFile = false;
+    // bool isFile = false;
     
     if (hasSelection) {
         QString filePath = fileSystemModel->filePath(index);
-        isFile = QFileInfo(filePath).isFile();
+        // isFile = QFileInfo(filePath).isFile();
     }
     
     pasteAction->setEnabled(!clipboardPath.isEmpty());
@@ -503,7 +502,7 @@ void FileSystemTreeView::refreshDirectory()
     }
     
     QString savedPath = currentFilePath();
-    QModelIndex currentIdx = currentIndex();
+    // QModelIndex currentIdx = currentIndex();
     
     setRootPath(currentRootPath);
     
