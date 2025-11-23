@@ -32,7 +32,6 @@ public:
     
     MarkdownEditor* editor() const { return m_editor; }
     MarkdownPreview* preview() const { return m_preview; }
-    OutlinePanel* outline() const { return m_outline; }
     
     QString content() const;
     void setContent(const QString &content);
@@ -53,7 +52,6 @@ private:
 
     MarkdownEditor *m_editor;
     MarkdownPreview *m_preview;
-    OutlinePanel *m_outline;
     QSplitter *m_splitter;
     QTimer *m_previewTimer;
     

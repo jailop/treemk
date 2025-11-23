@@ -4,7 +4,8 @@
 #include <QWidget>
 #include <QString>
 
-class QListWidget;
+class QTreeWidget;
+class QTreeWidgetItem;
 
 struct OutlineItem {
     int level;
@@ -28,14 +29,19 @@ public:
 signals:
     void headerClicked(int lineNumber);
 
+protected:
+    bool eventFilter(QObject *obj, QEvent *event) override;
+
 private slots:
-    void onItemClicked();
+    void onItemClicked(QTreeWidgetItem *item, int column);
+    void showContextMenu(const QPoint &pos);
 
 private:
     void setupUI();
     QList<OutlineItem> parseHeaders(const QString &markdown);
+    void buildTree(const QList<OutlineItem> &headers);
     
-    QListWidget *outlineList;
+    QTreeWidget *outlineTree;
 };
 
 #endif // OUTLINEPANEL_H

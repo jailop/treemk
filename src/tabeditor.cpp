@@ -14,7 +14,6 @@ TabEditor::TabEditor(QWidget *parent)
     : QWidget(parent)
     , m_editor(nullptr)
     , m_preview(nullptr)
-    , m_outline(nullptr)
     , m_splitter(nullptr)
     , m_previewTimer(nullptr)
     , m_isModified(false)
@@ -43,20 +42,11 @@ void TabEditor::setupUI()
     connect(m_editor, &MarkdownEditor::cursorPositionChanged,
             this, &TabEditor::syncPreviewScroll);
     
-    // Right side: preview and outline
-    QWidget *rightWidget = new QWidget(this);
-    QVBoxLayout *rightLayout = new QVBoxLayout(rightWidget);
-    rightLayout->setContentsMargins(0, 0, 0, 0);
-    
+    // Preview only (outline is now in main window)
     m_preview = new MarkdownPreview(this);
-    m_outline = new OutlinePanel(this);
-    m_outline->setMinimumHeight(150);
-    
-    rightLayout->addWidget(m_preview, 3);
-    rightLayout->addWidget(m_outline, 1);
     
     m_splitter->addWidget(m_editor);
-    m_splitter->addWidget(rightWidget);
+    m_splitter->addWidget(m_preview);
     m_splitter->setStretchFactor(0, 1);
     m_splitter->setStretchFactor(1, 1);
     
@@ -164,7 +154,7 @@ void TabEditor::updatePreview()
     }
     
     m_preview->setMarkdownContent(markdown);
-    m_outline->updateOutline(markdown);
+    // Note: Outline is now updated by MainWindow
     
     // Sync scroll position after preview refresh
     syncPreviewScroll();

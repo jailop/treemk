@@ -171,12 +171,50 @@ QString MarkdownPreview::convertMarkdownToHtml(const QString &markdown)
     QStringList lines = html.split('\n');
     QStringList outputLines;
     bool inCodeBlock = false;
+    bool inTable = false;
     QString codeBlockContent;
     QString codeLanguage;
+    QString currentParagraph;
+    QStringList tableLines;
     
-    for (const QString &line : lines) {
+    for (int i = 0; i < lines.size(); ++i) {
+        const QString &line = lines[i];
+       
+        /*
+        // Check if this line looks like a table row (contains |)
+        bool isTableRow = !inCodeBlock && line.contains('|') && line.trimmed().startsWith('|');
+        
+        // If we were in a table and this isn't a table row, close the table
+        if (inTable && !isTableRow) {
+            // Process accumulated table lines
+            if (!tableLines.isEmpty()) {
+                if (!currentParagraph.isEmpty()) {
+                    outputLines.append("<p>" + currentParagraph + "</p>");
+                    currentParagraph.clear();
+                }
+                // outputLines.append(processTable(tableLines));
+                outputLines.append(processTable(tableLines));
+                tableLines.clear();
+            }
+            inTable = false;
+        }
+        
+        // If this is a table row, accumulate it
+        if (isTableRow) {
+            inTable = true;
+            tableLines.append(line);
+            continue;
+        }
+        */
+        
         // Code blocks
         if (line.startsWith("```")) {
+            // Flush any pending paragraph
+            if (!currentParagraph.isEmpty()) {
+                outputLines.append("<p>" + currentParagraph + "</p>");
+                currentParagraph.clear();
+            }
+            
             if (inCodeBlock) {
                 // Closing fence - add the code block with language class
                 QString langClass = codeLanguage.isEmpty() ? "" : QString(" class=\"language-%1\"").arg(codeLanguage);
@@ -200,44 +238,96 @@ QString MarkdownPreview::convertMarkdownToHtml(const QString &markdown)
         }
         
         QString processedLine = line;
+        bool isBlockElement = false;
         
         // Headers
         if (processedLine.startsWith("# ")) {
+            // Flush any pending paragraph
+            if (!currentParagraph.isEmpty()) {
+                outputLines.append("<p>" + currentParagraph + "</p>");
+                currentParagraph.clear();
+            }
             processedLine = "<h1>" + processedLine.mid(2) + "</h1>";
+            isBlockElement = true;
         } else if (processedLine.startsWith("## ")) {
+            if (!currentParagraph.isEmpty()) {
+                outputLines.append("<p>" + currentParagraph + "</p>");
+                currentParagraph.clear();
+            }
             processedLine = "<h2>" + processedLine.mid(3) + "</h2>";
+            isBlockElement = true;
         } else if (processedLine.startsWith("### ")) {
+            if (!currentParagraph.isEmpty()) {
+                outputLines.append("<p>" + currentParagraph + "</p>");
+                currentParagraph.clear();
+            }
             processedLine = "<h3>" + processedLine.mid(4) + "</h3>";
+            isBlockElement = true;
         } else if (processedLine.startsWith("#### ")) {
+            if (!currentParagraph.isEmpty()) {
+                outputLines.append("<p>" + currentParagraph + "</p>");
+                currentParagraph.clear();
+            }
             processedLine = "<h4>" + processedLine.mid(5) + "</h4>";
+            isBlockElement = true;
         } else if (processedLine.startsWith("##### ")) {
+            if (!currentParagraph.isEmpty()) {
+                outputLines.append("<p>" + currentParagraph + "</p>");
+                currentParagraph.clear();
+            }
             processedLine = "<h5>" + processedLine.mid(6) + "</h5>";
+            isBlockElement = true;
         } else if (processedLine.startsWith("###### ")) {
+            if (!currentParagraph.isEmpty()) {
+                outputLines.append("<p>" + currentParagraph + "</p>");
+                currentParagraph.clear();
+            }
             processedLine = "<h6>" + processedLine.mid(7) + "</h6>";
+            isBlockElement = true;
         }
         // Blockquotes
         else if (processedLine.startsWith("> ")) {
+            if (!currentParagraph.isEmpty()) {
+                outputLines.append("<p>" + currentParagraph + "</p>");
+                currentParagraph.clear();
+            }
             processedLine = "<blockquote>" + processedLine.mid(2) + "</blockquote>";
+            isBlockElement = true;
         }
         // Horizontal rules
         else if (processedLine.trimmed().contains(QRegularExpression("^([-*_]\\s*){3,}$"))) {
+            if (!currentParagraph.isEmpty()) {
+                outputLines.append("<p>" + currentParagraph + "</p>");
+                currentParagraph.clear();
+            }
             processedLine = "<hr>";
+            isBlockElement = true;
         }
         // Unordered lists
         else if (processedLine.trimmed().startsWith("- ") || 
                  processedLine.trimmed().startsWith("* ") ||
                  processedLine.trimmed().startsWith("+ ")) {
+            if (!currentParagraph.isEmpty()) {
+                outputLines.append("<p>" + currentParagraph + "</p>");
+                currentParagraph.clear();
+            }
             int indent = processedLine.indexOf(QRegularExpression("[-*+]"));
             QString content = processedLine.mid(indent + 2);
             processedLine = "<li>" + content + "</li>";
+            isBlockElement = true;
         }
         // Ordered lists
         else if (processedLine.trimmed().contains(QRegularExpression("^\\d+\\.\\s"))) {
+            if (!currentParagraph.isEmpty()) {
+                outputLines.append("<p>" + currentParagraph + "</p>");
+                currentParagraph.clear();
+            }
             QRegularExpression re("^(\\s*)(\\d+)\\.\\s(.*)$");
             QRegularExpressionMatch match = re.match(processedLine);
             if (match.hasMatch()) {
                 QString content = match.captured(3);
                 processedLine = "<li>" + content + "</li>";
+                isBlockElement = true;
             }
         }
         
@@ -357,16 +447,28 @@ QString MarkdownPreview::convertMarkdownToHtml(const QString &markdown)
             processedLine.replace(urlReplacements[i].first, urlReplacements[i].second, urlReplacementTexts[i]);
         }
         
-        // Paragraph wrapping for non-empty, non-header, non-list lines
-        if (!processedLine.isEmpty() && 
-            !processedLine.startsWith("<h") && 
-            !processedLine.startsWith("<li") &&
-            !processedLine.startsWith("<blockquote") &&
-            !processedLine.startsWith("<hr>")) {
-            processedLine = "<p>" + processedLine + "</p>";
+        // Handle block elements vs paragraph content
+        if (isBlockElement) {
+            outputLines.append(processedLine);
+        } else if (processedLine.isEmpty()) {
+            // Empty line - flush current paragraph
+            if (!currentParagraph.isEmpty()) {
+                outputLines.append("<p>" + currentParagraph + "</p>");
+                currentParagraph.clear();
+            }
+        } else {
+            // Regular text - add to current paragraph
+            if (!currentParagraph.isEmpty()) {
+                currentParagraph += " " + processedLine;
+            } else {
+                currentParagraph = processedLine;
+            }
         }
-        
-        outputLines.append(processedLine);
+    }
+    
+    // Flush any remaining paragraph
+    if (!currentParagraph.isEmpty()) {
+        outputLines.append("<p>" + currentParagraph + "</p>");
     }
     
     QString result = outputLines.join("\n");

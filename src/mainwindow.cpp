@@ -37,6 +37,16 @@
 #include <QListWidget>
 #include <QProcess>
 #include <QFileInfo>
+#include <QStyle>
+
+// Helper function to create icons with fallbacks
+static QIcon iconWithFallback(const QString &themeName, QStyle::StandardPixmap fallback) {
+    QIcon icon = QIcon::fromTheme(themeName);
+    if (icon.isNull()) {
+        icon = qApp->style()->standardIcon(fallback);
+    }
+    return icon;
+}
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -78,25 +88,25 @@ void MainWindow::closeEvent(QCloseEvent *event)
 
 void MainWindow::createActions()
 {
-    newAction = new QAction(QIcon::fromTheme("document-new"), tr("&New"), this);
+    newAction = new QAction(iconWithFallback("document-new", QStyle::SP_FileIcon), tr("&New"), this);
     newAction->setShortcuts(QKeySequence::New);
     newAction->setStatusTip(tr("Create a new file"));
     newAction->setToolTip(tr("Create a new file"));
     connect(newAction, &QAction::triggered, this, &MainWindow::newFile);
 
-    openFolderAction = new QAction(QIcon::fromTheme("folder-open"), tr("Open &Folder..."), this);
+    openFolderAction = new QAction(iconWithFallback("folder-open", QStyle::SP_DirIcon), tr("Open &Folder..."), this);
     openFolderAction->setShortcut(QKeySequence(tr("Ctrl+Shift+O")));
     openFolderAction->setStatusTip(tr("Open a folder"));
     openFolderAction->setToolTip(tr("Open a folder"));
     connect(openFolderAction, &QAction::triggered, this, &MainWindow::openFolder);
 
-    saveAction = new QAction(QIcon::fromTheme("document-save"), tr("&Save"), this);
+    saveAction = new QAction(iconWithFallback("document-save", QStyle::SP_DialogSaveButton), tr("&Save"), this);
     saveAction->setShortcuts(QKeySequence::Save);
     saveAction->setStatusTip(tr("Save the document"));
     saveAction->setToolTip(tr("Save the document"));
     connect(saveAction, &QAction::triggered, this, &MainWindow::save);
 
-    saveAsAction = new QAction(QIcon::fromTheme("document-save-as"), tr("Save &As..."), this);
+    saveAsAction = new QAction(iconWithFallback("document-save-as", QStyle::SP_DialogSaveButton), tr("Save &As..."), this);
     saveAsAction->setShortcuts(QKeySequence::SaveAs);
     saveAsAction->setStatusTip(tr("Save the document under a new name"));
     saveAsAction->setToolTip(tr("Save document with a new name"));
@@ -122,49 +132,49 @@ void MainWindow::createActions()
     exportPlainTextAction->setToolTip(tr("Export to plain text"));
     connect(exportPlainTextAction, &QAction::triggered, this, &MainWindow::exportToPlainText);
     
-    insertImageAction = new QAction(QIcon::fromTheme("insert-image"), tr("Insert &Image..."), this);
+    insertImageAction = new QAction(iconWithFallback("insert-image", QStyle::SP_FileDialogInfoView), tr("Insert &Image..."), this);
     insertImageAction->setShortcut(QKeySequence(tr("Ctrl+Shift+I")));
     insertImageAction->setStatusTip(tr("Insert an image into the document"));
     insertImageAction->setToolTip(tr("Insert an image"));
     connect(insertImageAction, &QAction::triggered, this, &MainWindow::insertImage);
     
-    insertFormulaAction = new QAction(QIcon::fromTheme("preferences-desktop-font"), tr("Insert &Formula..."), this);
+    insertFormulaAction = new QAction(iconWithFallback("preferences-desktop-font", QStyle::SP_FileDialogInfoView), tr("Insert &Formula..."), this);
     insertFormulaAction->setShortcut(QKeySequence(tr("Ctrl+Shift+M")));
     insertFormulaAction->setStatusTip(tr("Insert a LaTeX formula"));
     insertFormulaAction->setToolTip(tr("Insert a LaTeX formula"));
     connect(insertFormulaAction, &QAction::triggered, this, &MainWindow::insertFormula);
     
-    insertWikiLinkAction = new QAction(QIcon::fromTheme("insert-link"), tr("Insert &Wiki Link..."), this);
+    insertWikiLinkAction = new QAction(iconWithFallback("insert-link", QStyle::SP_FileLinkIcon), tr("Insert &Wiki Link..."), this);
     insertWikiLinkAction->setShortcut(QKeySequence(tr("Ctrl+K")));
     insertWikiLinkAction->setStatusTip(tr("Insert a wiki-style link"));
     insertWikiLinkAction->setToolTip(tr("Insert a wiki-style link"));
     connect(insertWikiLinkAction, &QAction::triggered, this, &MainWindow::insertWikiLink);
     
-    attachDocumentAction = new QAction(QIcon::fromTheme("mail-attachment"), tr("Attach &Document..."), this);
+    attachDocumentAction = new QAction(iconWithFallback("mail-attachment", QStyle::SP_DriveFDIcon), tr("Attach &Document..."), this);
     attachDocumentAction->setShortcut(QKeySequence(tr("Ctrl+Shift+A")));
     attachDocumentAction->setStatusTip(tr("Attach a document file"));
     attachDocumentAction->setToolTip(tr("Attach a document"));
     connect(attachDocumentAction, &QAction::triggered, this, &MainWindow::attachDocument);
     
-    insertHeaderAction = new QAction(QIcon::fromTheme("format-text-bold"), tr("Insert &Header"), this);
+    insertHeaderAction = new QAction(iconWithFallback("format-text-bold", QStyle::SP_DialogYesButton), tr("Insert &Header"), this);
     insertHeaderAction->setShortcut(QKeySequence(tr("Ctrl+1")));
     insertHeaderAction->setStatusTip(tr("Insert a header"));
     insertHeaderAction->setToolTip(tr("Insert a header"));
     connect(insertHeaderAction, &QAction::triggered, this, &MainWindow::insertHeader);
     
-    insertBoldAction = new QAction(QIcon::fromTheme("format-text-bold"), tr("&Bold"), this);
+    insertBoldAction = new QAction(iconWithFallback("format-text-bold", QStyle::SP_DialogYesButton), tr("&Bold"), this);
     insertBoldAction->setShortcut(QKeySequence::Bold);
     insertBoldAction->setStatusTip(tr("Make text bold"));
     insertBoldAction->setToolTip(tr("Make text bold"));
     connect(insertBoldAction, &QAction::triggered, this, &MainWindow::insertBold);
     
-    insertItalicAction = new QAction(QIcon::fromTheme("format-text-italic"), tr("&Italic"), this);
+    insertItalicAction = new QAction(iconWithFallback("format-text-italic", QStyle::SP_DialogApplyButton), tr("&Italic"), this);
     insertItalicAction->setShortcut(QKeySequence::Italic);
     insertItalicAction->setStatusTip(tr("Make text italic"));
     insertItalicAction->setToolTip(tr("Make text italic"));
     connect(insertItalicAction, &QAction::triggered, this, &MainWindow::insertItalic);
     
-    insertCodeAction = new QAction(QIcon::fromTheme("text-x-generic"), tr("Inline &Code"), this);
+    insertCodeAction = new QAction(iconWithFallback("text-x-generic", QStyle::SP_ComputerIcon), tr("Inline &Code"), this);
     insertCodeAction->setShortcut(QKeySequence(tr("Ctrl+`")));
     insertCodeAction->setStatusTip(tr("Insert inline code"));
     insertCodeAction->setToolTip(tr("Insert inline code"));
@@ -200,13 +210,13 @@ void MainWindow::createActions()
     insertHorizontalRuleAction->setToolTip(tr("Insert horizontal rule"));
     connect(insertHorizontalRuleAction, &QAction::triggered, this, &MainWindow::insertHorizontalRule);
     
-    insertLinkAction = new QAction(QIcon::fromTheme("insert-link"), tr("Insert Lin&k..."), this);
+    insertLinkAction = new QAction(iconWithFallback("insert-link", QStyle::SP_FileLinkIcon), tr("Insert Lin&k..."), this);
     insertLinkAction->setShortcut(QKeySequence(tr("Ctrl+L")));
     insertLinkAction->setStatusTip(tr("Insert hyperlink"));
     insertLinkAction->setToolTip(tr("Insert hyperlink"));
     connect(insertLinkAction, &QAction::triggered, this, &MainWindow::insertLink);
     
-    insertTableAction = new QAction(QIcon::fromTheme("insert-table"), tr("Insert &Table"), this);
+    insertTableAction = new QAction(iconWithFallback("insert-table", QStyle::SP_FileDialogListView), tr("Insert &Table"), this);
     insertTableAction->setShortcut(QKeySequence(tr("Ctrl+Shift+T")));
     insertTableAction->setStatusTip(tr("Insert table"));
     insertTableAction->setToolTip(tr("Insert table"));
@@ -227,7 +237,7 @@ void MainWindow::createActions()
     exitAction->setStatusTip(tr("Exit the application"));
     connect(exitAction, &QAction::triggered, this, &QWidget::close);
 
-    undoAction = new QAction(QIcon::fromTheme("edit-undo"), tr("&Undo"), this);
+    undoAction = new QAction(iconWithFallback("edit-undo", QStyle::SP_ArrowBack), tr("&Undo"), this);
     undoAction->setShortcuts(QKeySequence::Undo);
     undoAction->setStatusTip(tr("Undo the last operation"));
     undoAction->setToolTip(tr("Undo"));
@@ -237,7 +247,7 @@ void MainWindow::createActions()
         if (tab) tab->editor()->undo();
     });
 
-    redoAction = new QAction(QIcon::fromTheme("edit-redo"), tr("&Redo"), this);
+    redoAction = new QAction(iconWithFallback("edit-redo", QStyle::SP_ArrowForward), tr("&Redo"), this);
     redoAction->setShortcuts(QKeySequence::Redo);
     redoAction->setStatusTip(tr("Redo the last operation"));
     redoAction->setToolTip(tr("Redo"));
@@ -247,7 +257,7 @@ void MainWindow::createActions()
         if (tab) tab->editor()->redo();
     });
 
-    cutAction = new QAction(QIcon::fromTheme("edit-cut"), tr("Cu&t"), this);
+    cutAction = new QAction(iconWithFallback("edit-cut", QStyle::SP_DialogCloseButton), tr("Cu&t"), this);
     cutAction->setShortcuts(QKeySequence::Cut);
     cutAction->setStatusTip(tr("Cut the current selection"));
     cutAction->setToolTip(tr("Cut"));
@@ -257,7 +267,7 @@ void MainWindow::createActions()
         if (tab) tab->editor()->cut();
     });
 
-    copyAction = new QAction(QIcon::fromTheme("edit-copy"), tr("&Copy"), this);
+    copyAction = new QAction(iconWithFallback("edit-copy", QStyle::SP_DialogOkButton), tr("&Copy"), this);
     copyAction->setShortcuts(QKeySequence::Copy);
     copyAction->setStatusTip(tr("Copy the current selection"));
     copyAction->setToolTip(tr("Copy"));
@@ -267,7 +277,7 @@ void MainWindow::createActions()
         if (tab) tab->editor()->copy();
     });
 
-    pasteAction = new QAction(QIcon::fromTheme("edit-paste"), tr("&Paste"), this);
+    pasteAction = new QAction(iconWithFallback("edit-paste", QStyle::SP_DialogApplyButton), tr("&Paste"), this);
     pasteAction->setShortcuts(QKeySequence::Paste);
     pasteAction->setStatusTip(tr("Paste the clipboard contents"));
     pasteAction->setToolTip(tr("Paste"));
@@ -276,57 +286,53 @@ void MainWindow::createActions()
         if (tab) tab->editor()->paste();
     });
     
-    findAction = new QAction(QIcon::fromTheme("edit-find"), tr("&Find..."), this);
+    findAction = new QAction(iconWithFallback("edit-find", QStyle::SP_FileDialogDetailedView), tr("&Find..."), this);
     findAction->setShortcuts(QKeySequence::Find);
     findAction->setStatusTip(tr("Find text"));
     findAction->setToolTip(tr("Find"));
     connect(findAction, &QAction::triggered, this, &MainWindow::find);
     
-    findReplaceAction = new QAction(QIcon::fromTheme("edit-find-replace"), tr("Find and &Replace..."), this);
+    findReplaceAction = new QAction(iconWithFallback("edit-find-replace", QStyle::SP_FileDialogDetailedView), tr("Find and &Replace..."), this);
     findReplaceAction->setShortcut(QKeySequence(tr("Ctrl+H")));
     findReplaceAction->setStatusTip(tr("Find and replace text"));
     findReplaceAction->setToolTip(tr("Find and replace"));
     connect(findReplaceAction, &QAction::triggered, this, &MainWindow::findAndReplace);
     
-    searchInFilesAction = new QAction(QIcon::fromTheme("system-search"), tr("Search in &Files..."), this);
+    searchInFilesAction = new QAction(iconWithFallback("system-search", QStyle::SP_FileDialogContentsView), tr("Search in &Files..."), this);
     searchInFilesAction->setShortcut(QKeySequence(tr("Ctrl+Shift+F")));
     searchInFilesAction->setStatusTip(tr("Search across all files"));
     searchInFilesAction->setToolTip(tr("Search in all files"));
     connect(searchInFilesAction, &QAction::triggered, this, &MainWindow::searchInFiles);
     
-    quickOpenAction = new QAction(QIcon::fromTheme("document-open-recent"), tr("&Quick Open..."), this);
+    quickOpenAction = new QAction(iconWithFallback("document-open-recent", QStyle::SP_DialogOpenButton), tr("&Quick Open..."), this);
     quickOpenAction->setShortcut(QKeySequence(tr("Ctrl+P")));
     quickOpenAction->setStatusTip(tr("Quickly open a file"));
     quickOpenAction->setToolTip(tr("Quick open"));
     connect(quickOpenAction, &QAction::triggered, this, &MainWindow::quickOpen);
 
-    toggleTreeViewAction = new QAction(tr("&File Tree"), this);
-    toggleTreeViewAction->setCheckable(true);
-    toggleTreeViewAction->setChecked(true);
-    toggleTreeViewAction->setShortcut(QKeySequence(tr("Ctrl+T")));
-    toggleTreeViewAction->setStatusTip(tr("Toggle file tree view"));
-    connect(toggleTreeViewAction, &QAction::triggered, this, &MainWindow::toggleTreeView);
+    toggleSidebarAction = new QAction(iconWithFallback("view-sidetree", QStyle::SP_DirIcon), tr("&Sidebar"), this);
+    toggleSidebarAction->setCheckable(true);
+    toggleSidebarAction->setChecked(true);
+    toggleSidebarAction->setShortcut(QKeySequence(tr("Ctrl+B")));
+    toggleSidebarAction->setStatusTip(tr("Toggle sidebar (Files/Outline)"));
+    toggleSidebarAction->setToolTip(tr("Toggle sidebar"));
+    connect(toggleSidebarAction, &QAction::triggered, this, &MainWindow::toggleSidebar);
 
-    togglePreviewAction = new QAction(tr("&Preview"), this);
+    togglePreviewAction = new QAction(iconWithFallback("document-preview", QStyle::SP_FileDialogContentsView), tr("&Preview"), this);
     togglePreviewAction->setCheckable(true);
     togglePreviewAction->setChecked(true);
     togglePreviewAction->setShortcut(QKeySequence(tr("Ctrl+P")));
     togglePreviewAction->setStatusTip(tr("Toggle preview panel"));
+    togglePreviewAction->setToolTip(tr("Toggle preview panel"));
     connect(togglePreviewAction, &QAction::triggered, this, &MainWindow::togglePreview);
     
-    toggleBacklinksAction = new QAction(tr("&Backlinks"), this);
+    toggleBacklinksAction = new QAction(iconWithFallback("go-jump", QStyle::SP_ArrowBack), tr("&Backlinks"), this);
     toggleBacklinksAction->setCheckable(true);
     toggleBacklinksAction->setChecked(false);
     toggleBacklinksAction->setShortcut(QKeySequence(tr("Ctrl+Shift+B")));
     toggleBacklinksAction->setStatusTip(tr("Toggle backlinks panel"));
+    toggleBacklinksAction->setToolTip(tr("Toggle backlinks panel"));
     connect(toggleBacklinksAction, &QAction::triggered, this, &MainWindow::toggleBacklinks);
-    
-    toggleOutlineAction = new QAction(tr("&Outline"), this);
-    toggleOutlineAction->setCheckable(true);
-    toggleOutlineAction->setChecked(true);
-    toggleOutlineAction->setShortcut(QKeySequence(tr("Ctrl+Shift+O")));
-    toggleOutlineAction->setStatusTip(tr("Toggle document outline"));
-    connect(toggleOutlineAction, &QAction::triggered, this, &MainWindow::toggleOutline);
     
     previewThemeLightAction = new QAction(tr("Light Theme"), this);
     previewThemeLightAction->setCheckable(true);
@@ -430,10 +436,9 @@ void MainWindow::createMenus()
     insertMenu->addAction(insertTableAction);
 
     viewMenu = menuBar()->addMenu(tr("&View"));
-    viewMenu->addAction(toggleTreeViewAction);
+    viewMenu->addAction(toggleSidebarAction);
     viewMenu->addAction(togglePreviewAction);
     viewMenu->addAction(toggleBacklinksAction);
-    viewMenu->addAction(toggleOutlineAction);
     viewMenu->addSeparator();
     QMenu *previewThemeMenu = viewMenu->addMenu(tr("Preview Theme"));
     previewThemeMenu->addAction(previewThemeLightAction);
@@ -487,18 +492,28 @@ void MainWindow::createToolbar()
     // Search
     mainToolbar->addAction(findAction);
     mainToolbar->addAction(quickOpenAction);
+    mainToolbar->addSeparator();
+    
+    // View toggles
+    mainToolbar->addAction(toggleSidebarAction);
+    mainToolbar->addAction(togglePreviewAction);
+    mainToolbar->addAction(toggleBacklinksAction);
 }
 
 void MainWindow::createLayout()
 {
-    // Tree panel
+    // Create left panel with tabs for File Tree and Outline
+    leftTabWidget = new QTabWidget(this);
+    leftTabWidget->setTabPosition(QTabWidget::South);
+    leftTabWidget->setMinimumWidth(150);
+    
+    // File tree tab
     treePanel = new QWidget(this);
     QVBoxLayout *treeLayout = new QVBoxLayout(treePanel);
     treeLayout->setContentsMargins(0, 0, 0, 0);
     
     treeView = new FileSystemTreeView(treePanel);
     treeLayout->addWidget(treeView);
-    treePanel->setMinimumWidth(150);
     
     connect(treeView, &FileSystemTreeView::fileSelected,
             this, &MainWindow::onFileSelected);
@@ -506,6 +521,18 @@ void MainWindow::createLayout()
             this, &MainWindow::onFileDoubleClicked);
     connect(treeView, &FileSystemTreeView::fileModifiedExternally,
             this, &MainWindow::onFileModifiedExternally);
+    
+    leftTabWidget->addTab(treePanel, tr("Files"));
+    
+    // Outline tab
+    outlinePanel = new QWidget(this);
+    QVBoxLayout *outlineLayout = new QVBoxLayout(outlinePanel);
+    outlineLayout->setContentsMargins(0, 0, 0, 0);
+    
+    outlineView = new OutlinePanel(outlinePanel);
+    outlineLayout->addWidget(outlineView);
+    
+    leftTabWidget->addTab(outlinePanel, tr("Outline"));
 
     // Tab widget for multiple editors
     tabWidget = new QTabWidget(this);
@@ -542,10 +569,10 @@ void MainWindow::createLayout()
 
     // Main splitter
     mainSplitter = new QSplitter(Qt::Horizontal, this);
-    mainSplitter->addWidget(treePanel);
+    mainSplitter->addWidget(leftTabWidget);
     mainSplitter->addWidget(tabWidget);
     mainSplitter->addWidget(backlinksPanel);
-    mainSplitter->setStretchFactor(0, 0);  // Tree panel
+    mainSplitter->setStretchFactor(0, 0);  // Left tab widget
     mainSplitter->setStretchFactor(1, 1);  // Tab widget gets most space
     mainSplitter->setStretchFactor(2, 0);  // Backlinks panel
     
@@ -565,9 +592,9 @@ void MainWindow::readSettings()
     if (settings->contains("mainSplitter"))
         mainSplitter->restoreState(settings->value("mainSplitter").toByteArray());
 
-    bool treeVisible = settings->value("treeVisible", true).toBool();
-    treePanel->setVisible(treeVisible);
-    toggleTreeViewAction->setChecked(treeVisible);
+    bool sidebarVisible = settings->value("sidebarVisible", true).toBool();
+    leftTabWidget->setVisible(sidebarVisible);
+    toggleSidebarAction->setChecked(sidebarVisible);
     
     // Load recent folders
     recentFolders = settings->value("recentFolders").toStringList();
@@ -621,7 +648,7 @@ void MainWindow::writeSettings()
     settings->setValue("pos", pos());
     settings->setValue("size", size());
     settings->setValue("mainSplitter", mainSplitter->saveState());
-    settings->setValue("treeVisible", treePanel->isVisible());
+    settings->setValue("sidebarVisible", leftTabWidget->isVisible());
     settings->setValue("lastFolder", currentFolder);
     settings->setValue("recentFolders", recentFolders);
     
@@ -827,9 +854,9 @@ void MainWindow::showKeyboardShortcuts()
     dialog.exec();
 }
 
-void MainWindow::toggleTreeView()
+void MainWindow::toggleSidebar()
 {
-    treePanel->setVisible(toggleTreeViewAction->isChecked());
+    leftTabWidget->setVisible(toggleSidebarAction->isChecked());
 }
 
 void MainWindow::togglePreview()
@@ -837,14 +864,6 @@ void MainWindow::togglePreview()
     TabEditor *tab = currentTabEditor();
     if (tab) {
         tab->preview()->setVisible(togglePreviewAction->isChecked());
-    }
-}
-
-void MainWindow::toggleOutline()
-{
-    TabEditor *tab = currentTabEditor();
-    if (tab) {
-        tab->outline()->setVisible(toggleOutlineAction->isChecked());
     }
 }
 
@@ -1197,7 +1216,11 @@ void MainWindow::updatePreview()
     
     QString markdown = tab->editor()->toPlainText();
     tab->preview()->setMarkdownContent(markdown);
-    tab->outline()->updateOutline(markdown);
+    
+    // Update the shared outline view
+    if (outlineView) {
+        outlineView->updateOutline(markdown);
+    }
 }
 
 void MainWindow::setPreviewThemeLight()
@@ -1913,9 +1936,20 @@ TabEditor* MainWindow::createNewTab()
     connect(tab->preview(), &MarkdownPreview::wikiLinkClicked,
             this, &MainWindow::onWikiLinkClicked);
     
-    // Connect outline clicks
-    connect(tab->outline(), &OutlinePanel::headerClicked,
-            this, &MainWindow::jumpToLine);
+    // Connect shared outline clicks to jump to line in current editor
+    if (outlineView) {
+        connect(outlineView, &OutlinePanel::headerClicked,
+                this, &MainWindow::jumpToLine, Qt::UniqueConnection);
+    }
+    
+    // Connect editor text changes to update outline
+    connect(tab->editor(), &MarkdownEditor::textChanged, this, [this]() {
+        TabEditor *currentTab = currentTabEditor();
+        if (currentTab && outlineView) {
+            QString markdown = currentTab->editor()->toPlainText();
+            outlineView->updateOutline(markdown);
+        }
+    });
     
     // Connect modification signal
     connect(tab, &TabEditor::modificationChanged,
@@ -1942,6 +1976,11 @@ TabEditor* MainWindow::createNewTab()
     
     int index = tabWidget->addTab(tab, tr("Untitled"));
     tabWidget->setCurrentIndex(index);
+    
+    // Initialize outline for the new tab (empty content)
+    if (outlineView) {
+        outlineView->updateOutline(tab->editor()->toPlainText());
+    }
     
     return tab;
 }
@@ -1974,6 +2013,12 @@ void MainWindow::onTabChanged(int index)
     if (tab) {
         currentFilePath = tab->filePath();
         updateBacklinks();
+        
+        // Update the shared outline view with current tab's content
+        if (outlineView) {
+            QString markdown = tab->editor()->toPlainText();
+            outlineView->updateOutline(markdown);
+        }
         
         // Update window title
         if (!tab->filePath().isEmpty()) {

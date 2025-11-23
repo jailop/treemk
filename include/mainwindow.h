@@ -42,10 +42,9 @@ private slots:
     void save();
     void saveAs();
     void about();
-    void toggleTreeView();
+    void toggleSidebar();
     void togglePreview();
     void toggleBacklinks();
-    void toggleOutline();
     void onFileSelected(const QString &filePath);
     void onFileDoubleClicked(const QString &filePath);
     void onFileModifiedExternally(const QString &filePath);
@@ -150,10 +149,9 @@ private:
     QAction *quickOpenAction;
     QAction *closeTabAction;
     QAction *closeAllTabsAction;
-    QAction *toggleTreeViewAction;
+    QAction *toggleSidebarAction;
     QAction *togglePreviewAction;
     QAction *toggleBacklinksAction;
-    QAction *toggleOutlineAction;
     QAction *previewThemeLightAction;
     QAction *previewThemeDarkAction;
     QAction *previewThemeSepiaAction;
@@ -166,12 +164,15 @@ private:
     QProgressBar *progressBar;
     
     QSplitter *mainSplitter;
+    QTabWidget *leftTabWidget;
     QWidget *treePanel;
+    QWidget *outlinePanel;
     QWidget *editorPanel;
     QTabWidget *tabWidget;
     QWidget *backlinksPanel;
     
     FileSystemTreeView *treeView;
+    OutlinePanel *outlineView;
     QListWidget *backlinksView;
     LinkParser *linkParser;
     
