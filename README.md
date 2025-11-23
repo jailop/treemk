@@ -2,6 +2,8 @@
 
 A wiki-Markdown text editor built with Qt, designed for organizing and managing interconnected notes.
 
+![screenshot](screenshot.png)
+
 ## Features
 
 - File system tree view for note organization
