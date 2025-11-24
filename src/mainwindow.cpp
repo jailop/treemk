@@ -368,10 +368,12 @@ void MainWindow::createActions()
     aboutAction->setToolTip(tr("About TreeMk"));
     connect(aboutAction, &QAction::triggered, this, &MainWindow::about);
 
+    /*
     aboutQtAction = new QAction(tr("About &Qt"), this);
     aboutQtAction->setStatusTip(tr("Show the Qt library's About box"));
     aboutQtAction->setToolTip(tr("About Qt Framework"));
     connect(aboutQtAction, &QAction::triggered, qApp, &QApplication::aboutQt);
+    */
 }
 
 void MainWindow::createMenus()
@@ -833,19 +835,11 @@ void MainWindow::saveAs()
 void MainWindow::about()
 {
     QMessageBox::about(this, tr("About TreeMk"),
-        tr("<h2>TreeMk - Markdown Editor</h2>"
+        tr("<h2>TreeMk</h2>"
            "<p>Version 0.1.0</p>"
-           "<p>A feature-rich Markdown text editor built with Qt 6, "
+           "<p>A wiki-markdown text editor, "
            "designed for organizing and managing interconnected notes.</p>"
-           "<p><b>Features:</b></p>"
-           "<ul>"
-           "<li>File system tree view</li>"
-           "<li>Wiki-style linking</li>"
-           "<li>Markdown preview</li>"
-           "<li>Image embedding</li>"
-           "<li>LaTeX formula rendering</li>"
-           "</ul>"
-           "<p>Copyright © 2024</p>"));
+           "<p>Copyright © 2025 - Jaime Lopez - Data Inquiry Consulting LLC</p>"));
 }
 
 void MainWindow::showKeyboardShortcuts()
@@ -1003,12 +997,17 @@ bool MainWindow::maybeSave()
     if (!tab || !tab->isModified()) {
         return true;
     }
-    
+
+    if (tab->editor()->toPlainText().isEmpty()) {
+        return true;
+    }
+
     QString fileName = tab->fileName();
     if (fileName.isEmpty()) {
         fileName = tr("Untitled");
     }
     
+        
     QMessageBox::StandardButton reply = QMessageBox::warning(
         this, tr("Unsaved Changes"),
         tr("The document '%1' has unsaved changes.\n\n"
@@ -2035,9 +2034,11 @@ void MainWindow::onTabCloseRequested(int index)
     if (!tab) {
         return;
     }
-    
-    // Check if modified
-    if (tab->isModified()) {
+
+    // If the content is empty and unmodified, close without prompt
+    bool shouldSave = !tab->editor()->toPlainText().isEmpty() &&
+        tab->isModified();
+    if (shouldSave) {
         tabWidget->setCurrentIndex(index);
         QMessageBox::StandardButton reply = QMessageBox::question(
             this,

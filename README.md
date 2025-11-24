@@ -1,6 +1,7 @@
 # TreeMk - Markdown Editor
 
-A wiki-Markdown text editor built with Qt, designed for organizing and managing interconnected notes.
+A wiki-Markdown text editor built with Qt, designed for organizing and
+managing interconnected notes.
 
 ![screenshot](screenshot.png)
 
@@ -12,7 +13,8 @@ A wiki-Markdown text editor built with Qt, designed for organizing and managing 
   - Ctrl+Click wiki-links in the editor to navigate to linked files
   - Ctrl+Enter keyboard shortcut to open wiki-link at cursor position
   - Automatically open files in new tabs or switch to existing tabs
-- File inclusion with `[[!note]]` syntax - embeds content of linked file in preview
+- File inclusion with `[[!note]]` syntax - embeds content of linked file
+  in preview
 - Markdown preview with syntax highlighting
 - Image embedding support
 - LaTeX formula rendering (inline `$...$` and block `$$...$$`)
@@ -25,26 +27,30 @@ A wiki-Markdown text editor built with Qt, designed for organizing and managing 
 - Qt 6.2 or higher
 - CMake 3.16 or higher
 - C++17 compatible compiler
-- Pandoc (for export features)
+- pandoc (for export features)
 
-Pandoc is required to expert notes to formats like HTML, PDF, and DOCX.
-Pandoc needs to be installed separately. For example, using `chocolatey`
-on Windows:
-
-```powershell
-choco install pandoc
-```
-
-### Qt Modules Required
+For Qt, the following modules need to be available at compile time:
 
 - Qt6::Core
 - Qt6::Gui
 - Qt6::Widgets
 - Qt6::WebEngineWidgets
 
+pandoc is required to export notes to formats like HTML, PDF, and DOCX.
+pandoc needs to be installed separately.
+
 ## Building from Source
 
 ### Linux
+
+For Debian/Ubuntu-based systems, install the required packages:
+
+```bash
+sudo apt update
+sudo apt install build-essential cmake qt6-base-dev qt6-webengine-dev pandoc
+```
+
+To build the app:
 
 ```bash
 # Create build directory
@@ -59,43 +65,16 @@ cmake --build .
 
 # Run
 ./treemk
+
+# To install system-wide (optional)
+sudo cmake --install .
 ```
 
 ### Windows
 
-Requirements:
+Additional requirement requirement:
+
 - Visual Studio 2019 or later (with C++ support)
-- Qt 6 for Windows
-- CMake
-
-#### Using the Deploy Script (Recommended)
-
-The easiest way to build and package TreeMk for distribution:
-
-**PowerShell:**
-```powershell
-.\deploy-windows.ps1 -QtPath "C:\Qt\6.x.x\msvc2022_64"
-```
-
-**Command Prompt:**
-```cmd
-deploy-windows.bat "C:\Qt\6.x.x\msvc2022_64"
-```
-
-This will:
-- Build the project in Release mode
-- Deploy all Qt dependencies using windeployqt
-- Create a distributable folder with installer scripts
-- Generate a ZIP file for easy distribution
-
-The output includes:
-- `treemk.exe` - The application
-- All required Qt libraries
-- `install.bat` - Installs to %LOCALAPPDATA%\TreeMk with desktop shortcuts
-- `uninstall.bat` - Complete uninstaller
-- `README.txt` - User documentation
-
-#### Manual Build
 
 ```bash
 # Create build directory
@@ -106,23 +85,14 @@ cd build
 cmake .. -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="C:/Qt/6.x.x/msvc2019_64"
 
 # Build
-cmake --build . --config Release
-
-# Run
-Release\treemk.exe
-```
-
-**Note for Windows**: After building, use `windeployqt` to deploy Qt dependencies:
-```bash
-windeployqt Release\treemk.exe
+cmake --build .
 ```
 
 ### macOS
 
-Requirements:
+Additional requirement:
+
 - Xcode or Xcode Command Line Tools
-- Qt 6 for macOS
-- CMake
 
 ```bash
 # Create build directory
@@ -137,9 +107,4 @@ cmake --build .
 
 # Run
 open treemk.app
-```
-
-**Note for macOS**: After building, use `macdeployqt` to create a distributable app bundle:
-```bash
-macdeployqt treemk.app
 ```
