@@ -77,10 +77,12 @@ void MarkdownPreview::setMarkdownContent(const QString &markdown)
     
     // Process wiki links (including inclusions)
     html = processWikiLinks(html);
-    
+   
+    /*
     if (latexEnabled) {
         html = processLatexFormulas(html);
     }
+    */
     
     QString styleSheet = getStyleSheet(currentTheme);
     
@@ -634,6 +636,7 @@ QString MarkdownPreview::getStyleSheet(const QString &theme)
     return baseStyle + themeStyle;
 }
 
+/*
 QString MarkdownPreview::processLatexFormulas(const QString &html)
 {
     // KaTeX will handle the rendering via auto-render.js
@@ -641,6 +644,7 @@ QString MarkdownPreview::processLatexFormulas(const QString &html)
     // The actual rendering happens in the JavaScript
     return html;
 }
+*/
 
 QString MarkdownPreview::processWikiLinks(const QString &html)
 {
