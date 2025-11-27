@@ -33,6 +33,10 @@ find_package(Qt6 REQUIRED COMPONENTS
     WebEngineWidgets
 )
 
+# Find md4c library
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(MD4C REQUIRED IMPORTED_TARGET md4c-html)
+
 # Include directories
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
@@ -110,6 +114,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt6::Gui
     Qt6::Widgets
     Qt6::WebEngineWidgets
+    PkgConfig::MD4C
 )
 
 # Platform-specific installation
@@ -143,4 +148,11 @@ else()
     install(TARGETS ${PROJECT_NAME}
         RUNTIME DESTINATION bin
     )
+endif()
+
+# Enable testing
+option(BUILD_TESTS "Build the test suite" ON)
+if(BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
 endif()
