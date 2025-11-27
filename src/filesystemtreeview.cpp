@@ -201,10 +201,16 @@ void FileSystemTreeView::onDirectoryChanged(const QString &path)
 
 void FileSystemTreeView::onFileChanged(const QString &path)
 {
+    if (path == fileSavingPath) {
+        fileSavingPath.clear();
+        if (!fileSystemWatcher->files().contains(path)) {
+            fileSystemWatcher->addPath(path);
+        }
+        return;
+    }
     if (path == watchedFilePath) {
         if (QFile::exists(path)) {
             emit fileModifiedExternally(path);
-            
             if (!fileSystemWatcher->files().contains(path)) {
                 fileSystemWatcher->addPath(path);
             }
@@ -513,4 +519,9 @@ void FileSystemTreeView::refreshDirectory()
             scrollTo(idx);
         }
     }
+}
+
+void FileSystemTreeView::notifyFileSaving(const QString &filePath)
+{
+    fileSavingPath = filePath;
 }
