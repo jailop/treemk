@@ -40,6 +40,7 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 set(SOURCES
     src/main.cpp
     src/mainwindow.cpp
+    src/mainwindow_actions.cpp
     src/tabeditor.cpp
     src/filesystemtreeview.cpp
     src/markdowneditor.cpp
