@@ -167,52 +167,56 @@ if(BUILD_TESTS)
     add_subdirectory(tests)
 endif()
 
-# CPack Configuration for installers (optional)
+# CPack Configuration for installers
+set(CPACK_PACKAGE_NAME "TreeMk")
+set(CPACK_PACKAGE_VENDOR "TreeMk")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Markdown editor with wiki-style linking")
+set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "TreeMk")
+
+# Set license file if it exists
 if(EXISTS "${CMAKE_SOURCE_DIR}/LICENSE")
-    set(CPACK_PACKAGE_NAME "TreeMk")
-    set(CPACK_PACKAGE_VENDOR "TreeMk")
-    set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Markdown editor with wiki-style linking")
-    set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
-    set(CPACK_PACKAGE_INSTALL_DIRECTORY "TreeMk")
     set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE")
-
-    # Windows NSIS installer
-    if(WIN32)
-        set(CPACK_GENERATOR "NSIS")
-        set(CPACK_NSIS_DISPLAY_NAME "TreeMk")
-        set(CPACK_NSIS_PACKAGE_NAME "TreeMk")
-        set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL ON)
-        set(CPACK_NSIS_MODIFY_PATH ON)
-        if(EXISTS "${CMAKE_SOURCE_DIR}/resources/treemk.ico")
-            set(CPACK_NSIS_MUI_ICON "${CMAKE_SOURCE_DIR}/resources/treemk.ico")
-            set(CPACK_NSIS_MUI_UNIICON "${CMAKE_SOURCE_DIR}/resources/treemk.ico")
-        endif()
-        set(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\treemk.exe")
-        set(CPACK_NSIS_MENU_LINKS
-            "bin/treemk.exe" "TreeMk"
-        )
-    endif()
-
-    # Linux DEB package
-    if(UNIX AND NOT APPLE)
-        set(CPACK_GENERATOR "DEB")
-        set(CPACK_DEBIAN_PACKAGE_MAINTAINER "TreeMk Developers")
-        set(CPACK_DEBIAN_PACKAGE_SECTION "editors")
-        set(CPACK_DEBIAN_PACKAGE_DEPENDS "libqt6core6, libqt6gui6, libqt6widgets6, libqt6webenginewidgets6, libmd4c-html0")
-        
-        # Install desktop file if it exists
-        if(EXISTS "${CMAKE_SOURCE_DIR}/resources/treemk.desktop")
-            install(FILES resources/treemk.desktop
-                DESTINATION share/applications)
-        endif()
-        
-        # Install icon if it exists
-        if(EXISTS "${CMAKE_SOURCE_DIR}/resources/treemk.png")
-            install(FILES resources/treemk.png
-                DESTINATION share/icons/hicolor/256x256/apps)
-        endif()
-    endif()
-
-    include(CPack)
+else()
+    message(WARNING "LICENSE file not found - installer will not include license")
 endif()
+
+# Windows NSIS installer
+if(WIN32)
+    set(CPACK_GENERATOR "NSIS")
+    set(CPACK_NSIS_DISPLAY_NAME "TreeMk")
+    set(CPACK_NSIS_PACKAGE_NAME "TreeMk")
+    set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL ON)
+    set(CPACK_NSIS_MODIFY_PATH ON)
+    if(EXISTS "${CMAKE_SOURCE_DIR}/resources/treemk.ico")
+        set(CPACK_NSIS_MUI_ICON "${CMAKE_SOURCE_DIR}/resources/treemk.ico")
+        set(CPACK_NSIS_MUI_UNIICON "${CMAKE_SOURCE_DIR}/resources/treemk.ico")
+    endif()
+    set(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\treemk.exe")
+    set(CPACK_NSIS_MENU_LINKS
+        "bin/treemk.exe" "TreeMk"
+    )
+endif()
+
+# Linux DEB package
+if(UNIX AND NOT APPLE)
+    set(CPACK_GENERATOR "DEB")
+    set(CPACK_DEBIAN_PACKAGE_MAINTAINER "TreeMk Developers")
+    set(CPACK_DEBIAN_PACKAGE_SECTION "editors")
+    set(CPACK_DEBIAN_PACKAGE_DEPENDS "libqt6core6, libqt6gui6, libqt6widgets6, libqt6webenginewidgets6, libmd4c-html0")
+    
+    # Install desktop file if it exists
+    if(EXISTS "${CMAKE_SOURCE_DIR}/resources/treemk.desktop")
+        install(FILES resources/treemk.desktop
+            DESTINATION share/applications)
+    endif()
+    
+    # Install icon if it exists
+    if(EXISTS "${CMAKE_SOURCE_DIR}/resources/treemk.png")
+        install(FILES resources/treemk.png
+            DESTINATION share/icons/hicolor/256x256/apps)
+    endif()
+endif()
+
+include(CPack)
 

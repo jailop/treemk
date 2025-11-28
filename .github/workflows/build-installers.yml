@@ -95,11 +95,34 @@ jobs:
       
       - name: Configure CMake
         run: |
+          # Verify required files exist
+          Write-Host "=== Verifying required files ==="
+          if (!(Test-Path LICENSE)) {
+            Write-Host "ERROR: LICENSE file not found!"
+            exit 1
+          } else {
+            Write-Host "✓ LICENSE file found"
+          }
+          if (!(Test-Path resources/treemk.ico)) {
+            Write-Host "WARNING: treemk.ico not found (installer will not have icon)"
+          } else {
+            Write-Host "✓ treemk.ico found"
+          }
+          
+          Write-Host "=== Configuring CMake ==="
           mkdir build
           cd build
           cmake .. -G "Visual Studio 17 2022" -A x64 `
             -DCMAKE_BUILD_TYPE=Release `
             -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
+          
+          Write-Host "=== Verifying CPack configuration ==="
+          if (!(Test-Path CPackConfig.cmake)) {
+            Write-Host "ERROR: CPackConfig.cmake not generated!"
+            exit 1
+          } else {
+            Write-Host "✓ CPackConfig.cmake generated successfully"
+          }
       
       - name: Build Application
         run: |
