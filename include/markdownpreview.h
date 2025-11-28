@@ -16,6 +16,7 @@ public:
     void setBasePath(const QString &path);
     void setLatexEnabled(bool enabled);
     void scrollToPercentage(double percentage);
+    double currentScrollPercentage() const;
 
 signals:
     void wikiLinkClicked(const QString &linkTarget);
@@ -34,6 +35,7 @@ private:
     QString currentTheme;
     QString basePath;
     bool latexEnabled;
+    double lastScrollPercentage;
 };
 
 #endif // MARKDOWNPREVIEW_H

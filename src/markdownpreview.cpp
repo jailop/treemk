@@ -41,7 +41,7 @@ private:
 
 MarkdownPreview::MarkdownPreview(QWidget *parent)
     : QWebEngineView(parent), currentTheme("light"), basePath(QDir::homePath()),
-      latexEnabled(true) {
+      latexEnabled(true), lastScrollPercentage(0.0) {
   setContextMenuPolicy(Qt::CustomContextMenu);
   // Set custom page to intercept link clicks
   WikiLinkPage *wikiPage = new WikiLinkPage(this);
@@ -101,6 +101,7 @@ void MarkdownPreview::setMarkdownContent(const QString &markdown) {
               "11.9.0/highlight.min.js\"></script>"
               "<style>%2</style>"
               "<script>"
+              "var savedScrollPercentage = %4;"
               "document.addEventListener('DOMContentLoaded', function() {"
               "  renderMathInElement(document.body, {"
               "    delimiters: ["
@@ -112,12 +113,16 @@ void MarkdownPreview::setMarkdownContent(const QString &markdown) {
               "  document.querySelectorAll('pre code').forEach((block) => {"
               "    hljs.highlightElement(block);"
               "  });"
+              "  if (savedScrollPercentage > 0) {"
+              "    window.scrollTo(0, document.body.scrollHeight * savedScrollPercentage);"
+              "  }"
               "});"
               "</script>"
               "</head>"
               "<body>%3</body>"
               "</html>")
-          .arg(highlightTheme, styleSheet, html);
+          .arg(highlightTheme, styleSheet, html)
+          .arg(lastScrollPercentage);
   // Use setHtml with baseUrl to allow loading local images
   QUrl baseUrl = QUrl::fromLocalFile(basePath + "/");
   setHtml(fullHtml, baseUrl);
@@ -126,11 +131,16 @@ void MarkdownPreview::setMarkdownContent(const QString &markdown) {
 void MarkdownPreview::setTheme(const QString &theme) { currentTheme = theme; }
 
 void MarkdownPreview::scrollToPercentage(double percentage) {
+  lastScrollPercentage = percentage;
   // Use JavaScript to scroll the preview to a specific percentage
   QString script =
       QString("window.scrollTo(0, document.body.scrollHeight * %1);")
           .arg(percentage);
   page()->runJavaScript(script);
+}
+
+double MarkdownPreview::currentScrollPercentage() const {
+  return lastScrollPercentage;
 }
 
 QString MarkdownPreview::convertMarkdownToHtml(const QString &markdown) {
