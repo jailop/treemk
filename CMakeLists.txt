@@ -33,6 +33,10 @@ find_package(Qt6 REQUIRED COMPONENTS
     WebEngineWidgets
 )
 
+# Find md4c library
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(MD4C REQUIRED IMPORTED_TARGET md4c-html)
+
 # Include directories
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
@@ -40,6 +44,7 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 set(SOURCES
     src/main.cpp
     src/mainwindow.cpp
+    src/mainwindow_actions.cpp
     src/tabeditor.cpp
     src/filesystemtreeview.cpp
     src/markdowneditor.cpp
@@ -52,6 +57,7 @@ set(SOURCES
     src/quickopendialog.cpp
     src/outlinepanel.cpp
     src/shortcutsdialog.cpp
+    src/shortcutmanager.cpp
     src/thememanager.cpp
 )
 
@@ -70,6 +76,7 @@ set(HEADERS
     include/quickopendialog.h
     include/outlinepanel.h
     include/shortcutsdialog.h
+    include/shortcutmanager.h
     include/thememanager.h
 )
 
@@ -109,6 +116,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt6::Gui
     Qt6::Widgets
     Qt6::WebEngineWidgets
+    PkgConfig::MD4C
 )
 
 # Platform-specific installation
@@ -143,3 +151,51 @@ else()
         RUNTIME DESTINATION bin
     )
 endif()
+
+# Enable testing
+option(BUILD_TESTS "Build the test suite" ON)
+if(BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
+
+# CPack Configuration for installers
+set(CPACK_PACKAGE_NAME "TreeMk")
+set(CPACK_PACKAGE_VENDOR "TreeMk")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Markdown editor with wiki-style linking")
+set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "TreeMk")
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE")
+
+# Windows NSIS installer
+if(WIN32)
+    set(CPACK_GENERATOR "NSIS")
+    set(CPACK_NSIS_DISPLAY_NAME "TreeMk")
+    set(CPACK_NSIS_PACKAGE_NAME "TreeMk")
+    set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL ON)
+    set(CPACK_NSIS_MODIFY_PATH ON)
+    set(CPACK_NSIS_MUI_ICON "${CMAKE_SOURCE_DIR}/resources/treemk.ico")
+    set(CPACK_NSIS_MUI_UNIICON "${CMAKE_SOURCE_DIR}/resources/treemk.ico")
+    set(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\treemk.exe")
+    set(CPACK_NSIS_MENU_LINKS
+        "bin/treemk.exe" "TreeMk"
+    )
+endif()
+
+# Linux DEB package
+if(UNIX AND NOT APPLE)
+    set(CPACK_GENERATOR "DEB")
+    set(CPACK_DEBIAN_PACKAGE_MAINTAINER "TreeMk Developers")
+    set(CPACK_DEBIAN_PACKAGE_SECTION "editors")
+    set(CPACK_DEBIAN_PACKAGE_DEPENDS "libqt6core6, libqt6gui6, libqt6widgets6, libqt6webenginewidgets6, libmd4c-html0")
+    
+    # Install desktop file
+    install(FILES resources/treemk.desktop
+        DESTINATION share/applications)
+    
+    # Install icon
+    install(FILES resources/treemk.png
+        DESTINATION share/icons/hicolor/256x256/apps)
+endif()
+
+include(CPack)

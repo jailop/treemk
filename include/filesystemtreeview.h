@@ -16,6 +16,7 @@ public:
     void setRootPath(const QString &path);
     QString currentFilePath() const;
     QString rootPath() const;
+    void notifyFileSaving(const QString &filePath);
 
 signals:
     void fileSelected(const QString &filePath);
@@ -63,6 +64,7 @@ private:
     bool clipboardIsCut;
     QString currentRootPath;
     QString watchedFilePath;
+    QString fileSavingPath;
 };
 
 #endif // FILESYSTEMTREEVIEW_H

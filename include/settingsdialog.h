@@ -30,8 +30,10 @@ signals:
 
 private slots:
     void saveSettings();
+    void applySettings();
     void onBrowseDefaultFolder();
     void onBrowseCustomCSS();
+    void onConfigureShortcuts();
 
 private:
     void setupUI();
@@ -40,6 +42,7 @@ private:
     void setupGeneralTab();
     void setupWikiLinksTab();
     void setupAppearanceTab();
+    void setupShortcutsTab();
     void loadSettings();
     
     QTabWidget *tabWidget;
