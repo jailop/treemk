@@ -81,18 +81,29 @@ hdiutil create -srcfolder "${DMG_DIR}" \
 
 # Mount the temporary DMG
 echo -e "${YELLOW}Mounting temporary DMG...${NC}"
-MOUNT_DIR=$(hdiutil attach -readwrite -noverify -noautoopen "${DMG_NAME}-temp.dmg" | egrep '^/dev/' | sed 1q | awk '{print $3}')
+MOUNT_OUTPUT=$(hdiutil attach -readwrite -noverify -noautoopen "${DMG_NAME}-temp.dmg" 2>&1)
+
+# Parse mount output - look for the line with Apple_HFS and extract mount point
+# Format: /dev/disk# <tabs> Apple_HFS <tabs> /Volumes/name
+MOUNT_DIR=$(echo "$MOUNT_OUTPUT" | grep "Apple_HFS" | sed 's/.*Apple_HFS[[:space:]]*//g' | sed 's/^[[:space:]]*//')
 
 if [ -z "$MOUNT_DIR" ]; then
-    echo -e "${RED}Error: Failed to mount DMG${NC}"
-    # Try to get the mount point another way
-    MOUNT_DIR=$(hdiutil attach -readwrite -noverify -noautoopen "${DMG_NAME}-temp.dmg" | tail -1 | awk '{print $3}')
+    # Fallback: try to find /Volumes path
+    MOUNT_DIR=$(echo "$MOUNT_OUTPUT" | grep "/Volumes" | tail -1 | sed 's/.*\(\/Volumes\/[^[:space:]].*\)$/\1/')
+fi
+
+if [ -z "$MOUNT_DIR" ]; then
+    echo -e "${RED}Error: Could not determine mount point${NC}"
+    echo "Mount output:"
+    echo "$MOUNT_OUTPUT"
+    exit 1
 fi
 
 echo -e "${YELLOW}Mounted at: ${MOUNT_DIR}${NC}"
 
-if [ -z "$MOUNT_DIR" ]; then
-    echo -e "${RED}Error: Could not determine mount point${NC}"
+# Verify mount succeeded
+if [ ! -d "$MOUNT_DIR" ]; then
+    echo -e "${RED}Error: Mount directory does not exist: ${MOUNT_DIR}${NC}"
     exit 1
 fi
 
@@ -129,25 +140,72 @@ fi
 
 # Unmount the temporary DMG
 echo -e "${YELLOW}Unmounting temporary DMG...${NC}"
-sync
-sync  # Double sync for safety
-sleep 2  # Give system time to flush
 
-# Try to detach with retries
-for i in 1 2 3; do
-    if hdiutil detach "${MOUNT_DIR}" 2>/dev/null; then
+# Force any pending operations to complete
+sync
+sleep 3
+
+# Try multiple unmount strategies
+UNMOUNTED=false
+for attempt in 1 2 3 4 5; do
+    echo "Unmount attempt $attempt..."
+    
+    # Try normal detach
+    if hdiutil detach "$MOUNT_DIR" -quiet 2>/dev/null; then
+        UNMOUNTED=true
         break
     fi
-    echo "Retry $i..."
-    sleep 2
+    
+    # Try force detach
+    if hdiutil detach "$MOUNT_DIR" -force -quiet 2>/dev/null; then
+        UNMOUNTED=true
+        break
+    fi
+    
+    # Wait longer between retries
+    sleep 5
 done
+
+if [ "$UNMOUNTED" = false ]; then
+    echo -e "${RED}Warning: Could not unmount cleanly, trying force detach...${NC}"
+    hdiutil detach "$MOUNT_DIR" -force 2>&1 || true
+    sleep 3
+fi
+
+# Verify unmount succeeded
+sleep 2
+if mount | grep -q "$MOUNT_DIR"; then
+    echo -e "${RED}Error: Volume still mounted after detach attempts${NC}"
+    # Last resort - try to eject by device
+    DEVICE=$(hdiutil info | grep "$MOUNT_DIR" | awk '{print $1}')
+    if [ -n "$DEVICE" ]; then
+        echo "Trying to eject device: $DEVICE"
+        hdiutil detach "$DEVICE" -force 2>&1 || true
+        sleep 5
+    fi
+fi
+
+# Final check before conversion
+if mount | grep -q "$MOUNT_DIR"; then
+    echo -e "${RED}Error: Could not unmount DMG, aborting conversion${NC}"
+    exit 1
+fi
 
 # Convert to compressed read-only DMG
 echo -e "${YELLOW}Creating final compressed DMG...${NC}"
-hdiutil convert "${DMG_NAME}-temp.dmg" \
+if hdiutil convert "${DMG_NAME}-temp.dmg" \
     -format UDZO \
     -imagekey zlib-level=9 \
-    -o "${DMG_NAME}.dmg"
+    -o "${DMG_NAME}.dmg" 2>&1; then
+    echo -e "${GREEN}Conversion successful${NC}"
+else
+    echo -e "${RED}Conversion failed, retrying with simpler options...${NC}"
+    # Retry with simpler conversion
+    sleep 5
+    hdiutil convert "${DMG_NAME}-temp.dmg" \
+        -format UDZO \
+        -o "${DMG_NAME}.dmg"
+fi
 
 # Clean up
 echo -e "${YELLOW}Cleaning up temporary files...${NC}"

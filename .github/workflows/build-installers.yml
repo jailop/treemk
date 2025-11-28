@@ -25,6 +25,10 @@ jobs:
         run: |
           brew install md4c
       
+      - name: Install create-dmg
+        run: |
+          brew install create-dmg
+      
       - name: Configure CMake
         run: |
           mkdir build
@@ -43,8 +47,8 @@ jobs:
       
       - name: Create DMG
         run: |
-          chmod +x create_dmg.sh
-          ./create_dmg.sh
+          chmod +x create_dmg_enhanced.sh
+          ./create_dmg_enhanced.sh
         env:
           CI: true
       
