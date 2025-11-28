@@ -109,7 +109,12 @@ jobs:
       - name: Deploy Qt dependencies
         run: |
           cd build\Release
-          windeployqt treemk.exe --webenginewidgets --release
+          # Try with no-translations first (faster and avoids common issues)
+          windeployqt treemk.exe --webenginewidgets --release --no-translations --no-system-d3d-compiler --no-opengl-sw
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "First attempt failed, trying with minimal options..."
+            windeployqt treemk.exe --release --no-translations
+          }
       
       - name: Install NSIS
         run: |
