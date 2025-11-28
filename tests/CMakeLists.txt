@@ -5,8 +5,16 @@ enable_testing()
 
 # Find required packages
 find_package(Qt6 REQUIRED COMPONENTS Test Core Widgets WebEngineWidgets)
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(MD4C REQUIRED IMPORTED_TARGET md4c-html)
+
+# Find md4c library (platform-specific)
+if(WIN32)
+    find_package(md4c CONFIG REQUIRED)
+    set(MD4C_LIBRARIES md4c::md4c-html)
+else()
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(MD4C REQUIRED IMPORTED_TARGET md4c-html)
+    set(MD4C_LIBRARIES PkgConfig::MD4C)
+endif()
 
 # Include parent directories
 include_directories(${CMAKE_SOURCE_DIR}/include)
@@ -19,7 +27,7 @@ add_library(test_helpers STATIC
 
 target_link_libraries(test_helpers
     Qt6::Core
-    PkgConfig::MD4C
+    ${MD4C_LIBRARIES}
 )
 
 # Test 1: Markdown Conversion Tests
@@ -53,7 +61,7 @@ add_test(NAME MarkdownConversion COMMAND test_markdown_conversion)
 #     Qt6::Core
 #     Qt6::Widgets
 #     Qt6::WebEngineWidgets
-#     PkgConfig::MD4C
+#     ${MD4C_LIBRARIES}
 # )
 # 
 # add_test(NAME MarkdownPreview COMMAND test_markdownpreview)
