@@ -57,6 +57,7 @@ set(SOURCES
     src/quickopendialog.cpp
     src/outlinepanel.cpp
     src/shortcutsdialog.cpp
+    src/shortcutmanager.cpp
     src/thememanager.cpp
 )
 
@@ -75,6 +76,7 @@ set(HEADERS
     include/quickopendialog.h
     include/outlinepanel.h
     include/shortcutsdialog.h
+    include/shortcutmanager.h
     include/thememanager.h
 )
 

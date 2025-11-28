@@ -935,8 +935,6 @@ void MainWindow::searchInFiles() {
 
 void MainWindow::openSettings() {
   SettingsDialog dialog(this);
-  connect(&dialog, &SettingsDialog::settingsChanged, this,
-          &MainWindow::applySettings);
 
   if (dialog.exec() == QDialog::Accepted) {
     applySettings();
@@ -948,20 +946,26 @@ void MainWindow::applySettings() {
   // Apply application theme
   QString appTheme =
       settings->value("appearance/appTheme", "system").toString();
-  ThemeManager::instance()->setAppTheme(appTheme);
+  if (ThemeManager::instance()) {
+    ThemeManager::instance()->setAppTheme(appTheme);
+  }
 
   // Apply editor color scheme to all tabs
   QString editorScheme =
       settings->value("appearance/editorColorScheme", "light").toString();
-  ThemeManager::instance()->setEditorColorScheme(editorScheme);
+  if (ThemeManager::instance()) {
+    ThemeManager::instance()->setEditorColorScheme(editorScheme);
+  }
 
   for (int i = 0; i < tabWidget->count(); ++i) {
     TabEditor *tab = qobject_cast<TabEditor *>(tabWidget->widget(i));
     if (tab && tab->editor()) {
       // Apply editor color scheme
-      tab->editor()->setPalette(ThemeManager::instance()->getEditorPalette());
-      tab->editor()->setStyleSheet(
-          ThemeManager::instance()->getEditorStyleSheet());
+      if (ThemeManager::instance()) {
+        tab->editor()->setPalette(ThemeManager::instance()->getEditorPalette());
+        tab->editor()->setStyleSheet(
+            ThemeManager::instance()->getEditorStyleSheet());
+      }
 
       // Update highlighter color scheme
       if (tab->editor()->highlighter()) {
@@ -980,26 +984,30 @@ void MainWindow::applySettings() {
   // Apply auto-save settings
   if (settings->value("autoSaveEnabled", true).toBool()) {
     int interval = settings->value("autoSaveInterval", 60).toInt();
-    autoSaveTimer->start(interval * 1000);
+    if (autoSaveTimer) {
+      autoSaveTimer->start(interval * 1000);
+    }
   } else {
-    autoSaveTimer->stop();
+    if (autoSaveTimer) {
+      autoSaveTimer->stop();
+    }
   }
 
   // Apply theme to all tabs
   QString theme = settings->value("previewTheme", "light").toString();
   for (int i = 0; i < tabWidget->count(); ++i) {
     TabEditor *tab = qobject_cast<TabEditor *>(tabWidget->widget(i));
-    if (tab) {
+    if (tab && tab->preview()) {
       tab->preview()->setTheme(theme);
     }
   }
 
   // Update theme action checkboxes
-  if (theme == "dark") {
+  if (previewThemeDarkAction && theme == "dark") {
     previewThemeDarkAction->setChecked(true);
-  } else if (theme == "sepia") {
+  } else if (previewThemeSepiaAction && theme == "sepia") {
     previewThemeSepiaAction->setChecked(true);
-  } else {
+  } else if (previewThemeLightAction) {
     previewThemeLightAction->setChecked(true);
   }
 

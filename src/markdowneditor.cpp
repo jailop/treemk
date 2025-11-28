@@ -1,5 +1,6 @@
 #include "markdowneditor.h"
 #include "markdownhighlighter.h"
+#include "shortcutmanager.h"
 #include <QPainter>
 #include <QTextBlock>
 #include <QFont>
@@ -161,11 +162,85 @@ void MarkdownEditor::mousePressEvent(QMouseEvent *event)
 
 void MarkdownEditor::keyPressEvent(QKeyEvent *event)
 {
+    // Get shortcut manager instance
+    ShortcutManager *sm = ShortcutManager::instance();
+    QKeySequence pressed(event->key() | event->modifiers());
+    
+    // Check custom navigation shortcuts
+    QTextCursor cursor = textCursor();
+    QTextCursor::MoveMode moveMode = (event->modifiers() & Qt::ShiftModifier) 
+        ? QTextCursor::KeepAnchor : QTextCursor::MoveAnchor;
+    
+    // Navigation actions
+    if (pressed == sm->getShortcut(ShortcutManager::MoveToStartOfLine)) {
+        cursor.movePosition(QTextCursor::StartOfLine, moveMode);
+        setTextCursor(cursor);
+        event->accept();
+        return;
+    } else if (pressed == sm->getShortcut(ShortcutManager::MoveToEndOfLine)) {
+        cursor.movePosition(QTextCursor::EndOfLine, moveMode);
+        setTextCursor(cursor);
+        event->accept();
+        return;
+    } else if (pressed == sm->getShortcut(ShortcutManager::MoveToStartOfDocument)) {
+        cursor.movePosition(QTextCursor::Start, moveMode);
+        setTextCursor(cursor);
+        event->accept();
+        return;
+    } else if (pressed == sm->getShortcut(ShortcutManager::MoveToEndOfDocument)) {
+        cursor.movePosition(QTextCursor::End, moveMode);
+        setTextCursor(cursor);
+        event->accept();
+        return;
+    } else if (pressed == sm->getShortcut(ShortcutManager::MoveWordLeft)) {
+        cursor.movePosition(QTextCursor::PreviousWord, moveMode);
+        setTextCursor(cursor);
+        event->accept();
+        return;
+    } else if (pressed == sm->getShortcut(ShortcutManager::MoveWordRight)) {
+        cursor.movePosition(QTextCursor::NextWord, moveMode);
+        setTextCursor(cursor);
+        event->accept();
+        return;
+    } else if (pressed == sm->getShortcut(ShortcutManager::MoveToPreviousParagraph)) {
+        cursor.movePosition(QTextCursor::PreviousBlock, moveMode);
+        setTextCursor(cursor);
+        event->accept();
+        return;
+    } else if (pressed == sm->getShortcut(ShortcutManager::MoveToNextParagraph)) {
+        cursor.movePosition(QTextCursor::NextBlock, moveMode);
+        setTextCursor(cursor);
+        event->accept();
+        return;
+    }
+    
+    // Editing actions
+    if (pressed == sm->getShortcut(ShortcutManager::DeleteWordLeft)) {
+        cursor.movePosition(QTextCursor::PreviousWord, QTextCursor::KeepAnchor);
+        cursor.removeSelectedText();
+        event->accept();
+        return;
+    } else if (pressed == sm->getShortcut(ShortcutManager::DeleteWordRight)) {
+        cursor.movePosition(QTextCursor::NextWord, QTextCursor::KeepAnchor);
+        cursor.removeSelectedText();
+        event->accept();
+        return;
+    } else if (pressed == sm->getShortcut(ShortcutManager::DeleteToStartOfLine)) {
+        cursor.movePosition(QTextCursor::StartOfLine, QTextCursor::KeepAnchor);
+        cursor.removeSelectedText();
+        event->accept();
+        return;
+    } else if (pressed == sm->getShortcut(ShortcutManager::DeleteToEndOfLine)) {
+        cursor.movePosition(QTextCursor::EndOfLine, QTextCursor::KeepAnchor);
+        cursor.removeSelectedText();
+        event->accept();
+        return;
+    }
+    
     // Ctrl+Enter or Ctrl+Return to open wiki-link at cursor
     if ((event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter) && 
         (event->modifiers() & Qt::ControlModifier)) {
         
-        QTextCursor cursor = textCursor();
         int position = cursor.position();
         
         // Try wiki link first
