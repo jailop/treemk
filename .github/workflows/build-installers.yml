@@ -123,19 +123,19 @@ jobs:
       - name: Create Windows Installer
         run: |
           cd build
-          cpack -G NSIS
+          cpack -G NSIS -C Release
       
       - name: Upload Installer
         uses: actions/upload-artifact@v4
         with:
           name: TreeMk-Windows
-          path: build/*.exe
+          path: build/TreeMk-*.exe
       
       - name: Upload to Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
         with:
-          files: build/*.exe
+          files: build/TreeMk-*.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
