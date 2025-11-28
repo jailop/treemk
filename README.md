@@ -39,6 +39,12 @@ For Qt, the following modules need to be available at compile time:
 pandoc is required to export notes to formats like HTML, PDF, and DOCX.
 pandoc needs to be installed separately.
 
+To render the preview, the app uses external JavaScript libraries
+accessed via CDN:
+
+- KaTeX is used for rendering LaTeX formulas.
+- highlight.js is used for syntax highlighting in code blocks.
+
 ## Building from Source
 
 ### Linux
