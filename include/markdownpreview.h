@@ -28,7 +28,7 @@ private slots:
 private:
     QString convertMarkdownToHtml(const QString &markdown);
     QString getStyleSheet(const QString &theme);
-    // QString processLatexFormulas(const QString &html);
+    QString processLatexFormulas(const QString &html);
     QString processWikiLinks(const QString &html);
     QString resolveAndIncludeFile(const QString &linkTarget, const QString &displayText);
     
