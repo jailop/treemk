@@ -95,6 +95,12 @@ void SettingsDialog::setupEditorTab() {
       new QCheckBox(tr("Enable syntax highlighting in code blocks"));
   behaviorLayout->addRow(enableCodeSyntaxCheckBox);
 
+  autoIndentCheckBox = new QCheckBox(tr("Auto-indent new lines"));
+  behaviorLayout->addRow(autoIndentCheckBox);
+
+  autoCloseBracketsCheckBox = new QCheckBox(tr("Auto-close brackets and quotes"));
+  behaviorLayout->addRow(autoCloseBracketsCheckBox);
+
   layout->addWidget(behaviorGroup);
   layout->addStretch();
 
@@ -319,6 +325,10 @@ void SettingsDialog::loadSettings() {
       settings.value("editor/highlightCurrentLine", true).toBool());
   enableCodeSyntaxCheckBox->setChecked(
       settings.value("editor/enableCodeSyntax", false).toBool());
+  autoIndentCheckBox->setChecked(
+      settings.value("editor/autoIndent", true).toBool());
+  autoCloseBracketsCheckBox->setChecked(
+      settings.value("editor/autoCloseBrackets", true).toBool());
 
   // Preview settings
   QString theme = settings.value("previewTheme", "light").toString();
@@ -389,6 +399,10 @@ void SettingsDialog::saveSettings() {
                     highlightCurrentLineCheckBox->isChecked());
   settings.setValue("editor/enableCodeSyntax",
                     enableCodeSyntaxCheckBox->isChecked());
+  settings.setValue("editor/autoIndent",
+                    autoIndentCheckBox->isChecked());
+  settings.setValue("editor/autoCloseBrackets",
+                    autoCloseBracketsCheckBox->isChecked());
 
   // Preview settings
   settings.setValue("previewTheme", themeComboBox->currentData().toString());

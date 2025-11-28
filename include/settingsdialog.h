@@ -55,6 +55,8 @@ private:
     QCheckBox *showLineNumbersCheckBox;
     QCheckBox *highlightCurrentLineCheckBox;
     QCheckBox *enableCodeSyntaxCheckBox;
+    QCheckBox *autoIndentCheckBox;
+    QCheckBox *autoCloseBracketsCheckBox;
 
     // Preview settings
     QComboBox *themeComboBox;

@@ -24,6 +24,7 @@
 #include <QInputDialog>
 #include <QMessageBox>
 #include <QDesktopServices>
+#include <QSettings>
 
 MarkdownEditor::MarkdownEditor(QWidget *parent)
     : QPlainTextEdit(parent)
@@ -255,6 +256,81 @@ void MarkdownEditor::keyPressEvent(QKeyEvent *event)
         QString externalUrl = getExternalLinkAtPosition(position);
         if (!externalUrl.isEmpty()) {
             QDesktopServices::openUrl(QUrl(externalUrl));
+            event->accept();
+            return;
+        }
+    }
+    
+    // Auto-indent on Enter
+    QSettings settings("TreeMk", "TreeMk");
+    bool autoIndent = settings.value("editor/autoIndent", true).toBool();
+    bool autoCloseBrackets = settings.value("editor/autoCloseBrackets", true).toBool();
+    
+    if (autoIndent && (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter)) {
+        // Get current line text to calculate indentation
+        QTextCursor cursor = textCursor();
+        QString currentLine = cursor.block().text();
+        
+        // Calculate leading whitespace
+        int indent = 0;
+        for (QChar ch : currentLine) {
+            if (ch == ' ') indent++;
+            else if (ch == '\t') indent += 4; // Treat tab as 4 spaces
+            else break;
+        }
+        
+        // Insert newline and indentation
+        cursor.insertText("\n" + QString(" ").repeated(indent));
+        setTextCursor(cursor);
+        event->accept();
+        return;
+    }
+    
+    // Auto-close brackets, parentheses, quotes
+    if (autoCloseBrackets) {
+        QString closingChar;
+        bool shouldClose = false;
+        
+        if (event->text() == "(") {
+            closingChar = ")";
+            shouldClose = true;
+        } else if (event->text() == "[") {
+            closingChar = "]";
+            shouldClose = true;
+        } else if (event->text() == "{") {
+            closingChar = "}";
+            shouldClose = true;
+        } else if (event->text() == "\"") {
+            closingChar = "\"";
+            shouldClose = true;
+        } else if (event->text() == "'") {
+            closingChar = "'";
+            shouldClose = true;
+        } else if (event->text() == "`") {
+            closingChar = "`";
+            shouldClose = true;
+        }
+        
+        if (shouldClose) {
+            QTextCursor cursor = textCursor();
+            cursor.insertText(event->text() + closingChar);
+            cursor.movePosition(QTextCursor::Left, QTextCursor::MoveAnchor);
+            setTextCursor(cursor);
+            event->accept();
+            return;
+        }
+        
+        // Skip over closing bracket if typed when already at one
+        QTextCursor cursor = textCursor();
+        QString nextChar = cursor.block().text().mid(cursor.positionInBlock(), 1);
+        if ((event->text() == ")" && nextChar == ")") ||
+            (event->text() == "]" && nextChar == "]") ||
+            (event->text() == "}" && nextChar == "}") ||
+            (event->text() == "\"" && nextChar == "\"") ||
+            (event->text() == "'" && nextChar == "'") ||
+            (event->text() == "`" && nextChar == "`")) {
+            cursor.movePosition(QTextCursor::Right, QTextCursor::MoveAnchor);
+            setTextCursor(cursor);
             event->accept();
             return;
         }
