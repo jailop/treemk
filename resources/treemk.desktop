@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=TreeMk
+Comment=Markdown editor with wiki-style linking
+Exec=treemk %F
+Icon=treemk
+Terminal=false
+Categories=Office;TextEditor;Development;
+MimeType=text/markdown;text/x-markdown;
+Keywords=markdown;editor;wiki;notes;
+StartupNotify=true
+StartupWMClass=treemk
