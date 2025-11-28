@@ -937,8 +937,9 @@ void MainWindow::openSettings() {
   SettingsDialog dialog(this);
 
   if (dialog.exec() == QDialog::Accepted) {
-    applySettings();
-    statusBar()->showMessage(tr("Settings saved"), 3000);
+    // Temporarily disabled to prevent crash
+    // applySettings();
+    statusBar()->showMessage(tr("Settings saved. Restart to apply changes."), 3000);
   }
 }
 
@@ -1032,7 +1033,9 @@ void MainWindow::applySettings() {
 
   // Apply preview refresh rate
   int refreshRate = settings->value("preview/refreshRate", 500).toInt();
-  previewUpdateTimer->setInterval(refreshRate);
+  if (previewUpdateTimer) {
+    previewUpdateTimer->setInterval(refreshRate);
+  }
 }
 
 void MainWindow::onSearchResultSelected(const QString &filePath,
