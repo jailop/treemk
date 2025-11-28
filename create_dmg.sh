@@ -83,11 +83,23 @@ hdiutil create -srcfolder "${DMG_DIR}" \
 echo -e "${YELLOW}Mounting temporary DMG...${NC}"
 MOUNT_DIR=$(hdiutil attach -readwrite -noverify -noautoopen "${DMG_NAME}-temp.dmg" | egrep '^/dev/' | sed 1q | awk '{print $3}')
 
+if [ -z "$MOUNT_DIR" ]; then
+    echo -e "${RED}Error: Failed to mount DMG${NC}"
+    # Try to get the mount point another way
+    MOUNT_DIR=$(hdiutil attach -readwrite -noverify -noautoopen "${DMG_NAME}-temp.dmg" | tail -1 | awk '{print $3}')
+fi
+
 echo -e "${YELLOW}Mounted at: ${MOUNT_DIR}${NC}"
 
-# Set DMG window properties using AppleScript
-echo -e "${YELLOW}Setting DMG window properties...${NC}"
-cat > /tmp/dmg_setup.applescript << EOF
+if [ -z "$MOUNT_DIR" ]; then
+    echo -e "${RED}Error: Could not determine mount point${NC}"
+    exit 1
+fi
+
+# Set DMG window properties using AppleScript (skip in CI)
+if [ -z "$CI" ]; then
+    echo -e "${YELLOW}Setting DMG window properties...${NC}"
+    cat > /tmp/dmg_setup.applescript << EOF
 tell application "Finder"
     tell disk "${VOLUME_NAME}"
         open
@@ -109,13 +121,26 @@ tell application "Finder"
 end tell
 EOF
 
-osascript /tmp/dmg_setup.applescript || echo "Warning: Could not set DMG window properties"
-rm /tmp/dmg_setup.applescript
+    osascript /tmp/dmg_setup.applescript || echo "Warning: Could not set DMG window properties"
+    rm /tmp/dmg_setup.applescript
+else
+    echo -e "${YELLOW}Skipping GUI setup in CI environment${NC}"
+fi
 
 # Unmount the temporary DMG
 echo -e "${YELLOW}Unmounting temporary DMG...${NC}"
 sync
-hdiutil detach "${MOUNT_DIR}"
+sync  # Double sync for safety
+sleep 2  # Give system time to flush
+
+# Try to detach with retries
+for i in 1 2 3; do
+    if hdiutil detach "${MOUNT_DIR}" 2>/dev/null; then
+        break
+    fi
+    echo "Retry $i..."
+    sleep 2
+done
 
 # Convert to compressed read-only DMG
 echo -e "${YELLOW}Creating final compressed DMG...${NC}"

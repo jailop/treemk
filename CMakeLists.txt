@@ -34,8 +34,16 @@ find_package(Qt6 REQUIRED COMPONENTS
 )
 
 # Find md4c library
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(MD4C REQUIRED IMPORTED_TARGET md4c-html)
+if(WIN32)
+    # On Windows, use vcpkg's find_package
+    find_package(md4c CONFIG REQUIRED)
+    set(MD4C_LIBRARIES md4c::md4c-html)
+else()
+    # On Unix systems, use pkg-config
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(MD4C REQUIRED IMPORTED_TARGET md4c-html)
+    set(MD4C_LIBRARIES PkgConfig::MD4C)
+endif()
 
 # Include directories
 include_directories(${CMAKE_SOURCE_DIR}/include)
@@ -116,7 +124,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt6::Gui
     Qt6::Widgets
     Qt6::WebEngineWidgets
-    PkgConfig::MD4C
+    ${MD4C_LIBRARIES}
 )
 
 # Platform-specific installation

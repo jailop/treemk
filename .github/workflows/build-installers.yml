@@ -45,6 +45,8 @@ jobs:
         run: |
           chmod +x create_dmg.sh
           ./create_dmg.sh
+        env:
+          CI: true
       
       - name: Upload DMG
         uses: actions/upload-artifact@v4
