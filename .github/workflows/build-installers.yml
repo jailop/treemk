@@ -19,7 +19,7 @@ jobs:
         uses: jurplel/install-qt-action@v3
         with:
           version: '6.5.0'
-          modules: 'qtwebengine qtwebchannel qtpositioning qtsvg'
+          modules: 'qtwebengine qtwebchannel qtpositioning'
       
       - name: Install md4c
         run: |
@@ -78,7 +78,7 @@ jobs:
         uses: jurplel/install-qt-action@v3
         with:
           version: '6.5.0'
-          modules: 'qtwebengine qtwebchannel qtpositioning qtsvg'
+          modules: 'qtwebengine qtwebchannel qtpositioning'
           arch: 'win64_msvc2019_64'
       
       - name: Setup MSVC
