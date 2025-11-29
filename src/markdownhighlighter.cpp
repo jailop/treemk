@@ -22,16 +22,16 @@ void MarkdownHighlighter::setupFormats()
     QColor codeBg, wikiLinkColor, brokenLinkColor;
     
     if (currentColorScheme == "dark") {
-        headerColor = QColor(100, 149, 237); // Cornflower blue
+        headerColor = QColor(255, 165, 0);
         textColor = QColor(220, 220, 220);
-        codeColor = QColor(206, 145, 120);
-        linkColor = QColor(42, 161, 255);
-        listColor = QColor(152, 195, 121);
-        quoteColor = QColor(128, 128, 128);
-        latexColor = QColor(229, 192, 123);
+        codeColor = QColor(206, 145, 120);    // Light salmon
+        linkColor = QColor(78, 201, 176);     // Bright teal
+        listColor = QColor(152, 195, 121);    // Light green
+        quoteColor = QColor(150, 150, 150);   // Lighter gray
+        latexColor = QColor(250, 240, 230);
         codeBg = QColor(45, 45, 45);
-        wikiLinkColor = QColor(156, 220, 254);
-        brokenLinkColor = QColor(240, 113, 120);
+        wikiLinkColor = QColor(156, 220, 254); // Light blue
+        brokenLinkColor = QColor(240, 113, 120); // Light red
     } else if (currentColorScheme == "solarized-light") {
         headerColor = QColor(38, 139, 210); // blue
         textColor = QColor(101, 123, 131);
@@ -292,6 +292,7 @@ void MarkdownHighlighter::setCodeSyntaxEnabled(bool enabled)
 
 void MarkdownHighlighter::updateColorScheme()
 {
+    setupFormats();
     rehighlight();
 }
 

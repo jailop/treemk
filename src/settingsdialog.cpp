@@ -46,6 +46,7 @@ void SettingsDialog::setupUI() {
 
   connect(buttonBox, &QDialogButtonBox::accepted, this, [this]() {
     saveSettings();
+    emit settingsChanged();
     accept();
   });
   connect(buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
@@ -302,6 +303,7 @@ void SettingsDialog::setupAppearanceTab() {
   QFormLayout *editorSchemeLayout = new QFormLayout(editorSchemeGroup);
 
   editorColorSchemeComboBox = new QComboBox();
+  editorColorSchemeComboBox->addItem(tr("Auto (Follow App Theme)"), "auto");
   editorColorSchemeComboBox->addItem(tr("Light"), "light");
   editorColorSchemeComboBox->addItem(tr("Dark"), "dark");
   editorColorSchemeComboBox->addItem(tr("Solarized Light"), "solarized-light");
@@ -309,6 +311,18 @@ void SettingsDialog::setupAppearanceTab() {
   editorSchemeLayout->addRow(tr("Color Scheme:"), editorColorSchemeComboBox);
 
   layout->addWidget(editorSchemeGroup);
+  
+  // Preview Color Scheme
+  QGroupBox *previewSchemeGroup = new QGroupBox(tr("Preview Color Scheme"));
+  QFormLayout *previewSchemeLayout = new QFormLayout(previewSchemeGroup);
+
+  previewColorSchemeComboBox = new QComboBox();
+  previewColorSchemeComboBox->addItem(tr("Auto (Follow App Theme)"), "auto");
+  previewColorSchemeComboBox->addItem(tr("Light"), "light");
+  previewColorSchemeComboBox->addItem(tr("Dark"), "dark");
+  previewSchemeLayout->addRow(tr("Color Scheme:"), previewColorSchemeComboBox);
+
+  layout->addWidget(previewSchemeGroup);
   layout->addStretch();
 
   tabWidget->addTab(appearanceTab, tr("Appearance"));
@@ -386,10 +400,16 @@ void SettingsDialog::loadSettings() {
     appThemeComboBox->setCurrentIndex(appThemeIndex);
 
   QString editorScheme =
-      settings.value("appearance/editorColorScheme", "light").toString();
+      settings.value("appearance/editorColorScheme", "auto").toString();
   int editorSchemeIndex = editorColorSchemeComboBox->findData(editorScheme);
   if (editorSchemeIndex >= 0)
     editorColorSchemeComboBox->setCurrentIndex(editorSchemeIndex);
+    
+  QString previewScheme =
+      settings.value("appearance/previewColorScheme", "auto").toString();
+  int previewSchemeIndex = previewColorSchemeComboBox->findData(previewScheme);
+  if (previewSchemeIndex >= 0)
+    previewColorSchemeComboBox->setCurrentIndex(previewSchemeIndex);
 }
 
 void SettingsDialog::saveSettings() {
@@ -445,60 +465,13 @@ void SettingsDialog::saveSettings() {
                     appThemeComboBox->currentData().toString());
   settings.setValue("appearance/editorColorScheme",
                     editorColorSchemeComboBox->currentData().toString());
-
-  settings.sync();
+  settings.setValue("appearance/previewColorScheme",
+                    previewColorSchemeComboBox->currentData().toString());
 }
 
 void SettingsDialog::applySettings() {
-  QSettings settings("TreeMk", "TreeMk");
-
-  // Editor settings
-  settings.setValue("editor/font", fontComboBox->currentFont().family());
-  settings.setValue("editor/fontSize", fontSizeSpinBox->value());
-  settings.setValue("editor/tabWidth", tabWidthSpinBox->value());
-  settings.setValue("editor/wordWrap", wordWrapCheckBox->isChecked());
-  settings.setValue("editor/showLineNumbers",
-                    showLineNumbersCheckBox->isChecked());
-  settings.setValue("editor/highlightCurrentLine",
-                    highlightCurrentLineCheckBox->isChecked());
-  settings.setValue("editor/enableCodeSyntax",
-                    enableCodeSyntaxCheckBox->isChecked());
-
-  // Preview settings
-  settings.setValue("previewTheme", themeComboBox->currentData().toString());
-  settings.setValue("preview/refreshRate", previewRefreshRateSpinBox->value());
-  settings.setValue("preview/fontSize", previewFontSizeSpinBox->value());
-  settings.setValue("preview/customCSS", customCSSLineEdit->text());
-
-  // General settings
-  settings.setValue("autoSaveEnabled", autoSaveEnabledCheck->isChecked());
-  settings.setValue("autoSaveInterval", autoSaveIntervalSpinBox->value());
-  settings.setValue("general/defaultFolder", defaultFolderLineEdit->text());
-  settings.setValue("general/confirmDelete",
-                    confirmDeleteCheckBox->isChecked());
-  settings.setValue("general/openLastFolder",
-                    openLastFolderCheckBox->isChecked());
-  settings.setValue("general/restoreSession",
-                    restoreSessionCheckBox->isChecked());
-
-  // Wiki links settings
-  settings.setValue("wikiLinks/format",
-                    wikiLinkFormatComboBox->currentData().toString());
-  settings.setValue("wikiLinks/relativePaths",
-                    relativeLinkPathsCheckBox->isChecked());
-  settings.setValue("wikiLinks/autoComplete",
-                    autoCompleteLinksCheckBox->isChecked());
-  settings.setValue("wikiLinks/showBacklinks",
-                    showBacklinksCheckBox->isChecked());
-
-  // Appearance settings
-  settings.setValue("appearance/appTheme",
-                    appThemeComboBox->currentData().toString());
-  settings.setValue("appearance/editorColorScheme",
-                    editorColorSchemeComboBox->currentData().toString());
-
-  settings.sync();
-  // Settings are saved, emit signal if needed
+  saveSettings();
+  emit settingsChanged();
 }
 
 void SettingsDialog::onBrowseDefaultFolder() {

@@ -6,6 +6,11 @@
 #include <QApplication>
 #include <QIcon>
 #include <QStyle>
+#include <QPalette>
+#include <QPixmap>
+#include <QPainter>
+#include <QFile>
+#include <QSvgRenderer>
 
 static QIcon iconWithFallback(const QString &themeName,
                               QStyle::StandardPixmap fallback) {
@@ -13,6 +18,49 @@ static QIcon iconWithFallback(const QString &themeName,
   if (icon.isNull()) {
     icon = qApp->style()->standardIcon(fallback);
   }
+  return icon;
+}
+
+static QIcon adaptiveSvgIcon(const QString &resourcePath) {
+  QIcon icon;
+  
+  // Load SVG file
+  QFile file(resourcePath);
+  if (!file.open(QIODevice::ReadOnly)) {
+    return icon;
+  }
+  
+  QString svgContent = QString::fromUtf8(file.readAll());
+  file.close();
+  
+  // Get current palette colors
+  QPalette palette = qApp->palette();
+  QColor normalColor = palette.color(QPalette::WindowText);
+  QColor disabledColor = palette.color(QPalette::Disabled, QPalette::WindowText);
+  
+  // Helper to create pixmap from SVG with specific color
+  auto createPixmap = [&svgContent](const QColor &color, const QSize &size) -> QPixmap {
+    QString coloredSvg = svgContent;
+    coloredSvg.replace("currentColor", color.name());
+    
+    QSvgRenderer renderer(coloredSvg.toUtf8());
+    QPixmap pixmap(size);
+    pixmap.fill(Qt::transparent);
+    
+    QPainter painter(&pixmap);
+    renderer.render(&painter);
+    
+    return pixmap;
+  };
+  
+  // Create pixmaps for different states and sizes
+  QList<QSize> sizes = {{16, 16}, {24, 24}, {32, 32}, {48, 48}};
+  
+  for (const QSize &size : sizes) {
+    icon.addPixmap(createPixmap(normalColor, size), QIcon::Normal);
+    icon.addPixmap(createPixmap(disabledColor, size), QIcon::Disabled);
+  }
+  
   return icon;
 }
 
@@ -48,20 +96,20 @@ void MainWindow::createActions() {
   saveAsAction->setToolTip(tr("Save document with a new name"));
   connect(saveAsAction, &QAction::triggered, this, &MainWindow::saveAs);
 
-  exportHtmlAction = new QAction(QIcon(":/icons/icons/export-html.svg"),
+  exportHtmlAction = new QAction(adaptiveSvgIcon(":/icons/icons/export-html.svg"),
                                  tr("Export to &HTML..."), this);
   exportHtmlAction->setStatusTip(tr("Export the document to HTML format"));
   exportHtmlAction->setToolTip(tr("Export to HTML"));
   connect(exportHtmlAction, &QAction::triggered, this,
           &MainWindow::exportToHtml);
 
-  exportPdfAction = new QAction(QIcon(":/icons/icons/export-pdf.svg"),
+  exportPdfAction = new QAction(adaptiveSvgIcon(":/icons/icons/export-pdf.svg"),
                                 tr("Export to &PDF..."), this);
   exportPdfAction->setStatusTip(tr("Export the document to PDF format"));
   exportPdfAction->setToolTip(tr("Export to PDF"));
   connect(exportPdfAction, &QAction::triggered, this, &MainWindow::exportToPdf);
 
-  exportDocxAction = new QAction(QIcon(":/icons/icons/export-docx.svg"),
+  exportDocxAction = new QAction(adaptiveSvgIcon(":/icons/icons/export-docx.svg"),
                                  tr("Export to &Word..."), this);
   exportDocxAction->setStatusTip(
       tr("Export the document to Microsoft Word format"));
@@ -69,7 +117,7 @@ void MainWindow::createActions() {
   connect(exportDocxAction, &QAction::triggered, this,
           &MainWindow::exportToDocx);
 
-  exportPlainTextAction = new QAction(QIcon(":/icons/icons/export-text.svg"),
+  exportPlainTextAction = new QAction(adaptiveSvgIcon(":/icons/icons/export-text.svg"),
                                       tr("Export to Plain &Text..."), this);
   exportPlainTextAction->setStatusTip(
       tr("Export the document to plain text format"));
@@ -148,7 +196,7 @@ void MainWindow::createActions() {
   insertCodeAction->setToolTip(tr("Insert inline code"));
   connect(insertCodeAction, &QAction::triggered, this, &MainWindow::insertCode);
 
-  insertCodeBlockAction = new QAction(QIcon(":/icons/icons/code-block.svg"),
+  insertCodeBlockAction = new QAction(adaptiveSvgIcon(":/icons/icons/code-block.svg"),
                                       tr("Code &Block"), this);
   insertCodeBlockAction->setShortcut(QKeySequence(tr("Ctrl+Shift+C")));
   insertCodeBlockAction->setStatusTip(tr("Insert code block"));
@@ -156,7 +204,7 @@ void MainWindow::createActions() {
   connect(insertCodeBlockAction, &QAction::triggered, this,
           &MainWindow::insertCodeBlock);
 
-  insertListAction = new QAction(QIcon(":/icons/icons/list-bullet.svg"),
+  insertListAction = new QAction(adaptiveSvgIcon(":/icons/icons/list-bullet.svg"),
                                  tr("Bulleted &List"), this);
   insertListAction->setShortcut(QKeySequence(tr("Ctrl+Shift+8")));
   insertListAction->setStatusTip(tr("Insert bulleted list"));
@@ -164,14 +212,14 @@ void MainWindow::createActions() {
   connect(insertListAction, &QAction::triggered, this, &MainWindow::insertList);
 
   insertNumberedListAction = new QAction(
-      QIcon(":/icons/icons/list-numbered.svg"), tr("&Numbered List"), this);
+      adaptiveSvgIcon(":/icons/icons/list-numbered.svg"), tr("&Numbered List"), this);
   insertNumberedListAction->setShortcut(QKeySequence(tr("Ctrl+Shift+7")));
   insertNumberedListAction->setStatusTip(tr("Insert numbered list"));
   insertNumberedListAction->setToolTip(tr("Insert numbered list"));
   connect(insertNumberedListAction, &QAction::triggered, this,
           &MainWindow::insertNumberedList);
 
-  insertBlockquoteAction = new QAction(QIcon(":/icons/icons/blockquote.svg"),
+  insertBlockquoteAction = new QAction(adaptiveSvgIcon(":/icons/icons/blockquote.svg"),
                                        tr("Block&quote"), this);
   insertBlockquoteAction->setShortcut(QKeySequence(tr("Ctrl+Shift+.")));
   insertBlockquoteAction->setStatusTip(tr("Insert blockquote"));
@@ -180,7 +228,7 @@ void MainWindow::createActions() {
           &MainWindow::insertBlockquote);
 
   insertHorizontalRuleAction = new QAction(
-      QIcon(":/icons/icons/horizontal-rule.svg"), tr("Horizontal &Rule"), this);
+      adaptiveSvgIcon(":/icons/icons/horizontal-rule.svg"), tr("Horizontal &Rule"), this);
   insertHorizontalRuleAction->setShortcut(QKeySequence(tr("Ctrl+Shift+-")));
   insertHorizontalRuleAction->setStatusTip(tr("Insert horizontal rule"));
   insertHorizontalRuleAction->setToolTip(tr("Insert horizontal rule"));

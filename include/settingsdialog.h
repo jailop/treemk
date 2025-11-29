@@ -84,6 +84,7 @@ private:
     // Appearance settings
     QComboBox *appThemeComboBox;
     QComboBox *editorColorSchemeComboBox;
+    QComboBox *previewColorSchemeComboBox;
     
     QPushButton *saveButton;
     QPushButton *cancelButton;

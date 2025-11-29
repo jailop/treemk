@@ -19,10 +19,17 @@ public:
     };
 
     enum class EditorColorScheme {
+        Auto,
         Light,
         Dark,
         SolarizedLight,
         SolarizedDark
+    };
+
+    enum class PreviewColorScheme {
+        Auto,
+        Light,
+        Dark
     };
 
     static ThemeManager* instance();
@@ -31,16 +38,24 @@ public:
     void setAppTheme(const QString &themeName);
     void setEditorColorScheme(EditorColorScheme scheme);
     void setEditorColorScheme(const QString &schemeName);
+    void setPreviewColorScheme(PreviewColorScheme scheme);
+    void setPreviewColorScheme(const QString &schemeName);
     
     AppTheme currentAppTheme() const { return m_currentAppTheme; }
     EditorColorScheme currentEditorColorScheme() const { return m_currentEditorScheme; }
+    PreviewColorScheme currentPreviewColorScheme() const { return m_currentPreviewScheme; }
+    
+    QString getResolvedEditorColorSchemeName() const;
+    QString getResolvedPreviewColorSchemeName() const;
     
     QPalette getEditorPalette() const;
     QString getEditorStyleSheet() const;
+    QString getPreviewStyleSheet() const;
     
 signals:
     void themeChanged();
     void editorColorSchemeChanged();
+    void previewColorSchemeChanged();
 
 private:
     explicit ThemeManager(QObject *parent = nullptr);
@@ -54,6 +69,7 @@ private:
     static ThemeManager* s_instance;
     AppTheme m_currentAppTheme;
     EditorColorScheme m_currentEditorScheme;
+    PreviewColorScheme m_currentPreviewScheme;
     bool m_systemIsDark;
 };
 

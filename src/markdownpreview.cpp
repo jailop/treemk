@@ -1,5 +1,7 @@
 #include "markdownpreview.h"
+#include "thememanager.h"
 #include <QAction>
+#include <QApplication>
 #include <QContextMenuEvent>
 #include <QDesktopServices>
 #include <QDir>
@@ -7,7 +9,9 @@
 #include <QMap>
 #include <QMenu>
 #include <QRegularExpression>
+#include <QSettings>
 #include <QShortcut>
+#include <QStyleHints>
 #include <QTextDocument>
 #include <QUrl>
 #include <QWebEnginePage>
@@ -56,6 +60,14 @@ MarkdownPreview::MarkdownPreview(QWidget *parent)
   QShortcut *reloadShortcut = new QShortcut(QKeySequence(Qt::Key_F5), this);
   connect(reloadShortcut, &QShortcut::activated, this,
           &MarkdownPreview::reloadPreview);
+  
+  // Connect to theme changes
+  if (ThemeManager::instance()) {
+    connect(ThemeManager::instance(), &ThemeManager::previewColorSchemeChanged,
+            this, &MarkdownPreview::onThemeChanged);
+    connect(ThemeManager::instance(), &ThemeManager::themeChanged,
+            this, &MarkdownPreview::onThemeChanged);
+  }
 }
 
 MarkdownPreview::~MarkdownPreview() {}
@@ -70,13 +82,34 @@ void MarkdownPreview::setMarkdownContent(const QString &markdown) {
   if (latexEnabled) {
     html = processLatexFormulas(html);
   }
-  QString styleSheet = getStyleSheet(currentTheme);
-  // Choose highlight.js theme based on current theme
+  // Get the appropriate stylesheet with max-width for images
+  QString baseStyleSheet = ThemeManager::instance()->getPreviewStyleSheet();
+  QString imageStyleSheet = "img { max-width: 100%; height: auto; }";
+  QString styleSheet = baseStyleSheet + "\n" + imageStyleSheet;
+  
+  // Choose highlight.js theme based on current preview scheme
   QString highlightTheme = "github.min.css";
-  if (currentTheme == "dark") {
+  
+  // Determine if we're in dark mode
+  QSettings settings("TreeMk", "TreeMk");
+  QString previewScheme = settings.value("appearance/previewColorScheme", "auto").toString();
+  bool isDark = false;
+  
+  if (previewScheme == "auto") {
+    // Follow app/system theme
+    QString appTheme = settings.value("appearance/appTheme", "system").toString();
+    if (appTheme == "dark") {
+      isDark = true;
+    } else if (appTheme == "system") {
+      QStyleHints *hints = QApplication::styleHints();
+      isDark = (hints->colorScheme() == Qt::ColorScheme::Dark);
+    }
+  } else if (previewScheme == "dark") {
+    isDark = true;
+  }
+  
+  if (isDark) {
     highlightTheme = "github-dark.min.css";
-  } else if (currentTheme == "sepia") {
-    highlightTheme = "github.min.css"; // Use light theme for sepia
   }
 
   QString fullHtml =
@@ -190,6 +223,10 @@ QString MarkdownPreview::getStyleSheet(const QString &theme) {
             padding: 20px;
             max-width: 900px;
             margin: 0 auto;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
         }
         h1, h2, h3, h4, h5, h6 {
             margin-top: 24px;
@@ -446,3 +483,8 @@ void MarkdownPreview::showContextMenu(const QPoint &pos) {
 }
 
 void MarkdownPreview::reloadPreview() { reload(); }
+
+void MarkdownPreview::onThemeChanged() {
+  // Trigger a re-render with the new theme
+  reload();
+}

@@ -24,6 +24,7 @@ signals:
 private slots:
     void showContextMenu(const QPoint &pos);
     void reloadPreview();
+    void onThemeChanged();
 
 private:
     QString convertMarkdownToHtml(const QString &markdown);

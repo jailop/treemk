@@ -935,12 +935,9 @@ void MainWindow::searchInFiles() {
 
 void MainWindow::openSettings() {
   SettingsDialog dialog(this);
+  connect(&dialog, &SettingsDialog::settingsChanged, this, &MainWindow::applySettings);
 
-  if (dialog.exec() == QDialog::Accepted) {
-    // Temporarily disabled to prevent crash
-    // applySettings();
-    statusBar()->showMessage(tr("Settings saved. Restart to apply changes."), 3000);
-  }
+  dialog.exec();
 }
 
 void MainWindow::applySettings() {
@@ -953,9 +950,15 @@ void MainWindow::applySettings() {
 
   // Apply editor color scheme to all tabs
   QString editorScheme =
-      settings->value("appearance/editorColorScheme", "light").toString();
+      settings->value("appearance/editorColorScheme", "auto").toString();
   if (ThemeManager::instance()) {
     ThemeManager::instance()->setEditorColorScheme(editorScheme);
+  }
+
+  // Get the resolved scheme name for highlighter
+  QString resolvedEditorScheme = "light";
+  if (ThemeManager::instance()) {
+    resolvedEditorScheme = ThemeManager::instance()->getResolvedEditorColorSchemeName();
   }
 
   for (int i = 0; i < tabWidget->count(); ++i) {
@@ -968,16 +971,18 @@ void MainWindow::applySettings() {
             ThemeManager::instance()->getEditorStyleSheet());
       }
 
-      // Update highlighter color scheme
-      if (tab->editor()->highlighter()) {
-        tab->editor()->highlighter()->setColorScheme(editorScheme);
-      }
-
-      // Apply code syntax highlighting setting
-      bool codeSyntaxEnabled =
-          settings->value("editor/enableCodeSyntax", false).toBool();
-      if (tab->editor()->highlighter()) {
-        tab->editor()->highlighter()->setCodeSyntaxEnabled(codeSyntaxEnabled);
+      // Update highlighter color scheme with resolved scheme
+      MarkdownHighlighter *highlighter = tab->editor()->highlighter();
+      if (highlighter) {
+        highlighter->setColorScheme(resolvedEditorScheme);
+        
+        // Apply code syntax highlighting setting
+        bool codeSyntaxEnabled =
+            settings->value("editor/enableCodeSyntax", false).toBool();
+        highlighter->setCodeSyntaxEnabled(codeSyntaxEnabled);
+        
+        // Force rehighlight to apply new colors
+        highlighter->rehighlight();
       }
     }
   }
@@ -994,8 +999,20 @@ void MainWindow::applySettings() {
     }
   }
 
-  // Apply theme to all tabs
+  // Apply preview color scheme
+  QString previewScheme =
+      settings->value("appearance/previewColorScheme", "auto").toString();
+  if (ThemeManager::instance()) {
+    ThemeManager::instance()->setPreviewColorScheme(previewScheme);
+  }
+  
+  // Get the resolved preview theme
   QString theme = settings->value("previewTheme", "light").toString();
+  if (ThemeManager::instance()) {
+    theme = ThemeManager::instance()->getResolvedPreviewColorSchemeName();
+  }
+  
+  // Apply theme to all tabs
   for (int i = 0; i < tabWidget->count(); ++i) {
     TabEditor *tab = qobject_cast<TabEditor *>(tabWidget->widget(i));
     if (tab && tab->preview()) {
@@ -1571,7 +1588,7 @@ TabEditor *MainWindow::createNewTab() {
 
   // Apply editor color scheme
   QString editorScheme =
-      settings->value("appearance/editorColorScheme", "light").toString();
+      settings->value("appearance/editorColorScheme", "auto").toString();
   tab->editor()->setPalette(ThemeManager::instance()->getEditorPalette());
   tab->editor()->setStyleSheet(ThemeManager::instance()->getEditorStyleSheet());
 

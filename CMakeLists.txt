@@ -31,6 +31,7 @@ find_package(Qt6 REQUIRED COMPONENTS
     Gui 
     Widgets
     WebEngineWidgets
+    Svg
 )
 
 # Find md4c library
@@ -124,6 +125,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt6::Gui
     Qt6::Widgets
     Qt6::WebEngineWidgets
+    Qt6::Svg
     ${MD4C_LIBRARIES}
 )
 
