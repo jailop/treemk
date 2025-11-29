@@ -46,7 +46,7 @@ void SettingsDialog::setupUI() {
 
   connect(buttonBox, &QDialogButtonBox::accepted, this, [this]() {
     saveSettings();
-    emit settingsChanged();
+    // emit settingsChanged();
     accept();
   });
   connect(buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
@@ -471,7 +471,7 @@ void SettingsDialog::saveSettings() {
 
 void SettingsDialog::applySettings() {
   saveSettings();
-  emit settingsChanged();
+  // emit settingsChanged();
 }
 
 void SettingsDialog::onBrowseDefaultFolder() {
