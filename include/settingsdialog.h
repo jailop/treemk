@@ -57,6 +57,7 @@ private:
     QCheckBox *enableCodeSyntaxCheckBox;
     QCheckBox *autoIndentCheckBox;
     QCheckBox *autoCloseBracketsCheckBox;
+    QCheckBox *enableWordPredictionCheckBox;
 
     // Preview settings
     QComboBox *themeComboBox;

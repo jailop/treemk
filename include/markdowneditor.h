@@ -2,6 +2,7 @@
 #define MARKDOWNEDITOR_H
 
 #include <QPlainTextEdit>
+#include <QMap>
 
 class QSyntaxHighlighter;
 class LineNumberArea;
@@ -40,19 +41,34 @@ protected:
     void dragMoveEvent(QDragMoveEvent *event) override;
     void dropEvent(QDropEvent *event) override;
     void insertFromMimeData(const QMimeData *source) override;
+    void paintEvent(QPaintEvent *event) override;
 
 private slots:
     void updateLineNumberAreaWidth(int newBlockCount);
     void highlightCurrentLine();
     void updateLineNumberArea(const QRect &rect, int dy);
+    void onTextChanged();
 
 private:
     void setupEditor();
     QString saveImageFromClipboard(const QImage &image);
+    void updateWordFrequency();
+    QString predictWord(const QString &prefix) const;
+    QString predictWordUnigram(const QString &prefix) const;
+    QString predictWordBigram(const QString &previousWord, const QString &prefix) const;
+    void showPrediction();
+    void hidePrediction();
+    void acceptPrediction();
     
     LineNumberArea *lineNumberArea;
     MarkdownHighlighter *m_highlighter;
     QString m_currentFilePath;
+    
+    // Word prediction
+    QMap<QString, int> m_wordFrequency;  // Unigram model
+    QMap<QPair<QString, QString>, int> m_bigramFrequency;  // Bigram model
+    QString m_currentPrediction;
+    bool m_predictionEnabled;
 };
 
 class LineNumberArea : public QWidget

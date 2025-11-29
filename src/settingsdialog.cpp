@@ -101,6 +101,11 @@ void SettingsDialog::setupEditorTab() {
   autoCloseBracketsCheckBox = new QCheckBox(tr("Auto-close brackets and quotes"));
   behaviorLayout->addRow(autoCloseBracketsCheckBox);
 
+  enableWordPredictionCheckBox = new QCheckBox(tr("Enable word prediction (Tab to accept)"));
+  enableWordPredictionCheckBox->setToolTip(
+      tr("Predict words based on document frequency and patterns"));
+  behaviorLayout->addRow(enableWordPredictionCheckBox);
+
   layout->addWidget(behaviorGroup);
   layout->addStretch();
 
@@ -329,6 +334,8 @@ void SettingsDialog::loadSettings() {
       settings.value("editor/autoIndent", true).toBool());
   autoCloseBracketsCheckBox->setChecked(
       settings.value("editor/autoCloseBrackets", true).toBool());
+  enableWordPredictionCheckBox->setChecked(
+      settings.value("editor/enableWordPrediction", true).toBool());
 
   // Preview settings
   QString theme = settings.value("previewTheme", "light").toString();
@@ -403,6 +410,8 @@ void SettingsDialog::saveSettings() {
                     autoIndentCheckBox->isChecked());
   settings.setValue("editor/autoCloseBrackets",
                     autoCloseBracketsCheckBox->isChecked());
+  settings.setValue("editor/enableWordPrediction",
+                    enableWordPredictionCheckBox->isChecked());
 
   // Preview settings
   settings.setValue("previewTheme", themeComboBox->currentData().toString());

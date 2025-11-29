@@ -9,17 +9,14 @@ managing interconnected notes.
 
 - File system tree view for note organization
 - Wiki-style linking between notes with `[[note]]` syntax
-  - Click wiki-links in the preview to navigate to linked files
-  - Ctrl+Click wiki-links in the editor to navigate to linked files
-  - Ctrl+Enter keyboard shortcut to open wiki-link at cursor position
-  - Automatically open files in new tabs or switch to existing tabs
 - File inclusion with `[[!note]]` syntax - embeds content of linked file
   in preview
-- Markdown preview with syntax highlighting
-- Image embedding support
-- LaTeX formula rendering (inline `$...$` and block `$$...$$`)
-- Multi-tab editing
+- Word prediction, based on the content of the current note
 - Search and navigation tools
+- Multi-tab editing
+- Markdown preview with syntax highlighting
+- LaTeX formula rendering (inline `$...$` and block `$$...$$`)
+- Image embedding support
 - Export to HTML, PDF, and DOCX (with Pandoc)
 
 ## Requirements
@@ -27,6 +24,7 @@ managing interconnected notes.
 - Qt 6.2 or higher
 - CMake 3.16 or higher
 - C++17 compatible compiler
+- md4c (for preview rendering)
 - pandoc (for export features)
 
 For Qt, the following modules need to be available at compile time:

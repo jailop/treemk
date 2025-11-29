@@ -27,7 +27,7 @@
 #include <QSettings>
 
 MarkdownEditor::MarkdownEditor(QWidget *parent)
-    : QPlainTextEdit(parent)
+    : QPlainTextEdit(parent), m_predictionEnabled(true)
 {
     lineNumberArea = new LineNumberArea(this);
     m_highlighter = new MarkdownHighlighter(document());
@@ -40,6 +40,8 @@ MarkdownEditor::MarkdownEditor(QWidget *parent)
             this, &MarkdownEditor::updateLineNumberArea);
     connect(this, &MarkdownEditor::cursorPositionChanged,
             this, &MarkdownEditor::highlightCurrentLine);
+    connect(this, &MarkdownEditor::textChanged,
+            this, &MarkdownEditor::onTextChanged);
     
     updateLineNumberAreaWidth(0);
     highlightCurrentLine();
@@ -161,8 +163,208 @@ void MarkdownEditor::mousePressEvent(QMouseEvent *event)
     QPlainTextEdit::mousePressEvent(event);
 }
 
+void MarkdownEditor::updateWordFrequency()
+{
+    m_wordFrequency.clear();
+    m_bigramFrequency.clear();
+    
+    QString text = toPlainText();
+    QRegularExpression wordRegex("\\b[a-zA-Z]{3,}\\b");
+    QRegularExpressionMatchIterator it = wordRegex.globalMatch(text);
+    
+    QStringList words;
+    while (it.hasNext()) {
+        QRegularExpressionMatch match = it.next();
+        QString word = match.captured(0).toLower();
+        words.append(word);
+        m_wordFrequency[word]++;
+    }
+    
+    // Build bigram model
+    for (int i = 0; i < words.size() - 1; i++) {
+        QPair<QString, QString> bigram(words[i], words[i + 1]);
+        m_bigramFrequency[bigram]++;
+    }
+}
+
+QString MarkdownEditor::predictWordUnigram(const QString &prefix) const
+{
+    if (prefix.length() < 2) {
+        return QString();
+    }
+    
+    QString bestMatch;
+    int maxFrequency = 0;
+    
+    for (auto it = m_wordFrequency.constBegin(); it != m_wordFrequency.constEnd(); ++it) {
+        const QString &word = it.key();
+        if (word.startsWith(prefix, Qt::CaseInsensitive) && word.length() > prefix.length()) {
+            if (it.value() > maxFrequency) {
+                maxFrequency = it.value();
+                bestMatch = word;
+            }
+        }
+    }
+    
+    return bestMatch;
+}
+
+QString MarkdownEditor::predictWordBigram(const QString &previousWord, const QString &prefix) const
+{
+    if (previousWord.isEmpty() || prefix.length() < 1) {
+        return QString();
+    }
+    
+    QString prevLower = previousWord.toLower();
+    QString prefixLower = prefix.toLower();
+    
+    QString bestMatch;
+    int maxFrequency = 0;
+    
+    for (auto it = m_bigramFrequency.constBegin(); it != m_bigramFrequency.constEnd(); ++it) {
+        const QPair<QString, QString> &bigram = it.key();
+        
+        // Check if this bigram starts with the previous word and the second word matches prefix
+        if (bigram.first == prevLower && 
+            bigram.second.startsWith(prefixLower) && 
+            bigram.second.length() > prefixLower.length()) {
+            
+            if (it.value() > maxFrequency) {
+                maxFrequency = it.value();
+                bestMatch = bigram.second;
+            }
+        }
+    }
+    
+    return bestMatch;
+}
+
+QString MarkdownEditor::predictWord(const QString &prefix) const
+{
+    if (prefix.length() < 1) {
+        return QString();
+    }
+    
+    // Get the previous word for bigram prediction
+    QTextCursor cursor = textCursor();
+    cursor.movePosition(QTextCursor::StartOfWord, QTextCursor::MoveAnchor);
+    cursor.movePosition(QTextCursor::PreviousWord, QTextCursor::MoveAnchor);
+    cursor.movePosition(QTextCursor::EndOfWord, QTextCursor::KeepAnchor);
+    QString previousWord = cursor.selectedText();
+    
+    // Try bigram prediction first (more context-specific)
+    QString bigramPrediction = predictWordBigram(previousWord, prefix);
+    
+    // Try unigram prediction
+    QString unigramPrediction = predictWordUnigram(prefix);
+    
+    // Choose the best prediction
+    // Prioritize bigram if it exists (more contextual)
+    if (!bigramPrediction.isEmpty()) {
+        // If bigram frequency is high enough, prefer it
+        QString prevLower = previousWord.toLower();
+        QPair<QString, QString> bigram(prevLower, bigramPrediction.toLower());
+        int bigramFreq = m_bigramFrequency.value(bigram, 0);
+        int unigramFreq = m_wordFrequency.value(unigramPrediction.toLower(), 0);
+        
+        // Prefer bigram if it appears at least half as often as unigram
+        // or if unigram doesn't exist
+        if (bigramFreq * 2 >= unigramFreq || unigramPrediction.isEmpty()) {
+            return bigramPrediction;
+        }
+    }
+    
+    return unigramPrediction;
+}
+
+void MarkdownEditor::showPrediction()
+{
+    QSettings settings("TreeMk", "TreeMk");
+    if (!settings.value("editor/enableWordPrediction", true).toBool()) {
+        return;
+    }
+    
+    QTextCursor cursor = textCursor();
+    cursor.movePosition(QTextCursor::StartOfWord, QTextCursor::KeepAnchor);
+    QString currentWord = cursor.selectedText();
+    
+    // Allow predictions with 1+ characters for bigram, 2+ for unigram
+    if (currentWord.length() >= 1) {
+        QString prediction = predictWord(currentWord);
+        if (!prediction.isEmpty() && prediction.toLower() != currentWord.toLower()) {
+            m_currentPrediction = prediction.mid(currentWord.length());
+            viewport()->update();
+            return;
+        }
+    }
+    
+    m_currentPrediction.clear();
+    viewport()->update();
+}
+
+void MarkdownEditor::hidePrediction()
+{
+    m_currentPrediction.clear();
+    viewport()->update();
+}
+
+void MarkdownEditor::acceptPrediction()
+{
+    if (!m_currentPrediction.isEmpty()) {
+        QTextCursor cursor = textCursor();
+        cursor.insertText(m_currentPrediction);
+        setTextCursor(cursor);
+        m_currentPrediction.clear();
+        viewport()->update();
+    }
+}
+
+void MarkdownEditor::onTextChanged()
+{
+    static int changeCount = 0;
+    changeCount++;
+    
+    // Update word frequency every 10 changes to avoid performance issues
+    if (changeCount % 10 == 0) {
+        updateWordFrequency();
+    }
+    
+    showPrediction();
+}
+
+void MarkdownEditor::paintEvent(QPaintEvent *event)
+{
+    QPlainTextEdit::paintEvent(event);
+    
+    // Draw prediction in gray
+    if (!m_currentPrediction.isEmpty()) {
+        QTextCursor cursor = textCursor();
+        QRect rect = cursorRect(cursor);
+        
+        QFont font = this->font();
+        QFontMetrics fm(font);
+        
+        QPainter painter(viewport());
+        painter.setFont(font);
+        painter.setPen(QColor(128, 128, 128, 180)); // Gray with transparency
+        
+        int x = rect.right();
+        int y = rect.bottom();
+        
+        painter.drawText(x, y, m_currentPrediction);
+    }
+}
+
+
 void MarkdownEditor::keyPressEvent(QKeyEvent *event)
 {
+    // Handle Tab key for word prediction
+    if (event->key() == Qt::Key_Tab && !m_currentPrediction.isEmpty()) {
+        acceptPrediction();
+        event->accept();
+        return;
+    }
+    
     // Get shortcut manager instance
     ShortcutManager *sm = ShortcutManager::instance();
     QKeySequence pressed(event->key() | event->modifiers());
@@ -334,6 +536,15 @@ void MarkdownEditor::keyPressEvent(QKeyEvent *event)
             event->accept();
             return;
         }
+    }
+    
+    // Hide prediction on certain keys
+    if (event->key() == Qt::Key_Left || event->key() == Qt::Key_Right ||
+        event->key() == Qt::Key_Up || event->key() == Qt::Key_Down ||
+        event->key() == Qt::Key_Home || event->key() == Qt::Key_End ||
+        event->key() == Qt::Key_PageUp || event->key() == Qt::Key_PageDown ||
+        event->key() == Qt::Key_Escape) {
+        hidePrediction();
     }
     
     QPlainTextEdit::keyPressEvent(event);
