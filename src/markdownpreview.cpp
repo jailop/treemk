@@ -70,12 +70,6 @@ MarkdownPreview::MarkdownPreview(QWidget *parent)
   }
 }
 
-MarkdownPreview::~MarkdownPreview() {}
-
-void MarkdownPreview::setBasePath(const QString &path) { basePath = path; }
-
-void MarkdownPreview::setLatexEnabled(bool enabled) { latexEnabled = enabled; }
-
 void MarkdownPreview::setMarkdownContent(const QString &markdown) {
   QString html = convertMarkdownToHtml(markdown);
   html = processWikiLinks(html);

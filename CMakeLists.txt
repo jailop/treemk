@@ -5,12 +5,10 @@ project(treemk VERSION 0.2.0 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Qt configuration
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-# Platform-specific settings
 if(WIN32)
     set(CMAKE_WIN32_EXECUTABLE ON)
 endif()
@@ -25,7 +23,6 @@ if (UNIX AND NOT APPLE)
     add_compile_options(-Wall -g)
 endif()
 
-# Find Qt6 packages
 find_package(Qt6 REQUIRED COMPONENTS 
     Core 
     Gui 
@@ -36,20 +33,16 @@ find_package(Qt6 REQUIRED COMPONENTS
 
 # Find md4c library
 if(WIN32)
-    # On Windows, use vcpkg's find_package
     find_package(md4c CONFIG REQUIRED)
     set(MD4C_LIBRARIES md4c::md4c-html)
 else()
-    # On Unix systems, use pkg-config
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(MD4C REQUIRED IMPORTED_TARGET md4c-html)
     set(MD4C_LIBRARIES PkgConfig::MD4C)
 endif()
 
-# Include directories
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
-# Source files
 set(SOURCES
     src/main.cpp
     src/mainwindow.cpp
@@ -70,7 +63,6 @@ set(SOURCES
     src/thememanager.cpp
 )
 
-# Header files
 set(HEADERS
     include/mainwindow.h
     include/tabeditor.h
@@ -89,12 +81,10 @@ set(HEADERS
     include/thememanager.h
 )
 
-# Resource files
 set(RESOURCES
     resources/resources.qrc
 )
 
-# Platform-specific executable configuration
 if(WIN32)
     add_executable(${PROJECT_NAME} WIN32
         ${SOURCES}
@@ -119,7 +109,6 @@ else()
     )
 endif()
 
-# Link Qt libraries
 target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt6::Core
     Qt6::Gui

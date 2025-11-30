@@ -9,12 +9,10 @@ class MarkdownPreview : public QWebEngineView
 
 public:
     explicit MarkdownPreview(QWidget *parent = nullptr);
-    ~MarkdownPreview();
-
     void setMarkdownContent(const QString &markdown);
     void setTheme(const QString &theme);
-    void setBasePath(const QString &path);
-    void setLatexEnabled(bool enabled);
+    void setBasePath(const QString &path) { basePath = path; }
+    void setLatexEnabled(bool enabled) { latexEnabled = enabled; }
     void scrollToPercentage(double percentage);
     double currentScrollPercentage() const;
 

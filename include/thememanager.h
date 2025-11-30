@@ -59,7 +59,6 @@ signals:
 
 private:
     explicit ThemeManager(QObject *parent = nullptr);
-    ~ThemeManager();
     
     void applyAppTheme();
     void applyLightTheme();

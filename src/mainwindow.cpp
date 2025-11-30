@@ -46,7 +46,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
   setWindowTitle("TreeMk - Markdown Editor");
   setWindowIcon(QIcon::fromTheme("text-editor"));
 
-  // Setup progress bar in status bar
   progressBar = new QProgressBar(this);
   progressBar->setMaximumWidth(200);
   progressBar->setVisible(false);
@@ -197,12 +196,10 @@ void MainWindow::createToolbar() {
 }
 
 void MainWindow::createLayout() {
-  // Create left panel with tabs for File Tree and Outline
   leftTabWidget = new QTabWidget(this);
   leftTabWidget->setTabPosition(QTabWidget::South);
   leftTabWidget->setMinimumWidth(150);
 
-  // File tree tab
   treePanel = new QWidget(this);
   QVBoxLayout *treeLayout = new QVBoxLayout(treePanel);
   treeLayout->setContentsMargins(0, 0, 0, 0);
@@ -219,7 +216,6 @@ void MainWindow::createLayout() {
 
   leftTabWidget->addTab(treePanel, tr("Files"));
 
-  // Outline tab
   outlinePanel = new QWidget(this);
   QVBoxLayout *outlineLayout = new QVBoxLayout(outlinePanel);
   outlineLayout->setContentsMargins(0, 0, 0, 0);
@@ -229,7 +225,6 @@ void MainWindow::createLayout() {
 
   leftTabWidget->addTab(outlinePanel, tr("Outline"));
 
-  // Tab widget for multiple editors
   tabWidget = new QTabWidget(this);
   tabWidget->setTabsClosable(true);
   tabWidget->setMovable(true);
@@ -240,7 +235,6 @@ void MainWindow::createLayout() {
   connect(tabWidget, &QTabWidget::tabCloseRequested, this,
           &MainWindow::onTabCloseRequested);
 
-  // Backlinks panel
   backlinksPanel = new QWidget(this);
   QVBoxLayout *backlinksLayout = new QVBoxLayout(backlinksPanel);
   backlinksLayout->setContentsMargins(5, 5, 5, 5);
@@ -262,7 +256,6 @@ void MainWindow::createLayout() {
             }
           });
 
-  // Main splitter
   mainSplitter = new QSplitter(Qt::Horizontal, this);
   mainSplitter->addWidget(leftTabWidget);
   mainSplitter->addWidget(tabWidget);
@@ -272,8 +265,6 @@ void MainWindow::createLayout() {
   mainSplitter->setStretchFactor(2, 0); // Backlinks panel
 
   setCentralWidget(mainSplitter);
-
-  // Create initial tab
   createNewTab();
 }
 
@@ -727,7 +718,6 @@ bool MainWindow::loadFile(const QString &filePath) {
       return true;
     }
   } else {
-    // Create new tab
     tab = createNewTab();
     if (tab->loadFile(filePath)) {
       currentFilePath = filePath;
