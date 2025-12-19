@@ -475,6 +475,13 @@ QString MarkdownPreview::resolveAndIncludeFile(const QString &linkTarget,
 void MarkdownPreview::showContextMenu(const QPoint &pos) {
   QMenu contextMenu(this);
 
+  // Add copy action using the web page's standard action
+  QAction *copyAction = page()->action(QWebEnginePage::Copy);
+  if (copyAction) {
+    contextMenu.addAction(copyAction);
+    contextMenu.addSeparator();
+  }
+
   QAction *reloadAction = contextMenu.addAction(tr("Reload"));
   connect(reloadAction, &QAction::triggered, this,
           &MarkdownPreview::reloadPreview);
