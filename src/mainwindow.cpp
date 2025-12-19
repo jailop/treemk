@@ -39,25 +39,42 @@
 #include <QToolBar>
 #include <QVBoxLayout>
 
-MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
+MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
+  fileMenu(nullptr), editMenu(nullptr), insertMenu(nullptr), viewMenu(nullptr),
+  helpMenu(nullptr), recentFoldersMenu(nullptr), newAction(nullptr),
+  openFolderAction(nullptr), saveAction(nullptr), saveAsAction(nullptr),
+  exportHtmlAction(nullptr), exportPdfAction(nullptr), exportDocxAction(nullptr),
+  exportPlainTextAction(nullptr), insertImageAction(nullptr),
+  insertFormulaAction(nullptr), insertWikiLinkAction(nullptr),
+  attachDocumentAction(nullptr), insertHeaderAction(nullptr),
+  insertBoldAction(nullptr), insertItalicAction(nullptr), insertCodeAction(nullptr),
+  insertCodeBlockAction(nullptr), insertListAction(nullptr),
+  insertNumberedListAction(nullptr), insertBlockquoteAction(nullptr),
+  insertHorizontalRuleAction(nullptr), insertLinkAction(nullptr),
+  insertTableAction(nullptr), exitAction(nullptr), undoAction(nullptr),
+  redoAction(nullptr), cutAction(nullptr), copyAction(nullptr),
+  pasteAction(nullptr), findAction(nullptr), findReplaceAction(nullptr),
+  searchInFilesAction(nullptr), quickOpenAction(nullptr),
+  closeTabAction(nullptr), closeAllTabsAction(nullptr),
+  toggleSidebarAction(nullptr), togglePreviewAction(nullptr),
+  toggleBacklinksAction(nullptr), previewThemeLightAction(nullptr),
+  previewThemeDarkAction(nullptr), previewThemeSepiaAction(nullptr),
+  settingsAction(nullptr), aboutAction(nullptr), aboutQtAction(nullptr),
+  keyboardShortcutsAction(nullptr) {
   settings = new QSettings("TreeMk", "TreeMk", this);
   linkParser = new LinkParser();
-
   setWindowTitle("TreeMk - Markdown Editor");
   setWindowIcon(QIcon::fromTheme("text-editor"));
-
   // Setup progress bar in status bar
   progressBar = new QProgressBar(this);
   progressBar->setMaximumWidth(200);
   progressBar->setVisible(false);
   statusBar()->addPermanentWidget(progressBar);
   statusBar()->showMessage(tr("Ready"));
-
   createLayout();
   createActions();
   createMenus();
   createToolbar();
-
   readSettings();
 }
 
@@ -513,17 +530,6 @@ void MainWindow::saveAs() {
   } else {
     QMessageBox::warning(this, tr("Error"), tr("Could not save file!"));
   }
-}
-
-void MainWindow::about() {
-  QMessageBox::about(
-      this, tr("About TreeMk"),
-      tr("<h2>TreeMk</h2>"
-         "<p>Version 0.1.0</p>"
-         "<p>A wiki-markdown text editor, "
-         "designed for organizing and managing interconnected notes.</p>"
-         "<p>Copyright © 2025 - Jaime Lopez - Data Inquiry Consulting "
-         "LLC</p>"));
 }
 
 void MainWindow::showKeyboardShortcuts() {
@@ -1689,6 +1695,26 @@ void MainWindow::onTabChanged(int index) {
     if (outlineView) {
       QString markdown = tab->editor()->toPlainText();
       outlineView->updateOutline(markdown);
+    }
+
+    // Connect editor signals to enable/disable actions
+    MarkdownEditor *editor = tab->editor();
+    if (editor && cutAction && copyAction && undoAction && redoAction) {
+      // Update action states based on current editor state
+      cutAction->setEnabled(editor->textCursor().hasSelection());
+      copyAction->setEnabled(editor->textCursor().hasSelection());
+      undoAction->setEnabled(editor->document()->isUndoAvailable());
+      redoAction->setEnabled(editor->document()->isRedoAvailable());
+      
+      // Connect signals to keep actions updated (use UniqueConnection to avoid duplicates)
+      connect(editor, &QPlainTextEdit::copyAvailable, cutAction,
+              &QAction::setEnabled, Qt::UniqueConnection);
+      connect(editor, &QPlainTextEdit::copyAvailable, copyAction,
+              &QAction::setEnabled, Qt::UniqueConnection);
+      connect(editor, &QPlainTextEdit::undoAvailable, undoAction,
+              &QAction::setEnabled, Qt::UniqueConnection);
+      connect(editor, &QPlainTextEdit::redoAvailable, redoAction,
+              &QAction::setEnabled, Qt::UniqueConnection);
     }
 
     // Update window title

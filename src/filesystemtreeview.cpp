@@ -386,7 +386,6 @@ void FileSystemTreeView::cutItem()
     if (!index.isValid()) {
         return;
     }
-    
     clipboardPath = fileSystemModel->filePath(index);
     clipboardIsCut = true;
 }
@@ -397,7 +396,6 @@ void FileSystemTreeView::copyItem()
     if (!index.isValid()) {
         return;
     }
-    
     clipboardPath = fileSystemModel->filePath(index);
     clipboardIsCut = false;
 }
@@ -407,10 +405,8 @@ void FileSystemTreeView::pasteItem()
     if (clipboardPath.isEmpty()) {
         return;
     }
-    
     QModelIndex index = currentIndex();
     QString targetPath;
-    
     if (index.isValid()) {
         QString selectedPath = fileSystemModel->filePath(index);
         QFileInfo fileInfo(selectedPath);
@@ -418,18 +414,14 @@ void FileSystemTreeView::pasteItem()
     } else {
         targetPath = currentRootPath;
     }
-    
     QFileInfo sourceInfo(clipboardPath);
     QString newPath = QDir(targetPath).filePath(sourceInfo.fileName());
-    
     if (QFile::exists(newPath)) {
         QMessageBox::warning(this, tr("Error"), 
                            tr("An item with this name already exists!"));
         return;
     }
-    
     bool success = false;
-    
     if (clipboardIsCut) {
         if (sourceInfo.isDir()) {
             success = QDir().rename(clipboardPath, newPath);
@@ -447,7 +439,6 @@ void FileSystemTreeView::pasteItem()
             success = QFile::copy(clipboardPath, newPath);
         }
     }
-    
     if (!success) {
         QMessageBox::warning(this, tr("Error"), tr("Failed to paste item!"));
     }
