@@ -1,0 +1,440 @@
+#include "mainwindow.h"
+#include "filesystemtreeview.h"
+#include "outlinepanel.h"
+#include "tabeditor.h"
+#include "markdowneditor.h"
+#include "markdownhighlighter.h"
+#include "markdownpreview.h"
+#include "linkparser.h"
+#include "settingsdialog.h"
+#include "shortcutsdialog.h"
+#include "thememanager.h"
+#include <QMenuBar>
+#include <QMenu>
+#include <QToolBar>
+#include <QSplitter>
+#include <QTabWidget>
+#include <QVBoxLayout>
+#include <QLabel>
+#include <QListWidget>
+#include <QFileInfo>
+#include <QDir>
+#include <QStatusBar>
+#include <QTimer>
+
+void MainWindow::createMenus() {
+  fileMenu = menuBar()->addMenu(tr("&File"));
+  fileMenu->addAction(newAction);
+  fileMenu->addAction(openFolderAction);
+  fileMenu->addSeparator();
+  recentFoldersMenu = fileMenu->addMenu(tr("Recent &Folders"));
+  populateRecentFoldersMenu();
+  fileMenu->addSeparator();
+  fileMenu->addAction(saveAction);
+  fileMenu->addAction(saveAsAction);
+  fileMenu->addSeparator();
+  QMenu *exportMenu = fileMenu->addMenu(tr("&Export"));
+  exportMenu->addAction(exportHtmlAction);
+  exportMenu->addAction(exportPdfAction);
+  exportMenu->addAction(exportDocxAction);
+  exportMenu->addAction(exportPlainTextAction);
+  fileMenu->addSeparator();
+  fileMenu->addAction(closeTabAction);
+  fileMenu->addAction(closeAllTabsAction);
+  fileMenu->addSeparator();
+  fileMenu->addAction(settingsAction);
+  fileMenu->addSeparator();
+  fileMenu->addAction(exitAction);
+
+  editMenu = menuBar()->addMenu(tr("&Edit"));
+  editMenu->addAction(undoAction);
+  editMenu->addAction(redoAction);
+  editMenu->addSeparator();
+  editMenu->addAction(cutAction);
+  editMenu->addAction(copyAction);
+  editMenu->addAction(pasteAction);
+  editMenu->addSeparator();
+  editMenu->addAction(findAction);
+  editMenu->addAction(findReplaceAction);
+  editMenu->addAction(searchInFilesAction);
+  editMenu->addSeparator();
+  editMenu->addAction(quickOpenAction);
+
+  insertMenu = menuBar()->addMenu(tr("&Insert"));
+  insertMenu->addAction(insertImageAction);
+  insertMenu->addAction(attachDocumentAction);
+  insertMenu->addAction(insertFormulaAction);
+  insertMenu->addSeparator();
+  insertMenu->addAction(insertWikiLinkAction);
+  insertMenu->addAction(insertLinkAction);
+  insertMenu->addSeparator();
+  insertMenu->addAction(insertHeaderAction);
+  insertMenu->addAction(insertBoldAction);
+  insertMenu->addAction(insertItalicAction);
+  insertMenu->addSeparator();
+  insertMenu->addAction(insertCodeAction);
+  insertMenu->addAction(insertCodeBlockAction);
+  insertMenu->addSeparator();
+  insertMenu->addAction(insertListAction);
+  insertMenu->addAction(insertNumberedListAction);
+  insertMenu->addAction(insertBlockquoteAction);
+  insertMenu->addSeparator();
+  insertMenu->addAction(insertHorizontalRuleAction);
+  insertMenu->addAction(insertTableAction);
+
+  viewMenu = menuBar()->addMenu(tr("&View"));
+  viewMenu->addAction(toggleSidebarAction);
+  viewMenu->addAction(togglePreviewAction);
+  viewMenu->addAction(toggleBacklinksAction);
+  viewMenu->addSeparator();
+  QMenu *previewThemeMenu = viewMenu->addMenu(tr("Preview Theme"));
+  previewThemeMenu->addAction(previewThemeLightAction);
+  previewThemeMenu->addAction(previewThemeDarkAction);
+  previewThemeMenu->addAction(previewThemeSepiaAction);
+
+  helpMenu = menuBar()->addMenu(tr("&Help"));
+  helpMenu->addAction(keyboardShortcutsAction);
+  helpMenu->addSeparator();
+  helpMenu->addAction(aboutAction);
+  helpMenu->addAction(aboutQtAction);
+}
+
+void MainWindow::createToolbar() {
+  mainToolbar = addToolBar(tr("Main Toolbar"));
+  mainToolbar->setObjectName("MainToolbar");
+  mainToolbar->setMovable(false);
+
+  // File operations
+  mainToolbar->addAction(newAction);
+  mainToolbar->addAction(openFolderAction);
+  mainToolbar->addAction(saveAction);
+  mainToolbar->addSeparator();
+
+  // Edit operations
+  mainToolbar->addAction(undoAction);
+  mainToolbar->addAction(redoAction);
+  mainToolbar->addSeparator();
+
+  // Formatting
+  mainToolbar->addAction(insertBoldAction);
+  mainToolbar->addAction(insertItalicAction);
+  mainToolbar->addAction(insertCodeAction);
+  mainToolbar->addSeparator();
+
+  // Insert operations
+  mainToolbar->addAction(insertLinkAction);
+  mainToolbar->addAction(insertImageAction);
+  mainToolbar->addAction(attachDocumentAction);
+  mainToolbar->addAction(insertTableAction);
+  mainToolbar->addSeparator();
+
+  // Export operations
+  mainToolbar->addAction(exportHtmlAction);
+  mainToolbar->addAction(exportPdfAction);
+  mainToolbar->addAction(exportDocxAction);
+  mainToolbar->addAction(exportPlainTextAction);
+  mainToolbar->addSeparator();
+
+  // Search
+  mainToolbar->addAction(findAction);
+  mainToolbar->addAction(quickOpenAction);
+  mainToolbar->addSeparator();
+
+  // View toggles
+  mainToolbar->addAction(toggleSidebarAction);
+  mainToolbar->addAction(togglePreviewAction);
+  mainToolbar->addAction(toggleBacklinksAction);
+}
+
+void MainWindow::createLayout() {
+  // Create left panel with tabs for File Tree and Outline
+  leftTabWidget = new QTabWidget(this);
+  leftTabWidget->setTabPosition(QTabWidget::South);
+  leftTabWidget->setMinimumWidth(150);
+
+  // File tree tab
+  treePanel = new QWidget(this);
+  QVBoxLayout *treeLayout = new QVBoxLayout(treePanel);
+  treeLayout->setContentsMargins(0, 0, 0, 0);
+
+  treeView = new FileSystemTreeView(treePanel);
+  treeLayout->addWidget(treeView);
+
+  connect(treeView, &FileSystemTreeView::fileSelected, this,
+          &MainWindow::onFileSelected);
+  connect(treeView, &FileSystemTreeView::fileDoubleClicked, this,
+          &MainWindow::onFileDoubleClicked);
+  connect(treeView, &FileSystemTreeView::fileModifiedExternally, this,
+          &MainWindow::onFileModifiedExternally);
+
+  leftTabWidget->addTab(treePanel, tr("Files"));
+
+  // Outline tab
+  outlinePanel = new QWidget(this);
+  QVBoxLayout *outlineLayout = new QVBoxLayout(outlinePanel);
+  outlineLayout->setContentsMargins(0, 0, 0, 0);
+
+  outlineView = new OutlinePanel(outlinePanel);
+  outlineLayout->addWidget(outlineView);
+
+  leftTabWidget->addTab(outlinePanel, tr("Outline"));
+
+  // Tab widget for multiple editors
+  tabWidget = new QTabWidget(this);
+  tabWidget->setTabsClosable(true);
+  tabWidget->setMovable(true);
+  tabWidget->setDocumentMode(true);
+
+  connect(tabWidget, &QTabWidget::currentChanged, this,
+          &MainWindow::onTabChanged);
+  connect(tabWidget, &QTabWidget::tabCloseRequested, this,
+          &MainWindow::onTabCloseRequested);
+
+  // Backlinks panel
+  backlinksPanel = new QWidget(this);
+  QVBoxLayout *backlinksLayout = new QVBoxLayout(backlinksPanel);
+  backlinksLayout->setContentsMargins(5, 5, 5, 5);
+
+  QLabel *backlinksLabel = new QLabel(tr("Backlinks"), backlinksPanel);
+  backlinksLabel->setStyleSheet("font-weight: bold; padding: 5px;");
+  backlinksLayout->addWidget(backlinksLabel);
+
+  backlinksView = new QListWidget(backlinksPanel);
+  backlinksLayout->addWidget(backlinksView);
+  backlinksPanel->setMinimumWidth(150);
+  backlinksPanel->setVisible(false);
+
+  connect(backlinksView, &QListWidget::itemDoubleClicked,
+          [this](QListWidgetItem *item) {
+            QString filePath = item->data(Qt::UserRole).toString();
+            if (!filePath.isEmpty()) {
+              loadFile(filePath);
+            }
+          });
+
+  // Main splitter
+  mainSplitter = new QSplitter(Qt::Horizontal, this);
+  mainSplitter->addWidget(leftTabWidget);
+  mainSplitter->addWidget(tabWidget);
+  mainSplitter->addWidget(backlinksPanel);
+  mainSplitter->setStretchFactor(0, 0); // Left tab widget
+  mainSplitter->setStretchFactor(1, 1); // Tab widget gets most space
+  mainSplitter->setStretchFactor(2, 0); // Backlinks panel
+
+  setCentralWidget(mainSplitter);
+
+  // Create initial tab
+  createNewTab();
+}
+
+void MainWindow::readSettings() {
+  QPoint pos = settings->value("pos", QPoint(200, 200)).toPoint();
+  QSize size = settings->value("size", QSize(1024, 768)).toSize();
+  resize(size);
+  move(pos);
+
+  if (settings->contains("mainSplitter"))
+    mainSplitter->restoreState(settings->value("mainSplitter").toByteArray());
+
+  bool sidebarVisible = settings->value("sidebarVisible", true).toBool();
+  leftTabWidget->setVisible(sidebarVisible);
+  toggleSidebarAction->setChecked(sidebarVisible);
+
+  // Load recent folders
+  recentFolders = settings->value("recentFolders").toStringList();
+
+  QString lastFolder = settings->value("lastFolder").toString();
+  if (!lastFolder.isEmpty() && QDir(lastFolder).exists()) {
+    treeView->setRootPath(lastFolder);
+    currentFolder = lastFolder;
+
+    TabEditor *tab = currentTabEditor();
+    if (tab && tab->editor()->getHighlighter()) {
+      tab->editor()->getHighlighter()->setRootPath(lastFolder);
+    }
+
+    linkParser->buildLinkIndex(lastFolder);
+
+    statusBar()->showMessage(tr("Opened folder: %1").arg(lastFolder));
+  }
+
+  // Restore open files from last session (if enabled in preferences)
+  bool restoreSession =
+      settings->value("general/restoreSession", true).toBool();
+  QStringList openFiles = settings->value("session/openFiles").toStringList();
+  int activeTabIndex = settings->value("session/activeTab", -1).toInt();
+
+  if (restoreSession && !openFiles.isEmpty()) {
+    // Close the default empty tab if it exists and is empty
+    if (tabWidget->count() == 1) {
+      TabEditor *firstTab = qobject_cast<TabEditor *>(tabWidget->widget(0));
+      if (firstTab && firstTab->filePath().isEmpty() &&
+          !firstTab->editor()->isModified()) {
+        tabWidget->removeTab(0);
+        delete firstTab;
+      }
+    }
+
+    // Open each file from the session
+    for (const QString &filePath : openFiles) {
+      if (QFileInfo::exists(filePath)) {
+        loadFile(filePath);
+      }
+    }
+
+    // Restore the active tab
+    if (activeTabIndex >= 0 && activeTabIndex < tabWidget->count()) {
+      tabWidget->setCurrentIndex(activeTabIndex);
+    }
+  }
+}
+
+void MainWindow::writeSettings() {
+  settings->setValue("pos", pos());
+  settings->setValue("size", size());
+  settings->setValue("mainSplitter", mainSplitter->saveState());
+  settings->setValue("sidebarVisible", leftTabWidget->isVisible());
+  settings->setValue("lastFolder", currentFolder);
+  settings->setValue("recentFolders", recentFolders);
+
+  // Save open files
+  QStringList openFiles;
+  int activeTabIndex = tabWidget->currentIndex();
+
+  for (int i = 0; i < tabWidget->count(); ++i) {
+    TabEditor *tab = qobject_cast<TabEditor *>(tabWidget->widget(i));
+    if (tab && !tab->filePath().isEmpty()) {
+      openFiles.append(tab->filePath());
+    }
+  }
+
+  settings->setValue("session/openFiles", openFiles);
+  settings->setValue("session/activeTab", activeTabIndex);
+}
+
+void MainWindow::openSettings() {
+  SettingsDialog dialog(this);
+  connect(&dialog, &SettingsDialog::settingsChanged, this, &MainWindow::applySettings);
+
+  dialog.exec();
+}
+
+void MainWindow::applySettings() {
+  // Apply application theme
+  QString appTheme =
+      settings->value("appearance/appTheme", "system").toString();
+  if (ThemeManager::instance()) {
+    ThemeManager::instance()->setAppTheme(appTheme);
+  }
+
+  // Apply editor color scheme to all tabs
+  QString editorScheme =
+      settings->value("appearance/editorColorScheme", "auto").toString();
+  if (ThemeManager::instance()) {
+    ThemeManager::instance()->setEditorColorScheme(editorScheme);
+  }
+
+  // Get the resolved scheme name for highlighter
+  QString resolvedEditorScheme = "light";
+  if (ThemeManager::instance()) {
+    resolvedEditorScheme = ThemeManager::instance()->getResolvedEditorColorSchemeName();
+  }
+
+  for (int i = 0; i < tabWidget->count(); ++i) {
+    TabEditor *tab = qobject_cast<TabEditor *>(tabWidget->widget(i));
+    if (tab && tab->editor()) {
+      // Apply editor color scheme
+      if (ThemeManager::instance()) {
+        tab->editor()->setPalette(ThemeManager::instance()->getEditorPalette());
+        tab->editor()->setStyleSheet(
+            ThemeManager::instance()->getEditorStyleSheet());
+      }
+
+      // Update highlighter color scheme with resolved scheme
+      MarkdownHighlighter *highlighter = tab->editor()->highlighter();
+      if (highlighter) {
+        highlighter->setColorScheme(resolvedEditorScheme);
+        
+        // Apply code syntax highlighting setting
+        bool codeSyntaxEnabled =
+            settings->value("editor/enableCodeSyntax", false).toBool();
+        highlighter->setCodeSyntaxEnabled(codeSyntaxEnabled);
+        
+        // Force rehighlight to apply new colors
+        highlighter->rehighlight();
+      }
+    }
+  }
+
+  // Apply auto-save settings
+  if (settings->value("autoSaveEnabled", true).toBool()) {
+    int interval = settings->value("autoSaveInterval", 60).toInt();
+    if (autoSaveTimer) {
+      autoSaveTimer->start(interval * 1000);
+    }
+  } else {
+    if (autoSaveTimer) {
+      autoSaveTimer->stop();
+    }
+  }
+
+  // Apply preview color scheme
+  QString previewScheme =
+      settings->value("appearance/previewColorScheme", "auto").toString();
+  if (ThemeManager::instance()) {
+    ThemeManager::instance()->setPreviewColorScheme(previewScheme);
+  }
+  
+  // Get the resolved preview theme
+  QString theme = settings->value("previewTheme", "light").toString();
+  if (ThemeManager::instance()) {
+    theme = ThemeManager::instance()->getResolvedPreviewColorSchemeName();
+  }
+  
+  // Apply theme to all tabs
+  for (int i = 0; i < tabWidget->count(); ++i) {
+    TabEditor *tab = qobject_cast<TabEditor *>(tabWidget->widget(i));
+    if (tab && tab->preview()) {
+      tab->preview()->setTheme(theme);
+    }
+  }
+
+  // Update theme action checkboxes
+  if (previewThemeDarkAction && theme == "dark") {
+    previewThemeDarkAction->setChecked(true);
+  } else if (previewThemeSepiaAction && theme == "sepia") {
+    previewThemeSepiaAction->setChecked(true);
+  } else if (previewThemeLightAction) {
+    previewThemeLightAction->setChecked(true);
+  }
+
+  // Apply editor settings to all tabs
+  QString fontFamily = settings->value("editor/font", "Sans Serif").toString();
+  int fontSize = settings->value("editor/fontSize", 11).toInt();
+  int tabWidth = settings->value("editor/tabWidth", 4).toInt();
+  bool wordWrap = settings->value("editor/wordWrap", true).toBool();
+
+  QFont font(fontFamily, fontSize);
+
+  for (int i = 0; i < tabWidget->count(); ++i) {
+    TabEditor *tab = qobject_cast<TabEditor *>(tabWidget->widget(i));
+    if (tab && tab->editor()) {
+      tab->editor()->setFont(font);
+      tab->editor()->setTabStopDistance(
+          QFontMetrics(font).horizontalAdvance(' ') * tabWidth);
+      tab->editor()->setLineWrapMode(wordWrap ? QPlainTextEdit::WidgetWidth
+                                              : QPlainTextEdit::NoWrap);
+    }
+  }
+
+  // Apply preview refresh rate
+  int refreshRate = settings->value("preview/refreshRate", 500).toInt();
+  if (previewUpdateTimer) {
+    previewUpdateTimer->setInterval(refreshRate);
+  }
+}
+
+void MainWindow::showKeyboardShortcuts() {
+  ShortcutsDialog dialog(this);
+  dialog.exec();
+}

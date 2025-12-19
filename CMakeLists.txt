@@ -55,6 +55,13 @@ set(SOURCES
     src/mainwindow.cpp
     src/mainwindow_about.cpp
     src/mainwindow_actions.cpp
+    src/mainwindow_file.cpp
+    src/mainwindow_edit.cpp
+    src/mainwindow_insert.cpp
+    src/mainwindow_export.cpp
+    src/mainwindow_tabs.cpp
+    src/mainwindow_view.cpp
+    src/mainwindow_ui.cpp
     src/tabeditor.cpp
     src/filesystemtreeview.cpp
     src/markdowneditor.cpp
