@@ -22,10 +22,6 @@ void MainWindow::togglePreview() {
   }
 }
 
-void MainWindow::toggleBacklinks() {
-  backlinksPanel->setVisible(!backlinksPanel->isVisible());
-}
-
 void MainWindow::onWikiLinkClicked(const QString &linkTarget) {
   if (currentFolder.isEmpty()) {
     statusBar()->showMessage(tr("No folder opened. Cannot resolve wiki link."),

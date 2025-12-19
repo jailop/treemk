@@ -26,7 +26,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
   searchInFilesAction(nullptr), quickOpenAction(nullptr),
   closeTabAction(nullptr), closeAllTabsAction(nullptr),
   toggleSidebarAction(nullptr), togglePreviewAction(nullptr),
-  toggleBacklinksAction(nullptr), previewThemeLightAction(nullptr),
+  previewThemeLightAction(nullptr),
   previewThemeDarkAction(nullptr), previewThemeSepiaAction(nullptr),
   settingsAction(nullptr), aboutAction(nullptr), aboutQtAction(nullptr),
   keyboardShortcutsAction(nullptr) {

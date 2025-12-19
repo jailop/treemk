@@ -85,7 +85,6 @@ void MainWindow::createMenus() {
   viewMenu = menuBar()->addMenu(tr("&View"));
   viewMenu->addAction(toggleSidebarAction);
   viewMenu->addAction(togglePreviewAction);
-  viewMenu->addAction(toggleBacklinksAction);
   viewMenu->addSeparator();
   QMenu *previewThemeMenu = viewMenu->addMenu(tr("Preview Theme"));
   previewThemeMenu->addAction(previewThemeLightAction);
@@ -143,11 +142,10 @@ void MainWindow::createToolbar() {
   // View toggles
   mainToolbar->addAction(toggleSidebarAction);
   mainToolbar->addAction(togglePreviewAction);
-  mainToolbar->addAction(toggleBacklinksAction);
 }
 
 void MainWindow::createLayout() {
-  // Create left panel with tabs for File Tree and Outline
+  // Create left panel with tabs for File Tree, Outline, and Backlinks
   leftTabWidget = new QTabWidget(this);
   leftTabWidget->setTabPosition(QTabWidget::South);
   leftTabWidget->setMinimumWidth(150);
@@ -179,6 +177,24 @@ void MainWindow::createLayout() {
 
   leftTabWidget->addTab(outlinePanel, tr("Outline"));
 
+  // Backlinks tab
+  backlinksPanel = new QWidget(this);
+  QVBoxLayout *backlinksLayout = new QVBoxLayout(backlinksPanel);
+  backlinksLayout->setContentsMargins(0, 0, 0, 0);
+
+  backlinksView = new QListWidget(backlinksPanel);
+  backlinksLayout->addWidget(backlinksView);
+
+  connect(backlinksView, &QListWidget::itemDoubleClicked,
+          [this](QListWidgetItem *item) {
+            QString filePath = item->data(Qt::UserRole).toString();
+            if (!filePath.isEmpty()) {
+              loadFile(filePath);
+            }
+          });
+
+  leftTabWidget->addTab(backlinksPanel, tr("Backlinks"));
+
   // Tab widget for multiple editors
   tabWidget = new QTabWidget(this);
   tabWidget->setTabsClosable(true);
@@ -190,36 +206,12 @@ void MainWindow::createLayout() {
   connect(tabWidget, &QTabWidget::tabCloseRequested, this,
           &MainWindow::onTabCloseRequested);
 
-  // Backlinks panel
-  backlinksPanel = new QWidget(this);
-  QVBoxLayout *backlinksLayout = new QVBoxLayout(backlinksPanel);
-  backlinksLayout->setContentsMargins(5, 5, 5, 5);
-
-  QLabel *backlinksLabel = new QLabel(tr("Backlinks"), backlinksPanel);
-  backlinksLabel->setStyleSheet("font-weight: bold; padding: 5px;");
-  backlinksLayout->addWidget(backlinksLabel);
-
-  backlinksView = new QListWidget(backlinksPanel);
-  backlinksLayout->addWidget(backlinksView);
-  backlinksPanel->setMinimumWidth(150);
-  backlinksPanel->setVisible(false);
-
-  connect(backlinksView, &QListWidget::itemDoubleClicked,
-          [this](QListWidgetItem *item) {
-            QString filePath = item->data(Qt::UserRole).toString();
-            if (!filePath.isEmpty()) {
-              loadFile(filePath);
-            }
-          });
-
   // Main splitter
   mainSplitter = new QSplitter(Qt::Horizontal, this);
   mainSplitter->addWidget(leftTabWidget);
   mainSplitter->addWidget(tabWidget);
-  mainSplitter->addWidget(backlinksPanel);
   mainSplitter->setStretchFactor(0, 0); // Left tab widget
   mainSplitter->setStretchFactor(1, 1); // Tab widget gets most space
-  mainSplitter->setStretchFactor(2, 0); // Backlinks panel
 
   setCentralWidget(mainSplitter);
 
