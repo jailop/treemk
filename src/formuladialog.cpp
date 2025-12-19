@@ -1,98 +1,25 @@
 #include "formuladialog.h"
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QTextEdit>
-#include <QRadioButton>
-#include <QPushButton>
-#include <QComboBox>
-#include <QLabel>
-#include <QGroupBox>
-#include <QButtonGroup>
+#include "ui_formuladialog.h"
+#include <QFont>
 
 FormulaDialog::FormulaDialog(QWidget *parent)
-    : QDialog(parent)
+    : QDialog(parent), ui(new Ui::FormulaDialog)
 {
-    setWindowTitle(tr("Insert LaTeX Formula"));
-    setMinimumSize(500, 400);
+    ui->setupUi(this);
     
-    setupUI();
+    // Set monospace font for formula editor
+    ui->formulaEdit->setFont(QFont("Monospace", 10));
+    
     loadTemplates();
+    
+    // Connect signals
+    connect(ui->templateCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &FormulaDialog::insertTemplate);
 }
 
 FormulaDialog::~FormulaDialog()
 {
-}
-
-void FormulaDialog::setupUI()
-{
-    QVBoxLayout *mainLayout = new QVBoxLayout(this);
-    
-    // Type selection
-    QGroupBox *typeGroup = new QGroupBox(tr("Formula Type"), this);
-    QHBoxLayout *typeLayout = new QHBoxLayout(typeGroup);
-    
-    inlineRadio = new QRadioButton(tr("Inline ($...$)"), this);
-    blockRadio = new QRadioButton(tr("Block ($$...$$)"), this);
-    inlineRadio->setChecked(true);
-    
-    QButtonGroup *typeButtonGroup = new QButtonGroup(this);
-    typeButtonGroup->addButton(inlineRadio);
-    typeButtonGroup->addButton(blockRadio);
-    
-    typeLayout->addWidget(inlineRadio);
-    typeLayout->addWidget(blockRadio);
-    typeLayout->addStretch();
-    
-    mainLayout->addWidget(typeGroup);
-    
-    // Template selection
-    QHBoxLayout *templateLayout = new QHBoxLayout();
-    QLabel *templateLabel = new QLabel(tr("Template:"), this);
-    templateCombo = new QComboBox(this);
-    
-    templateLayout->addWidget(templateLabel);
-    templateLayout->addWidget(templateCombo, 1);
-    
-    mainLayout->addLayout(templateLayout);
-    
-    // Formula editor
-    QLabel *formulaLabel = new QLabel(tr("LaTeX Formula:"), this);
-    mainLayout->addWidget(formulaLabel);
-    
-    formulaEdit = new QTextEdit(this);
-    formulaEdit->setPlaceholderText(tr("Enter LaTeX formula here..."));
-    formulaEdit->setFont(QFont("Monospace", 10));
-    mainLayout->addWidget(formulaEdit);
-    
-    // Info label
-    QLabel *infoLabel = new QLabel(
-        tr("<small><b>Examples:</b><br>"
-           "Inline: x^2 + y^2 = z^2<br>"
-           "Block: \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}<br>"
-           "Greek: \\alpha, \\beta, \\gamma<br>"
-           "Symbols: \\sum, \\int, \\infty</small>"), this);
-    infoLabel->setTextFormat(Qt::RichText);
-    infoLabel->setWordWrap(true);
-    mainLayout->addWidget(infoLabel);
-    
-    // Buttons
-    QHBoxLayout *buttonLayout = new QHBoxLayout();
-    buttonLayout->addStretch();
-    
-    insertButton = new QPushButton(tr("Insert"), this);
-    insertButton->setDefault(true);
-    cancelButton = new QPushButton(tr("Cancel"), this);
-    
-    buttonLayout->addWidget(insertButton);
-    buttonLayout->addWidget(cancelButton);
-    
-    mainLayout->addLayout(buttonLayout);
-    
-    // Connect signals
-    connect(templateCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
-            this, &FormulaDialog::insertTemplate);
-    connect(insertButton, &QPushButton::clicked, this, &QDialog::accept);
-    connect(cancelButton, &QPushButton::clicked, this, &QDialog::reject);
+    delete ui;
 }
 
 void FormulaDialog::loadTemplates()
@@ -112,15 +39,15 @@ void FormulaDialog::loadTemplates()
     templates["Partial Derivative"] = "\\frac{\\partial f}{\\partial x}";
     
     for (auto it = templates.constBegin(); it != templates.constEnd(); ++it) {
-        templateCombo->addItem(it.key(), it.value());
+        ui->templateCombo->addItem(it.key(), it.value());
     }
 }
 
 void FormulaDialog::insertTemplate()
 {
-    QString formula = templateCombo->currentData().toString();
+    QString formula = ui->templateCombo->currentData().toString();
     if (!formula.isEmpty()) {
-        formulaEdit->setText(formula);
+        ui->formulaEdit->setText(formula);
     }
 }
 
@@ -132,20 +59,10 @@ void FormulaDialog::updatePreview()
 
 QString FormulaDialog::getFormula() const
 {
-    QString formula = formulaEdit->toPlainText().trimmed();
-    
-    if (formula.isEmpty()) {
-        return QString();
-    }
-    
-    if (isBlockFormula()) {
-        return "$$" + formula + "$$";
-    } else {
-        return "$" + formula + "$";
-    }
+    return ui->formulaEdit->toPlainText().trimmed();
 }
 
 bool FormulaDialog::isBlockFormula() const
 {
-    return blockRadio->isChecked();
+    return ui->blockRadio->isChecked();
 }

@@ -49,6 +49,9 @@ endif()
 # Include directories
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
+# UI files directory
+set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_SOURCE_DIR}/ui)
+
 # Source files
 set(SOURCES
     src/main.cpp
@@ -102,18 +105,28 @@ set(RESOURCES
     resources/resources.qrc
 )
 
+# UI files
+set(UI_FILES
+    ui/formuladialog.ui
+    ui/searchdialog.ui
+    ui/quickopendialog.ui
+    ui/shortcutsdialog.ui
+)
+
 # Platform-specific executable configuration
 if(WIN32)
     add_executable(${PROJECT_NAME} WIN32
         ${SOURCES}
         ${HEADERS}
         ${RESOURCES}
+        ${UI_FILES}
     )
 elseif(APPLE)
     add_executable(${PROJECT_NAME} MACOSX_BUNDLE
         ${SOURCES}
         ${HEADERS}
         ${RESOURCES}
+        ${UI_FILES}
     )
     set_target_properties(${PROJECT_NAME} PROPERTIES
         MACOSX_BUNDLE TRUE
@@ -124,6 +137,7 @@ else()
         ${SOURCES}
         ${HEADERS}
         ${RESOURCES}
+        ${UI_FILES}
     )
 endif()
 
