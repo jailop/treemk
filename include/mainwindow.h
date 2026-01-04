@@ -44,7 +44,6 @@ private slots:
     void about();
     void toggleSidebar();
     void togglePreview();
-    void toggleBacklinks();
     void onFileSelected(const QString &filePath);
     void onFileDoubleClicked(const QString &filePath);
     void onFileModifiedExternally(const QString &filePath);
@@ -151,7 +150,6 @@ private:
     QAction *closeAllTabsAction;
     QAction *toggleSidebarAction;
     QAction *togglePreviewAction;
-    QAction *toggleBacklinksAction;
     QAction *previewThemeLightAction;
     QAction *previewThemeDarkAction;
     QAction *previewThemeSepiaAction;

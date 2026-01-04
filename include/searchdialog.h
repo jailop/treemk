@@ -5,10 +5,9 @@
 #include <QString>
 #include <QList>
 
-class QLineEdit;
-class QListWidget;
-class QPushButton;
-class QCheckBox;
+namespace Ui {
+class SearchDialog;
+}
 
 struct SearchResult
 {
@@ -37,19 +36,12 @@ private slots:
     void onResultDoubleClicked();
 
 private:
-    void setupUI();
     QList<SearchResult> searchInFiles(const QString &query, bool caseSensitive, bool wholeWord);
     void scanDirectory(const QString &dirPath, const QString &query, bool caseSensitive, 
                       bool wholeWord, QList<SearchResult> &results);
 
+    Ui::SearchDialog *ui;
     QString rootPath;
-    
-    QLineEdit *searchEdit;
-    QListWidget *resultsView;
-    QPushButton *searchButton;
-    QPushButton *closeButton;
-    QCheckBox *caseSensitiveCheck;
-    QCheckBox *wholeWordCheck;
 };
 
 #endif // SEARCHDIALOG_H

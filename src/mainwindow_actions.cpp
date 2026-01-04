@@ -388,17 +388,6 @@ void MainWindow::createActions() {
   connect(togglePreviewAction, &QAction::triggered, this,
           &MainWindow::togglePreview);
 
-  toggleBacklinksAction =
-      new QAction(iconWithFallback("go-jump", QStyle::SP_ArrowBack),
-                  tr("&Backlinks"), this);
-  toggleBacklinksAction->setCheckable(true);
-  toggleBacklinksAction->setChecked(false);
-  toggleBacklinksAction->setShortcut(QKeySequence(tr("Ctrl+Shift+B")));
-  toggleBacklinksAction->setStatusTip(tr("Toggle backlinks panel"));
-  toggleBacklinksAction->setToolTip(tr("Toggle backlinks panel"));
-  connect(toggleBacklinksAction, &QAction::triggered, this,
-          &MainWindow::toggleBacklinks);
-
   previewThemeLightAction = new QAction(tr("Light Theme"), this);
   previewThemeLightAction->setCheckable(true);
   previewThemeLightAction->setChecked(true);

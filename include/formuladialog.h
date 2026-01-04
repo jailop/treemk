@@ -2,11 +2,11 @@
 #define FORMULADIALOG_H
 
 #include <QDialog>
+#include <QMap>
 
-class QTextEdit;
-class QRadioButton;
-class QPushButton;
-class QComboBox;
+namespace Ui {
+class FormulaDialog;
+}
 
 class FormulaDialog : public QDialog
 {
@@ -24,16 +24,9 @@ private slots:
     void updatePreview();
 
 private:
-    void setupUI();
     void loadTemplates();
     
-    QTextEdit *formulaEdit;
-    QRadioButton *inlineRadio;
-    QRadioButton *blockRadio;
-    QComboBox *templateCombo;
-    QPushButton *insertButton;
-    QPushButton *cancelButton;
-    
+    Ui::FormulaDialog *ui;
     QMap<QString, QString> templates;
 };
 

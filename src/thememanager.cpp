@@ -4,6 +4,124 @@
 #include <QPalette>
 #include <QColor>
 
+const QString light_theme = R"(
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI',
+            Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+        line-height: 1.6;
+        padding: 20px;
+    }
+    h1, h2 {
+        border-bottom: 1px solid #eaecef;
+        padding-bottom: 0.3em;
+    }
+    h1, h2, h3, h4, h5, h6 {
+        font-weight: 600;
+        margin-top: 24px;
+        margin-bottom: 16px;
+    }
+    p {
+        margin-bottom: 16px;
+    }
+    a {
+        color: #0366d6;
+        text-decoration: none;
+    }
+    a:hover {
+        text-decoration: underline;
+    }
+    pre, code {
+        background-color: #f6f8fa;
+        border-radius: 3px;
+        font-family: 'SFMono-Regular', Consolas, monospace;
+    }
+    pre {
+        padding: 16px;
+        overflow: auto;
+    }
+    code {
+        padding: 0.2em 0.4em;
+        font-size: 85%;
+    }
+    blockquote {
+        margin: 0;
+        padding-left: 16px;
+        border-left: 4px solid #dfe2e5;
+        color: #6a737d;
+    }
+    table {
+        border-collapse: collapse;
+        margin-bottom: 16px;
+    }
+    th, td {
+        border: 1px solid #dfe2e5;
+        padding: 6px 13px;
+    }
+    th {
+        background-color: #f6f8fa;
+    }
+)";
+const QString dark_theme = R"(
+    body {
+        background-color: #1e1e1e;
+        color: #dcdcdc;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI',
+            Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+        line-height: 1.6;
+        padding: 20px;
+    }
+    h1, h2 {
+        border-bottom: 1px solid #444444;
+        padding-bottom: 0.3em;
+    }
+    h1, h2, h3, h4, h5, h6 {
+        font-weight: 600;
+        margin-top: 24px;
+        margin-bottom: 16px;
+    }
+    p {
+        margin-bottom: 16px;
+    }
+    a {
+        color: #4daafc;
+        text-decoration: none;
+    }
+    a:hover {
+        text-decoration: underline;
+    }
+    pre, code {
+        background-color: #2d2d2d;
+        border-radius: 3px;
+        font-family: 'SFMono-Regular', Consolas, monospace;
+    }
+    pre {
+        padding: 16px;
+        overflow: auto;
+    }
+    code {
+        padding: 0.2em 0.4em;
+        font-size: 85%;
+    }
+    blockquote {
+        margin: 0;
+        padding-left: 16px;
+        border-left: 4px solid #444444;
+        color: #aaaaaa;
+    }
+    table {
+        border-collapse: collapse;
+        margin-bottom: 16px;
+    }
+    th, td {
+        border: 1px solid #444444;
+        padding: 6px 13px;
+    }
+    th {
+        background-color: #2d2d2d;
+    }
+)";
+
+
 ThemeManager* ThemeManager::s_instance = nullptr;
 
 ThemeManager* ThemeManager::instance()
@@ -335,52 +453,12 @@ QString ThemeManager::getPreviewStyleSheet() const
         break;
         
     case PreviewColorScheme::Light:
-        styleSheet = R"(
-            body {
-                background-color: #ffffff;
-                color: #000000;
-            }
-            a {
-                color: #0066cc;
-            }
-            pre, code {
-                background-color: #f5f5f5;
-                color: #000000;
-            }
-        )";
+        // A like github light style
+        styleSheet = light_theme;
         break;
         
     case PreviewColorScheme::Dark:
-        styleSheet = R"(
-            body {
-                background-color: #1e1e1e;
-                color: #dcdcdc;
-            }
-            a {
-                color: #4daafc;
-            }
-            pre, code {
-                background-color: #2d2d2d;
-                color: #dcdcdc;
-            }
-            h1, h2, h3, h4, h5, h6 {
-                color: #ffffff;
-            }
-            table {
-                border-color: #444444;
-            }
-            th {
-                background-color: #2d2d2d;
-                border-color: #444444;
-            }
-            td {
-                border-color: #444444;
-            }
-            blockquote {
-                border-left-color: #444444;
-                color: #aaaaaa;
-            }
-        )";
+        styleSheet = dark_theme;
         break;
     }
     

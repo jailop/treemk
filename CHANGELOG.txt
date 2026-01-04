@@ -1,0 +1,8 @@
+0.1.1 - 2025-12-19:
+
+- mainwindow.cpp refactored in smaller files and functions
+- widget layout and creation process moved to ui files
+- cut and copy menu actions connected when text is selected in edit
+  widget
+- copy option in preview contextual menu
+- backlinks panel moved together with files and outline panels
