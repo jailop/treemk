@@ -1,15 +1,15 @@
 #include "mainwindow.h"
-#include "tabeditor.h"
 #include "markdowneditor.h"
-#include "searchdialog.h"
 #include "quickopendialog.h"
+#include "searchdialog.h"
+#include "tabeditor.h"
 #include <QInputDialog>
 #include <QLineEdit>
-#include <QTextCursor>
-#include <QTextDocument>
-#include <QTextBlock>
 #include <QMessageBox>
 #include <QStatusBar>
+#include <QTextBlock>
+#include <QTextCursor>
+#include <QTextDocument>
 
 void MainWindow::find() {
   TabEditor *tab = currentTabEditor();
@@ -54,9 +54,9 @@ void MainWindow::findAndReplace() {
     return;
 
   bool okFind, okReplace;
-  QString searchText = QInputDialog::getText(this, tr("Find and Replace"),
-                                             tr("Find text:"), QLineEdit::Normal,
-                                             "", &okFind);
+  QString searchText =
+      QInputDialog::getText(this, tr("Find and Replace"), tr("Find text:"),
+                            QLineEdit::Normal, "", &okFind);
 
   if (!okFind || searchText.isEmpty()) {
     return;
@@ -91,8 +91,8 @@ void MainWindow::findAndReplace() {
   }
 
   if (replaceCount > 0) {
-    statusBar()->showMessage(
-        tr("Replaced %1 occurrence(s)").arg(replaceCount), 3000);
+    statusBar()->showMessage(tr("Replaced %1 occurrence(s)").arg(replaceCount),
+                             3000);
   } else {
     statusBar()->showMessage(tr("Text not found"), 2000);
   }
@@ -113,7 +113,7 @@ void MainWindow::searchInFiles() {
 }
 
 void MainWindow::onSearchResultSelected(const QString &filePath,
-                                         int lineNumber) {
+                                        int lineNumber) {
   if (loadFile(filePath)) {
     jumpToLine(lineNumber);
   }
@@ -140,7 +140,8 @@ void MainWindow::jumpToLine(int lineNumber) {
   if (!tab)
     return;
 
-  QTextBlock block = tab->editor()->document()->findBlockByLineNumber(lineNumber - 1);
+  QTextBlock block =
+      tab->editor()->document()->findBlockByLineNumber(lineNumber - 1);
   QTextCursor cursor(block);
   tab->editor()->setTextCursor(cursor);
   tab->editor()->centerCursor();

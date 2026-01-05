@@ -9,7 +9,7 @@
 SearchDialog::SearchDialog(const QString &path, QWidget *parent)
     : QDialog(parent), ui(new Ui::SearchDialog), rootPath(path) {
   ui->setupUi(this);
-  
+
   // Connect signals
   connect(ui->searchButton, &QPushButton::clicked, this,
           &SearchDialog::performSearch);
@@ -22,9 +22,7 @@ SearchDialog::SearchDialog(const QString &path, QWidget *parent)
   ui->searchEdit->setFocus();
 }
 
-SearchDialog::~SearchDialog() {
-  delete ui;
-}
+SearchDialog::~SearchDialog() { delete ui; }
 
 void SearchDialog::performSearch() {
   QString query = ui->searchEdit->text();

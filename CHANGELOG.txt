@@ -11,3 +11,4 @@
 
 - When a tab is saved, the file external change detection alert is
 ignored.
+- Global values defined in `defs.h`

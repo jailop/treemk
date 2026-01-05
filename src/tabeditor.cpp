@@ -33,7 +33,7 @@ void TabEditor::setupUI() {
   m_preview = new MarkdownPreview(this);
   // TODO set base on the width of the layout container
   m_preview->setMinimumWidth(300);
-  
+
   m_splitter->addWidget(m_editor);
   m_splitter->addWidget(m_preview);
   m_splitter->setStretchFactor(0, 1);

@@ -8,26 +8,25 @@ namespace Ui {
 class FormulaDialog;
 }
 
-class FormulaDialog : public QDialog
-{
-    Q_OBJECT
+class FormulaDialog : public QDialog {
+  Q_OBJECT
 
 public:
-    explicit FormulaDialog(QWidget *parent = nullptr);
-    ~FormulaDialog();
-    
-    QString getFormula() const;
-    bool isBlockFormula() const;
+  explicit FormulaDialog(QWidget *parent = nullptr);
+  ~FormulaDialog();
+
+  QString getFormula() const;
+  bool isBlockFormula() const;
 
 private slots:
-    void insertTemplate();
-    void updatePreview();
+  void insertTemplate();
+  void updatePreview();
 
 private:
-    void loadTemplates();
-    
-    Ui::FormulaDialog *ui;
-    QMap<QString, QString> templates;
+  void loadTemplates();
+
+  Ui::FormulaDialog *ui;
+  QMap<QString, QString> templates;
 };
 
 #endif // FORMULADIALOG_H

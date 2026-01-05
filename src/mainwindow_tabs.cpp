@@ -1,12 +1,13 @@
+#include "defs.h"
 #include "mainwindow.h"
-#include "tabeditor.h"
 #include "markdowneditor.h"
 #include "markdownhighlighter.h"
 #include "markdownpreview.h"
 #include "outlinepanel.h"
+#include "tabeditor.h"
 #include "thememanager.h"
-#include <QMessageBox>
 #include <QFileInfo>
+#include <QMessageBox>
 
 TabEditor *MainWindow::currentTabEditor() const {
   return qobject_cast<TabEditor *>(tabWidget->currentWidget());
@@ -141,8 +142,9 @@ void MainWindow::onTabChanged(int index) {
       copyAction->setEnabled(editor->textCursor().hasSelection());
       undoAction->setEnabled(editor->document()->isUndoAvailable());
       redoAction->setEnabled(editor->document()->isRedoAvailable());
-      
-      // Connect signals to keep actions updated (use UniqueConnection to avoid duplicates)
+
+      // Connect signals to keep actions updated (use UniqueConnection to avoid
+      // duplicates)
       connect(editor, &QPlainTextEdit::copyAvailable, cutAction,
               &QAction::setEnabled, Qt::UniqueConnection);
       connect(editor, &QPlainTextEdit::copyAvailable, copyAction,
@@ -155,9 +157,9 @@ void MainWindow::onTabChanged(int index) {
 
     // Update window title
     if (!tab->filePath().isEmpty()) {
-      setWindowTitle(QString("%1 - TreeMk").arg(tab->fileName()));
+      setWindowTitle(QString("%1 - %2").arg(tab->fileName(), APP_LABEL));
     } else {
-      setWindowTitle("TreeMk");
+      setWindowTitle(APP_LABEL);
     }
   }
 }

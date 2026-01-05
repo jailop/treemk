@@ -1,19 +1,18 @@
-#include "mainwindow.h"
-#include "tabeditor.h"
-#include "markdowneditor.h"
-#include "markdownhighlighter.h"
+#include "defs.h"
 #include "filesystemtreeview.h"
 #include "linkparser.h"
-#include <QFileDialog>
+#include "mainwindow.h"
+#include "markdowneditor.h"
+#include "markdownhighlighter.h"
+#include "tabeditor.h"
 #include <QDir>
-#include <QMessageBox>
+#include <QFileDialog>
 #include <QFileInfo>
-#include <QStatusBar>
 #include <QMenu>
+#include <QMessageBox>
+#include <QStatusBar>
 
-void MainWindow::newFile() { 
-  createNewTab(); 
-}
+void MainWindow::newFile() { createNewTab(); }
 
 void MainWindow::openFolder() {
   QString folder = QFileDialog::getExistingDirectory(
@@ -90,8 +89,7 @@ void MainWindow::populateRecentFoldersMenu() {
     for (const QString &folder : recentFolders) {
       QAction *action = recentFoldersMenu->addAction(folder);
       action->setData(folder);
-      connect(action, &QAction::triggered, this,
-              &MainWindow::openRecentFolder);
+      connect(action, &QAction::triggered, this, &MainWindow::openRecentFolder);
     }
     recentFoldersMenu->addSeparator();
     QAction *clearAction =
@@ -119,7 +117,8 @@ void MainWindow::saveAs() {
   if (!tab)
     return;
 
-  QString initialPath = currentFolder.isEmpty() ? QDir::homePath() : currentFolder;
+  QString initialPath =
+      currentFolder.isEmpty() ? QDir::homePath() : currentFolder;
   if (!tab->filePath().isEmpty()) {
     initialPath = tab->filePath();
   }
@@ -135,9 +134,8 @@ void MainWindow::saveAs() {
         linkParser->buildLinkIndex(currentFolder);
       }
       updateBacklinks();
-      statusBar()->showMessage(tr("File saved as: %1")
-                                   .arg(QFileInfo(fileName).fileName()),
-                               2000);
+      statusBar()->showMessage(
+          tr("File saved as: %1").arg(QFileInfo(fileName).fileName()), 2000);
     }
   }
 }
@@ -154,12 +152,13 @@ void MainWindow::onFileDoubleClicked(const QString &filePath) {
 
 void MainWindow::onFileModifiedExternally(const QString &filePath) {
   TabEditor *tab = findTabByPath(filePath);
-  if (!tab) return;
+  if (!tab)
+    return;
   if (tab->ownSaved()) {
-      // The file was modified by this app, so there is nothing to do.
-      // Just clear the flag
-      tab->clearOwnSaved();
-      return;
+    // The file was modified by this app, so there is nothing to do.
+    // Just clear the flag
+    tab->clearOwnSaved();
+    return;
   }
   QMessageBox::StandardButton reply = QMessageBox::question(
       this, tr("File Modified"),
@@ -229,13 +228,13 @@ bool MainWindow::loadFile(const QString &filePath) {
 
     updateBacklinks();
     setWindowTitle(
-        QString("%1 - TreeMk").arg(QFileInfo(filePath).fileName()));
+        QString("%1 - %2").arg(QFileInfo(filePath).fileName(), APP_LABEL));
     statusBar()->showMessage(
         tr("Loaded: %1").arg(QFileInfo(filePath).fileName()), 3000);
     return true;
   }
 
-  QMessageBox::warning(this, tr("Error"), tr("Could not load file!"));
+  QMessageBox::warning(this, tr("Error"), tr("Could not load file"));
   return false;
 }
 

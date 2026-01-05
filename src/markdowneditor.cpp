@@ -1,824 +1,811 @@
+#include "defs.h"
 #include "markdowneditor.h"
 #include "markdownhighlighter.h"
 #include "shortcutmanager.h"
-#include <QPainter>
-#include <QTextBlock>
-#include <QFont>
-#include <QFontMetrics>
-#include <QScrollBar>
-#include <QMouseEvent>
-#include <QTextCursor>
-#include <QRegularExpression>
 #include <QApplication>
+#include <QClipboard>
+#include <QDateTime>
+#include <QDesktopServices>
+#include <QDir>
 #include <QDragEnterEvent>
 #include <QDragMoveEvent>
 #include <QDropEvent>
-#include <QMimeData>
-#include <QUrl>
 #include <QFileInfo>
-#include <QKeyEvent>
-#include <QClipboard>
+#include <QFont>
+#include <QFontMetrics>
 #include <QImage>
-#include <QDir>
-#include <QDateTime>
 #include <QInputDialog>
+#include <QKeyEvent>
 #include <QMessageBox>
-#include <QDesktopServices>
+#include <QMimeData>
+#include <QMouseEvent>
+#include <QPainter>
+#include <QRegularExpression>
+#include <QScrollBar>
 #include <QSettings>
+#include <QTextBlock>
+#include <QTextCursor>
+#include <QUrl>
 
 MarkdownEditor::MarkdownEditor(QWidget *parent)
-    : QPlainTextEdit(parent), m_predictionEnabled(true)
-{
-    lineNumberArea = new LineNumberArea(this);
-    m_highlighter = new MarkdownHighlighter(document());
-    
-    setupEditor();
-    
-    connect(this, &MarkdownEditor::blockCountChanged,
-            this, &MarkdownEditor::updateLineNumberAreaWidth);
-    connect(this, &MarkdownEditor::updateRequest,
-            this, &MarkdownEditor::updateLineNumberArea);
-    connect(this, &MarkdownEditor::cursorPositionChanged,
-            this, &MarkdownEditor::highlightCurrentLine);
-    connect(this, &MarkdownEditor::textChanged,
-            this, &MarkdownEditor::onTextChanged);
-    
-    updateLineNumberAreaWidth(0);
-    highlightCurrentLine();
-    
-    connect(document(), &QTextDocument::modificationChanged,
-            this, &MarkdownEditor::setModified);
+    : QPlainTextEdit(parent), m_predictionEnabled(true) {
+  lineNumberArea = new LineNumberArea(this);
+  m_highlighter = new MarkdownHighlighter(document());
+
+  setupEditor();
+
+  connect(this, &MarkdownEditor::blockCountChanged, this,
+          &MarkdownEditor::updateLineNumberAreaWidth);
+  connect(this, &MarkdownEditor::updateRequest, this,
+          &MarkdownEditor::updateLineNumberArea);
+  connect(this, &MarkdownEditor::cursorPositionChanged, this,
+          &MarkdownEditor::highlightCurrentLine);
+  connect(this, &MarkdownEditor::textChanged, this,
+          &MarkdownEditor::onTextChanged);
+
+  updateLineNumberAreaWidth(0);
+  highlightCurrentLine();
+
+  connect(document(), &QTextDocument::modificationChanged, this,
+          &MarkdownEditor::setModified);
 }
 
-MarkdownEditor::~MarkdownEditor()
-{
+MarkdownEditor::~MarkdownEditor() {}
+
+bool MarkdownEditor::isModified() const { return document()->isModified(); }
+
+void MarkdownEditor::setModified(bool modified) {
+  document()->setModified(modified);
 }
 
-bool MarkdownEditor::isModified() const
-{
-    return document()->isModified();
+MarkdownHighlighter *MarkdownEditor::getHighlighter() const {
+  return m_highlighter;
 }
 
-void MarkdownEditor::setModified(bool modified)
-{
-    document()->setModified(modified);
-}
+QString MarkdownEditor::getLinkAtPosition(int position) const {
+  QTextCursor cursor(document());
+  cursor.setPosition(position);
 
-MarkdownHighlighter* MarkdownEditor::getHighlighter() const
-{
-    return m_highlighter;
-}
+  QString line = cursor.block().text();
+  int posInBlock = cursor.positionInBlock();
 
-QString MarkdownEditor::getLinkAtPosition(int position) const
-{
-    QTextCursor cursor(document());
-    cursor.setPosition(position);
-    
-    QString line = cursor.block().text();
-    int posInBlock = cursor.positionInBlock();
-    
-    // Pattern for [[target]] or [[target|display]]
-    QRegularExpression wikiLinkPattern("\\[\\[([^\\]|]+)(\\|([^\\]]+))?\\]\\]");
-    QRegularExpressionMatchIterator matchIterator = wikiLinkPattern.globalMatch(line);
-    
-    while (matchIterator.hasNext()) {
-        QRegularExpressionMatch match = matchIterator.next();
-        int start = match.capturedStart();
-        int end = start + match.capturedLength();
-        
-        if (posInBlock >= start && posInBlock <= end) {
-            return match.captured(1).trimmed();
-        }
+  // Pattern for [[target]] or [[target|display]]
+  QRegularExpression wikiLinkPattern("\\[\\[([^\\]|]+)(\\|([^\\]]+))?\\]\\]");
+  QRegularExpressionMatchIterator matchIterator =
+      wikiLinkPattern.globalMatch(line);
+
+  while (matchIterator.hasNext()) {
+    QRegularExpressionMatch match = matchIterator.next();
+    int start = match.capturedStart();
+    int end = start + match.capturedLength();
+
+    if (posInBlock >= start && posInBlock <= end) {
+      return match.captured(1).trimmed();
     }
-    
+  }
+
+  return QString();
+}
+
+QString MarkdownEditor::getExternalLinkAtPosition(int position) const {
+  QTextCursor cursor(document());
+  cursor.setPosition(position);
+
+  QString line = cursor.block().text();
+  int posInBlock = cursor.positionInBlock();
+
+  // Pattern for [text](url)
+  QRegularExpression markdownLinkPattern("\\[([^\\]]+)\\]\\(([^\\)]+)\\)");
+  QRegularExpressionMatchIterator matchIterator =
+      markdownLinkPattern.globalMatch(line);
+
+  while (matchIterator.hasNext()) {
+    QRegularExpressionMatch match = matchIterator.next();
+    int start = match.capturedStart();
+    int end = start + match.capturedLength();
+
+    if (posInBlock >= start && posInBlock <= end) {
+      QString url = match.captured(2).trimmed();
+      // Check if it's an external link (http/https)
+      if (url.startsWith("http://") || url.startsWith("https://")) {
+        return url;
+      }
+    }
+  }
+
+  // Pattern for plain URLs (http:// or https://)
+  QRegularExpression urlPattern("(https?://[^\\s]+)");
+  QRegularExpressionMatchIterator urlIterator = urlPattern.globalMatch(line);
+
+  while (urlIterator.hasNext()) {
+    QRegularExpressionMatch match = urlIterator.next();
+    int start = match.capturedStart();
+    int end = start + match.capturedLength();
+
+    if (posInBlock >= start && posInBlock < end) {
+      return match.captured(1);
+    }
+  }
+
+  return QString();
+}
+
+void MarkdownEditor::mousePressEvent(QMouseEvent *event) {
+  if (event->button() == Qt::LeftButton &&
+      (event->modifiers() & Qt::ControlModifier)) {
+    QTextCursor cursor = cursorForPosition(event->pos());
+    int position = cursor.position();
+
+    // Try wiki link first
+    QString linkTarget = getLinkAtPosition(position);
+    if (!linkTarget.isEmpty()) {
+      emit wikiLinkClicked(linkTarget);
+      event->accept();
+      return;
+    }
+
+    // Try external link
+    QString externalUrl = getExternalLinkAtPosition(position);
+    if (!externalUrl.isEmpty()) {
+      QDesktopServices::openUrl(QUrl(externalUrl));
+      event->accept();
+      return;
+    }
+  }
+
+  QPlainTextEdit::mousePressEvent(event);
+}
+
+void MarkdownEditor::updateWordFrequency() {
+  m_wordFrequency.clear();
+  m_bigramFrequency.clear();
+
+  QString text = toPlainText();
+  QRegularExpression wordRegex("\\b[a-zA-Z]{3,}\\b");
+  QRegularExpressionMatchIterator it = wordRegex.globalMatch(text);
+
+  QStringList words;
+  while (it.hasNext()) {
+    QRegularExpressionMatch match = it.next();
+    QString word = match.captured(0).toLower();
+    words.append(word);
+    m_wordFrequency[word]++;
+  }
+
+  // Build bigram model
+  for (int i = 0; i < words.size() - 1; i++) {
+    QPair<QString, QString> bigram(words[i], words[i + 1]);
+    m_bigramFrequency[bigram]++;
+  }
+}
+
+QString MarkdownEditor::predictWordUnigram(const QString &prefix) const {
+  if (prefix.length() < 2) {
     return QString();
+  }
+
+  QString bestMatch;
+  int maxFrequency = 0;
+
+  for (auto it = m_wordFrequency.constBegin(); it != m_wordFrequency.constEnd();
+       ++it) {
+    const QString &word = it.key();
+    if (word.startsWith(prefix, Qt::CaseInsensitive) &&
+        word.length() > prefix.length()) {
+      if (it.value() > maxFrequency) {
+        maxFrequency = it.value();
+        bestMatch = word;
+      }
+    }
+  }
+
+  return bestMatch;
 }
 
-QString MarkdownEditor::getExternalLinkAtPosition(int position) const
-{
-    QTextCursor cursor(document());
-    cursor.setPosition(position);
-    
-    QString line = cursor.block().text();
-    int posInBlock = cursor.positionInBlock();
-    
-    // Pattern for [text](url)
-    QRegularExpression markdownLinkPattern("\\[([^\\]]+)\\]\\(([^\\)]+)\\)");
-    QRegularExpressionMatchIterator matchIterator = markdownLinkPattern.globalMatch(line);
-    
-    while (matchIterator.hasNext()) {
-        QRegularExpressionMatch match = matchIterator.next();
-        int start = match.capturedStart();
-        int end = start + match.capturedLength();
-        
-        if (posInBlock >= start && posInBlock <= end) {
-            QString url = match.captured(2).trimmed();
-            // Check if it's an external link (http/https)
-            if (url.startsWith("http://") || url.startsWith("https://")) {
-                return url;
-            }
-        }
-    }
-    
-    // Pattern for plain URLs (http:// or https://)
-    QRegularExpression urlPattern("(https?://[^\\s]+)");
-    QRegularExpressionMatchIterator urlIterator = urlPattern.globalMatch(line);
-    
-    while (urlIterator.hasNext()) {
-        QRegularExpressionMatch match = urlIterator.next();
-        int start = match.capturedStart();
-        int end = start + match.capturedLength();
-        
-        if (posInBlock >= start && posInBlock < end) {
-            return match.captured(1);
-        }
-    }
-    
+QString MarkdownEditor::predictWordBigram(const QString &previousWord,
+                                          const QString &prefix) const {
+  if (previousWord.isEmpty() || prefix.length() < 1) {
     return QString();
+  }
+
+  QString prevLower = previousWord.toLower();
+  QString prefixLower = prefix.toLower();
+
+  QString bestMatch;
+  int maxFrequency = 0;
+
+  for (auto it = m_bigramFrequency.constBegin();
+       it != m_bigramFrequency.constEnd(); ++it) {
+    const QPair<QString, QString> &bigram = it.key();
+
+    // Check if this bigram starts with the previous word and the second word
+    // matches prefix
+    if (bigram.first == prevLower && bigram.second.startsWith(prefixLower) &&
+        bigram.second.length() > prefixLower.length()) {
+
+      if (it.value() > maxFrequency) {
+        maxFrequency = it.value();
+        bestMatch = bigram.second;
+      }
+    }
+  }
+
+  return bestMatch;
 }
 
-void MarkdownEditor::mousePressEvent(QMouseEvent *event)
-{
-    if (event->button() == Qt::LeftButton && (event->modifiers() & Qt::ControlModifier)) {
-        QTextCursor cursor = cursorForPosition(event->pos());
-        int position = cursor.position();
-        
-        // Try wiki link first
-        QString linkTarget = getLinkAtPosition(position);
-        if (!linkTarget.isEmpty()) {
-            emit wikiLinkClicked(linkTarget);
-            event->accept();
-            return;
-        }
-        
-        // Try external link
-        QString externalUrl = getExternalLinkAtPosition(position);
-        if (!externalUrl.isEmpty()) {
-            QDesktopServices::openUrl(QUrl(externalUrl));
-            event->accept();
-            return;
-        }
-    }
-    
-    QPlainTextEdit::mousePressEvent(event);
-}
+QString MarkdownEditor::predictWord(const QString &prefix) const {
+  if (prefix.length() < 1) {
+    return QString();
+  }
 
-void MarkdownEditor::updateWordFrequency()
-{
-    m_wordFrequency.clear();
-    m_bigramFrequency.clear();
-    
-    QString text = toPlainText();
-    QRegularExpression wordRegex("\\b[a-zA-Z]{3,}\\b");
-    QRegularExpressionMatchIterator it = wordRegex.globalMatch(text);
-    
-    QStringList words;
-    while (it.hasNext()) {
-        QRegularExpressionMatch match = it.next();
-        QString word = match.captured(0).toLower();
-        words.append(word);
-        m_wordFrequency[word]++;
-    }
-    
-    // Build bigram model
-    for (int i = 0; i < words.size() - 1; i++) {
-        QPair<QString, QString> bigram(words[i], words[i + 1]);
-        m_bigramFrequency[bigram]++;
-    }
-}
+  // Get the previous word for bigram prediction
+  QTextCursor cursor = textCursor();
+  cursor.movePosition(QTextCursor::StartOfWord, QTextCursor::MoveAnchor);
+  cursor.movePosition(QTextCursor::PreviousWord, QTextCursor::MoveAnchor);
+  cursor.movePosition(QTextCursor::EndOfWord, QTextCursor::KeepAnchor);
+  QString previousWord = cursor.selectedText();
 
-QString MarkdownEditor::predictWordUnigram(const QString &prefix) const
-{
-    if (prefix.length() < 2) {
-        return QString();
-    }
-    
-    QString bestMatch;
-    int maxFrequency = 0;
-    
-    for (auto it = m_wordFrequency.constBegin(); it != m_wordFrequency.constEnd(); ++it) {
-        const QString &word = it.key();
-        if (word.startsWith(prefix, Qt::CaseInsensitive) && word.length() > prefix.length()) {
-            if (it.value() > maxFrequency) {
-                maxFrequency = it.value();
-                bestMatch = word;
-            }
-        }
-    }
-    
-    return bestMatch;
-}
+  // Try bigram prediction first (more context-specific)
+  QString bigramPrediction = predictWordBigram(previousWord, prefix);
 
-QString MarkdownEditor::predictWordBigram(const QString &previousWord, const QString &prefix) const
-{
-    if (previousWord.isEmpty() || prefix.length() < 1) {
-        return QString();
-    }
-    
+  // Try unigram prediction
+  QString unigramPrediction = predictWordUnigram(prefix);
+
+  // Choose the best prediction
+  // Prioritize bigram if it exists (more contextual)
+  if (!bigramPrediction.isEmpty()) {
+    // If bigram frequency is high enough, prefer it
     QString prevLower = previousWord.toLower();
-    QString prefixLower = prefix.toLower();
-    
-    QString bestMatch;
-    int maxFrequency = 0;
-    
-    for (auto it = m_bigramFrequency.constBegin(); it != m_bigramFrequency.constEnd(); ++it) {
-        const QPair<QString, QString> &bigram = it.key();
-        
-        // Check if this bigram starts with the previous word and the second word matches prefix
-        if (bigram.first == prevLower && 
-            bigram.second.startsWith(prefixLower) && 
-            bigram.second.length() > prefixLower.length()) {
-            
-            if (it.value() > maxFrequency) {
-                maxFrequency = it.value();
-                bestMatch = bigram.second;
-            }
-        }
+    QPair<QString, QString> bigram(prevLower, bigramPrediction.toLower());
+    int bigramFreq = m_bigramFrequency.value(bigram, 0);
+    int unigramFreq = m_wordFrequency.value(unigramPrediction.toLower(), 0);
+
+    // Prefer bigram if it appears at least half as often as unigram
+    // or if unigram doesn't exist
+    if (bigramFreq * 2 >= unigramFreq || unigramPrediction.isEmpty()) {
+      return bigramPrediction;
     }
-    
-    return bestMatch;
+  }
+
+  return unigramPrediction;
 }
 
-QString MarkdownEditor::predictWord(const QString &prefix) const
-{
-    if (prefix.length() < 1) {
-        return QString();
+void MarkdownEditor::showPrediction() {
+  QSettings settings(APP_LABEL, APP_LABEL);
+  if (!settings.value("editor/enableWordPrediction", true).toBool()) {
+    return;
+  }
+
+  QTextCursor cursor = textCursor();
+  cursor.movePosition(QTextCursor::StartOfWord, QTextCursor::KeepAnchor);
+  QString currentWord = cursor.selectedText();
+
+  // Allow predictions with 1+ characters for bigram, 2+ for unigram
+  if (currentWord.length() >= 1) {
+    QString prediction = predictWord(currentWord);
+    if (!prediction.isEmpty() &&
+        prediction.toLower() != currentWord.toLower()) {
+      m_currentPrediction = prediction.mid(currentWord.length());
+      viewport()->update();
+      return;
     }
-    
-    // Get the previous word for bigram prediction
-    QTextCursor cursor = textCursor();
-    cursor.movePosition(QTextCursor::StartOfWord, QTextCursor::MoveAnchor);
-    cursor.movePosition(QTextCursor::PreviousWord, QTextCursor::MoveAnchor);
-    cursor.movePosition(QTextCursor::EndOfWord, QTextCursor::KeepAnchor);
-    QString previousWord = cursor.selectedText();
-    
-    // Try bigram prediction first (more context-specific)
-    QString bigramPrediction = predictWordBigram(previousWord, prefix);
-    
-    // Try unigram prediction
-    QString unigramPrediction = predictWordUnigram(prefix);
-    
-    // Choose the best prediction
-    // Prioritize bigram if it exists (more contextual)
-    if (!bigramPrediction.isEmpty()) {
-        // If bigram frequency is high enough, prefer it
-        QString prevLower = previousWord.toLower();
-        QPair<QString, QString> bigram(prevLower, bigramPrediction.toLower());
-        int bigramFreq = m_bigramFrequency.value(bigram, 0);
-        int unigramFreq = m_wordFrequency.value(unigramPrediction.toLower(), 0);
-        
-        // Prefer bigram if it appears at least half as often as unigram
-        // or if unigram doesn't exist
-        if (bigramFreq * 2 >= unigramFreq || unigramPrediction.isEmpty()) {
-            return bigramPrediction;
-        }
-    }
-    
-    return unigramPrediction;
+  }
+
+  m_currentPrediction.clear();
+  viewport()->update();
 }
 
-void MarkdownEditor::showPrediction()
-{
-    QSettings settings("TreeMk", "TreeMk");
-    if (!settings.value("editor/enableWordPrediction", true).toBool()) {
-        return;
-    }
-    
+void MarkdownEditor::hidePrediction() {
+  m_currentPrediction.clear();
+  viewport()->update();
+}
+
+void MarkdownEditor::acceptPrediction() {
+  if (!m_currentPrediction.isEmpty()) {
     QTextCursor cursor = textCursor();
-    cursor.movePosition(QTextCursor::StartOfWord, QTextCursor::KeepAnchor);
-    QString currentWord = cursor.selectedText();
-    
-    // Allow predictions with 1+ characters for bigram, 2+ for unigram
-    if (currentWord.length() >= 1) {
-        QString prediction = predictWord(currentWord);
-        if (!prediction.isEmpty() && prediction.toLower() != currentWord.toLower()) {
-            m_currentPrediction = prediction.mid(currentWord.length());
-            viewport()->update();
-            return;
-        }
-    }
-    
+    cursor.insertText(m_currentPrediction);
+    setTextCursor(cursor);
     m_currentPrediction.clear();
     viewport()->update();
+  }
 }
 
-void MarkdownEditor::hidePrediction()
-{
-    m_currentPrediction.clear();
-    viewport()->update();
+void MarkdownEditor::onTextChanged() {
+  static int changeCount = 0;
+  changeCount++;
+
+  // Update word frequency every 10 changes to avoid performance issues
+  if (changeCount % 10 == 0) {
+    updateWordFrequency();
+  }
+
+  showPrediction();
 }
 
-void MarkdownEditor::acceptPrediction()
-{
-    if (!m_currentPrediction.isEmpty()) {
-        QTextCursor cursor = textCursor();
-        cursor.insertText(m_currentPrediction);
-        setTextCursor(cursor);
-        m_currentPrediction.clear();
-        viewport()->update();
-    }
-}
+void MarkdownEditor::paintEvent(QPaintEvent *event) {
+  QPlainTextEdit::paintEvent(event);
 
-void MarkdownEditor::onTextChanged()
-{
-    static int changeCount = 0;
-    changeCount++;
-    
-    // Update word frequency every 10 changes to avoid performance issues
-    if (changeCount % 10 == 0) {
-        updateWordFrequency();
-    }
-    
-    showPrediction();
-}
-
-void MarkdownEditor::paintEvent(QPaintEvent *event)
-{
-    QPlainTextEdit::paintEvent(event);
-    
-    // Draw prediction in gray
-    if (!m_currentPrediction.isEmpty()) {
-        QTextCursor cursor = textCursor();
-        QRect rect = cursorRect(cursor);
-        
-        QFont font = this->font();
-        QFontMetrics fm(font);
-        
-        QPainter painter(viewport());
-        painter.setFont(font);
-        painter.setPen(QColor(128, 128, 128, 180)); // Gray with transparency
-        
-        int x = rect.right();
-        int y = rect.bottom();
-        
-        painter.drawText(x, y, m_currentPrediction);
-    }
-}
-
-
-void MarkdownEditor::keyPressEvent(QKeyEvent *event)
-{
-    // Handle Tab key for word prediction
-    if (event->key() == Qt::Key_Tab && !m_currentPrediction.isEmpty()) {
-        acceptPrediction();
-        event->accept();
-        return;
-    }
-    
-    // Get shortcut manager instance
-    ShortcutManager *sm = ShortcutManager::instance();
-    QKeySequence pressed(event->key() | event->modifiers());
-    
-    // Check custom navigation shortcuts
+  // Draw prediction in gray
+  if (!m_currentPrediction.isEmpty()) {
     QTextCursor cursor = textCursor();
-    QTextCursor::MoveMode moveMode = (event->modifiers() & Qt::ShiftModifier) 
-        ? QTextCursor::KeepAnchor : QTextCursor::MoveAnchor;
-    
-    // Navigation actions
-    if (pressed == sm->getShortcut(ShortcutManager::MoveToStartOfLine)) {
-        cursor.movePosition(QTextCursor::StartOfLine, moveMode);
-        setTextCursor(cursor);
-        event->accept();
-        return;
-    } else if (pressed == sm->getShortcut(ShortcutManager::MoveToEndOfLine)) {
-        cursor.movePosition(QTextCursor::EndOfLine, moveMode);
-        setTextCursor(cursor);
-        event->accept();
-        return;
-    } else if (pressed == sm->getShortcut(ShortcutManager::MoveToStartOfDocument)) {
-        cursor.movePosition(QTextCursor::Start, moveMode);
-        setTextCursor(cursor);
-        event->accept();
-        return;
-    } else if (pressed == sm->getShortcut(ShortcutManager::MoveToEndOfDocument)) {
-        cursor.movePosition(QTextCursor::End, moveMode);
-        setTextCursor(cursor);
-        event->accept();
-        return;
-    } else if (pressed == sm->getShortcut(ShortcutManager::MoveWordLeft)) {
-        cursor.movePosition(QTextCursor::PreviousWord, moveMode);
-        setTextCursor(cursor);
-        event->accept();
-        return;
-    } else if (pressed == sm->getShortcut(ShortcutManager::MoveWordRight)) {
-        cursor.movePosition(QTextCursor::NextWord, moveMode);
-        setTextCursor(cursor);
-        event->accept();
-        return;
-    } else if (pressed == sm->getShortcut(ShortcutManager::MoveToPreviousParagraph)) {
-        cursor.movePosition(QTextCursor::PreviousBlock, moveMode);
-        setTextCursor(cursor);
-        event->accept();
-        return;
-    } else if (pressed == sm->getShortcut(ShortcutManager::MoveToNextParagraph)) {
-        cursor.movePosition(QTextCursor::NextBlock, moveMode);
-        setTextCursor(cursor);
-        event->accept();
-        return;
+    QRect rect = cursorRect(cursor);
+
+    QFont font = this->font();
+    QFontMetrics fm(font);
+
+    QPainter painter(viewport());
+    painter.setFont(font);
+    painter.setPen(QColor(128, 128, 128, 180)); // Gray with transparency
+
+    int x = rect.right();
+    int y = rect.bottom();
+
+    painter.drawText(x, y, m_currentPrediction);
+  }
+}
+
+void MarkdownEditor::keyPressEvent(QKeyEvent *event) {
+  // Handle Tab key for word prediction
+  if (event->key() == Qt::Key_Tab && !m_currentPrediction.isEmpty()) {
+    acceptPrediction();
+    event->accept();
+    return;
+  }
+
+  // Get shortcut manager instance
+  ShortcutManager *sm = ShortcutManager::instance();
+  QKeySequence pressed(event->key() | event->modifiers());
+
+  // Check custom navigation shortcuts
+  QTextCursor cursor = textCursor();
+  QTextCursor::MoveMode moveMode = (event->modifiers() & Qt::ShiftModifier)
+                                       ? QTextCursor::KeepAnchor
+                                       : QTextCursor::MoveAnchor;
+
+  // Navigation actions
+  if (pressed == sm->getShortcut(ShortcutManager::MoveToStartOfLine)) {
+    cursor.movePosition(QTextCursor::StartOfLine, moveMode);
+    setTextCursor(cursor);
+    event->accept();
+    return;
+  } else if (pressed == sm->getShortcut(ShortcutManager::MoveToEndOfLine)) {
+    cursor.movePosition(QTextCursor::EndOfLine, moveMode);
+    setTextCursor(cursor);
+    event->accept();
+    return;
+  } else if (pressed ==
+             sm->getShortcut(ShortcutManager::MoveToStartOfDocument)) {
+    cursor.movePosition(QTextCursor::Start, moveMode);
+    setTextCursor(cursor);
+    event->accept();
+    return;
+  } else if (pressed == sm->getShortcut(ShortcutManager::MoveToEndOfDocument)) {
+    cursor.movePosition(QTextCursor::End, moveMode);
+    setTextCursor(cursor);
+    event->accept();
+    return;
+  } else if (pressed == sm->getShortcut(ShortcutManager::MoveWordLeft)) {
+    cursor.movePosition(QTextCursor::PreviousWord, moveMode);
+    setTextCursor(cursor);
+    event->accept();
+    return;
+  } else if (pressed == sm->getShortcut(ShortcutManager::MoveWordRight)) {
+    cursor.movePosition(QTextCursor::NextWord, moveMode);
+    setTextCursor(cursor);
+    event->accept();
+    return;
+  } else if (pressed ==
+             sm->getShortcut(ShortcutManager::MoveToPreviousParagraph)) {
+    cursor.movePosition(QTextCursor::PreviousBlock, moveMode);
+    setTextCursor(cursor);
+    event->accept();
+    return;
+  } else if (pressed == sm->getShortcut(ShortcutManager::MoveToNextParagraph)) {
+    cursor.movePosition(QTextCursor::NextBlock, moveMode);
+    setTextCursor(cursor);
+    event->accept();
+    return;
+  }
+
+  // Editing actions
+  if (pressed == sm->getShortcut(ShortcutManager::DeleteWordLeft)) {
+    cursor.movePosition(QTextCursor::PreviousWord, QTextCursor::KeepAnchor);
+    cursor.removeSelectedText();
+    event->accept();
+    return;
+  } else if (pressed == sm->getShortcut(ShortcutManager::DeleteWordRight)) {
+    cursor.movePosition(QTextCursor::NextWord, QTextCursor::KeepAnchor);
+    cursor.removeSelectedText();
+    event->accept();
+    return;
+  } else if (pressed == sm->getShortcut(ShortcutManager::DeleteToStartOfLine)) {
+    cursor.movePosition(QTextCursor::StartOfLine, QTextCursor::KeepAnchor);
+    cursor.removeSelectedText();
+    event->accept();
+    return;
+  } else if (pressed == sm->getShortcut(ShortcutManager::DeleteToEndOfLine)) {
+    cursor.movePosition(QTextCursor::EndOfLine, QTextCursor::KeepAnchor);
+    cursor.removeSelectedText();
+    event->accept();
+    return;
+  }
+
+  // Ctrl+Enter or Ctrl+Return to open wiki-link at cursor
+  if ((event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter) &&
+      (event->modifiers() & Qt::ControlModifier)) {
+
+    int position = cursor.position();
+
+    // Try wiki link first
+    QString linkTarget = getLinkAtPosition(position);
+    if (!linkTarget.isEmpty()) {
+      emit wikiLinkClicked(linkTarget);
+      event->accept();
+      return;
     }
-    
-    // Editing actions
-    if (pressed == sm->getShortcut(ShortcutManager::DeleteWordLeft)) {
-        cursor.movePosition(QTextCursor::PreviousWord, QTextCursor::KeepAnchor);
-        cursor.removeSelectedText();
-        event->accept();
-        return;
-    } else if (pressed == sm->getShortcut(ShortcutManager::DeleteWordRight)) {
-        cursor.movePosition(QTextCursor::NextWord, QTextCursor::KeepAnchor);
-        cursor.removeSelectedText();
-        event->accept();
-        return;
-    } else if (pressed == sm->getShortcut(ShortcutManager::DeleteToStartOfLine)) {
-        cursor.movePosition(QTextCursor::StartOfLine, QTextCursor::KeepAnchor);
-        cursor.removeSelectedText();
-        event->accept();
-        return;
-    } else if (pressed == sm->getShortcut(ShortcutManager::DeleteToEndOfLine)) {
-        cursor.movePosition(QTextCursor::EndOfLine, QTextCursor::KeepAnchor);
-        cursor.removeSelectedText();
-        event->accept();
-        return;
+
+    // Try external link
+    QString externalUrl = getExternalLinkAtPosition(position);
+    if (!externalUrl.isEmpty()) {
+      QDesktopServices::openUrl(QUrl(externalUrl));
+      event->accept();
+      return;
     }
-    
-    // Ctrl+Enter or Ctrl+Return to open wiki-link at cursor
-    if ((event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter) && 
-        (event->modifiers() & Qt::ControlModifier)) {
-        
-        int position = cursor.position();
-        
-        // Try wiki link first
-        QString linkTarget = getLinkAtPosition(position);
-        if (!linkTarget.isEmpty()) {
-            emit wikiLinkClicked(linkTarget);
-            event->accept();
-            return;
+  }
+
+  // Auto-indent on Enter
+  QSettings settings(APP_LABEL, APP_LABEL);
+  bool autoIndent = settings.value("editor/autoIndent", true).toBool();
+  bool autoCloseBrackets =
+      settings.value("editor/autoCloseBrackets", true).toBool();
+
+  if (autoIndent &&
+      (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter)) {
+    // Get current line text to calculate indentation
+    QTextCursor cursor = textCursor();
+    QString currentLine = cursor.block().text();
+
+    // Calculate leading whitespace
+    int indent = 0;
+    for (QChar ch : currentLine) {
+      if (ch == ' ')
+        indent++;
+      else if (ch == '\t')
+        indent += 4; // Treat tab as 4 spaces
+      else
+        break;
+    }
+
+    // Insert newline and indentation
+    cursor.insertText("\n" + QString(" ").repeated(indent));
+    setTextCursor(cursor);
+    event->accept();
+    return;
+  }
+
+  // Auto-close brackets, parentheses, quotes
+  if (autoCloseBrackets) {
+    QString closingChar;
+    bool shouldClose = false;
+
+    if (event->text() == "(") {
+      closingChar = ")";
+      shouldClose = true;
+    } else if (event->text() == "[") {
+      closingChar = "]";
+      shouldClose = true;
+    } else if (event->text() == "{") {
+      closingChar = "}";
+      shouldClose = true;
+    } else if (event->text() == "\"") {
+      closingChar = "\"";
+      shouldClose = true;
+    } else if (event->text() == "'") {
+      closingChar = "'";
+      shouldClose = true;
+    } else if (event->text() == "`") {
+      closingChar = "`";
+      shouldClose = true;
+    }
+
+    if (shouldClose) {
+      QTextCursor cursor = textCursor();
+      cursor.insertText(event->text() + closingChar);
+      cursor.movePosition(QTextCursor::Left, QTextCursor::MoveAnchor);
+      setTextCursor(cursor);
+      event->accept();
+      return;
+    }
+
+    // Skip over closing bracket if typed when already at one
+    QTextCursor cursor = textCursor();
+    QString nextChar = cursor.block().text().mid(cursor.positionInBlock(), 1);
+    if ((event->text() == ")" && nextChar == ")") ||
+        (event->text() == "]" && nextChar == "]") ||
+        (event->text() == "}" && nextChar == "}") ||
+        (event->text() == "\"" && nextChar == "\"") ||
+        (event->text() == "'" && nextChar == "'") ||
+        (event->text() == "`" && nextChar == "`")) {
+      cursor.movePosition(QTextCursor::Right, QTextCursor::MoveAnchor);
+      setTextCursor(cursor);
+      event->accept();
+      return;
+    }
+  }
+
+  // Hide prediction on certain keys
+  if (event->key() == Qt::Key_Left || event->key() == Qt::Key_Right ||
+      event->key() == Qt::Key_Up || event->key() == Qt::Key_Down ||
+      event->key() == Qt::Key_Home || event->key() == Qt::Key_End ||
+      event->key() == Qt::Key_PageUp || event->key() == Qt::Key_PageDown ||
+      event->key() == Qt::Key_Escape) {
+    hidePrediction();
+  }
+
+  QPlainTextEdit::keyPressEvent(event);
+}
+
+void MarkdownEditor::dragEnterEvent(QDragEnterEvent *event) {
+  if (event->mimeData()->hasUrls()) {
+    event->acceptProposedAction();
+  } else {
+    QPlainTextEdit::dragEnterEvent(event);
+  }
+}
+
+void MarkdownEditor::dragMoveEvent(QDragMoveEvent *event) {
+  if (event->mimeData()->hasUrls()) {
+    event->acceptProposedAction();
+  } else {
+    QPlainTextEdit::dragMoveEvent(event);
+  }
+}
+
+void MarkdownEditor::dropEvent(QDropEvent *event) {
+  if (event->mimeData()->hasUrls()) {
+    QList<QUrl> urls = event->mimeData()->urls();
+
+    // Get drop position
+    QTextCursor cursor = cursorForPosition(event->position().toPoint());
+    setTextCursor(cursor);
+
+    for (const QUrl &url : urls) {
+      if (url.isLocalFile()) {
+        QString filePath = url.toLocalFile();
+        QFileInfo fileInfo(filePath);
+
+        // Check if it's an image
+        QStringList imageExtensions;
+        imageExtensions << "png" << "jpg" << "jpeg" << "gif" << "bmp" << "svg";
+
+        if (imageExtensions.contains(fileInfo.suffix().toLower())) {
+          // Insert as image
+          QString imageMarkdown =
+              QString("![%1](%2)").arg(fileInfo.baseName(), filePath);
+          cursor.insertText(imageMarkdown);
+          cursor.insertText("\n");
+        } else {
+          // Insert as link
+          QString linkMarkdown =
+              QString("[%1](%2)").arg(fileInfo.fileName(), filePath);
+          cursor.insertText(linkMarkdown);
+          cursor.insertText("\n");
         }
-        
-        // Try external link
-        QString externalUrl = getExternalLinkAtPosition(position);
-        if (!externalUrl.isEmpty()) {
-            QDesktopServices::openUrl(QUrl(externalUrl));
-            event->accept();
-            return;
-        }
+      }
     }
-    
-    // Auto-indent on Enter
-    QSettings settings("TreeMk", "TreeMk");
-    bool autoIndent = settings.value("editor/autoIndent", true).toBool();
-    bool autoCloseBrackets = settings.value("editor/autoCloseBrackets", true).toBool();
-    
-    if (autoIndent && (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter)) {
-        // Get current line text to calculate indentation
+
+    event->acceptProposedAction();
+  } else {
+    QPlainTextEdit::dropEvent(event);
+  }
+}
+
+void MarkdownEditor::setupEditor() {
+  QFont font;
+  font.setFamily("Sans Serif");
+  font.setStyleHint(QFont::SansSerif);
+  font.setPointSize(11);
+  setFont(font);
+
+  QFontMetrics metrics(font);
+  setTabStopDistance(4 * metrics.horizontalAdvance(' '));
+
+  setLineWrapMode(QPlainTextEdit::WidgetWidth);
+  setWordWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);
+
+  QPalette p = palette();
+  p.setColor(QPalette::Base, QColor(255, 255, 255));
+  p.setColor(QPalette::Text, QColor(0, 0, 0));
+  setPalette(p);
+}
+
+int MarkdownEditor::lineNumberAreaWidth() {
+  int digits = 1;
+  int max = qMax(1, blockCount());
+  while (max >= 10) {
+    max /= 10;
+    ++digits;
+  }
+
+  int space = 10 + fontMetrics().horizontalAdvance(QLatin1Char('9')) * digits;
+  return space;
+}
+
+void MarkdownEditor::updateLineNumberAreaWidth(int /* newBlockCount */) {
+  setViewportMargins(lineNumberAreaWidth(), 0, 0, 0);
+}
+
+void MarkdownEditor::updateLineNumberArea(const QRect &rect, int dy) {
+  if (dy)
+    lineNumberArea->scroll(0, dy);
+  else
+    lineNumberArea->update(0, rect.y(), lineNumberArea->width(), rect.height());
+
+  if (rect.contains(viewport()->rect()))
+    updateLineNumberAreaWidth(0);
+}
+
+void MarkdownEditor::resizeEvent(QResizeEvent *e) {
+  QPlainTextEdit::resizeEvent(e);
+
+  QRect cr = contentsRect();
+  lineNumberArea->setGeometry(
+      QRect(cr.left(), cr.top(), lineNumberAreaWidth(), cr.height()));
+}
+
+void MarkdownEditor::highlightCurrentLine() {
+  QList<QTextEdit::ExtraSelection> extraSelections;
+
+  if (!isReadOnly()) {
+    QTextEdit::ExtraSelection selection;
+
+    QColor lineColor = QColor(Qt::yellow).lighter(160);
+
+    selection.format.setBackground(lineColor);
+    selection.format.setProperty(QTextFormat::FullWidthSelection, true);
+    selection.cursor = textCursor();
+    selection.cursor.clearSelection();
+    extraSelections.append(selection);
+  }
+
+  setExtraSelections(extraSelections);
+}
+
+void MarkdownEditor::lineNumberAreaPaintEvent(QPaintEvent *event) {
+  QPainter painter(lineNumberArea);
+  painter.fillRect(event->rect(), QColor(240, 240, 240));
+
+  QTextBlock block = firstVisibleBlock();
+  int blockNumber = block.blockNumber();
+  int top =
+      qRound(blockBoundingGeometry(block).translated(contentOffset()).top());
+  int bottom = top + qRound(blockBoundingRect(block).height());
+
+  while (block.isValid() && top <= event->rect().bottom()) {
+    if (block.isVisible() && bottom >= event->rect().top()) {
+      QString number = QString::number(blockNumber + 1);
+      painter.setPen(QColor(120, 120, 120));
+      painter.drawText(0, top, lineNumberArea->width() - 5,
+                       fontMetrics().height(), Qt::AlignRight, number);
+    }
+
+    block = block.next();
+    top = bottom;
+    bottom = top + qRound(blockBoundingRect(block).height());
+    ++blockNumber;
+  }
+}
+
+void MarkdownEditor::setCurrentFilePath(const QString &filePath) {
+  m_currentFilePath = filePath;
+}
+
+void MarkdownEditor::insertFromMimeData(const QMimeData *source) {
+  // Check if clipboard contains an image
+  if (source->hasImage()) {
+    QImage image = qvariant_cast<QImage>(source->imageData());
+    if (!image.isNull()) {
+      QString imagePath = saveImageFromClipboard(image);
+      if (!imagePath.isEmpty()) {
+        // Insert markdown image syntax
         QTextCursor cursor = textCursor();
-        QString currentLine = cursor.block().text();
-        
-        // Calculate leading whitespace
-        int indent = 0;
-        for (QChar ch : currentLine) {
-            if (ch == ' ') indent++;
-            else if (ch == '\t') indent += 4; // Treat tab as 4 spaces
-            else break;
-        }
-        
-        // Insert newline and indentation
-        cursor.insertText("\n" + QString(" ").repeated(indent));
-        setTextCursor(cursor);
-        event->accept();
+        cursor.insertText(QString("![image](%1)").arg(imagePath));
         return;
+      }
     }
-    
-    // Auto-close brackets, parentheses, quotes
-    if (autoCloseBrackets) {
-        QString closingChar;
-        bool shouldClose = false;
-        
-        if (event->text() == "(") {
-            closingChar = ")";
-            shouldClose = true;
-        } else if (event->text() == "[") {
-            closingChar = "]";
-            shouldClose = true;
-        } else if (event->text() == "{") {
-            closingChar = "}";
-            shouldClose = true;
-        } else if (event->text() == "\"") {
-            closingChar = "\"";
-            shouldClose = true;
-        } else if (event->text() == "'") {
-            closingChar = "'";
-            shouldClose = true;
-        } else if (event->text() == "`") {
-            closingChar = "`";
-            shouldClose = true;
-        }
-        
-        if (shouldClose) {
-            QTextCursor cursor = textCursor();
-            cursor.insertText(event->text() + closingChar);
-            cursor.movePosition(QTextCursor::Left, QTextCursor::MoveAnchor);
-            setTextCursor(cursor);
-            event->accept();
-            return;
-        }
-        
-        // Skip over closing bracket if typed when already at one
-        QTextCursor cursor = textCursor();
-        QString nextChar = cursor.block().text().mid(cursor.positionInBlock(), 1);
-        if ((event->text() == ")" && nextChar == ")") ||
-            (event->text() == "]" && nextChar == "]") ||
-            (event->text() == "}" && nextChar == "}") ||
-            (event->text() == "\"" && nextChar == "\"") ||
-            (event->text() == "'" && nextChar == "'") ||
-            (event->text() == "`" && nextChar == "`")) {
-            cursor.movePosition(QTextCursor::Right, QTextCursor::MoveAnchor);
-            setTextCursor(cursor);
-            event->accept();
-            return;
-        }
-    }
-    
-    // Hide prediction on certain keys
-    if (event->key() == Qt::Key_Left || event->key() == Qt::Key_Right ||
-        event->key() == Qt::Key_Up || event->key() == Qt::Key_Down ||
-        event->key() == Qt::Key_Home || event->key() == Qt::Key_End ||
-        event->key() == Qt::Key_PageUp || event->key() == Qt::Key_PageDown ||
-        event->key() == Qt::Key_Escape) {
-        hidePrediction();
-    }
-    
-    QPlainTextEdit::keyPressEvent(event);
+  }
+
+  // Default behavior for other content
+  QPlainTextEdit::insertFromMimeData(source);
 }
 
-void MarkdownEditor::dragEnterEvent(QDragEnterEvent *event)
-{
-    if (event->mimeData()->hasUrls()) {
-        event->acceptProposedAction();
-    } else {
-        QPlainTextEdit::dragEnterEvent(event);
-    }
-}
-
-void MarkdownEditor::dragMoveEvent(QDragMoveEvent *event)
-{
-    if (event->mimeData()->hasUrls()) {
-        event->acceptProposedAction();
-    } else {
-        QPlainTextEdit::dragMoveEvent(event);
-    }
-}
-
-void MarkdownEditor::dropEvent(QDropEvent *event)
-{
-    if (event->mimeData()->hasUrls()) {
-        QList<QUrl> urls = event->mimeData()->urls();
-        
-        // Get drop position
-        QTextCursor cursor = cursorForPosition(event->position().toPoint());
-        setTextCursor(cursor);
-        
-        for (const QUrl &url : urls) {
-            if (url.isLocalFile()) {
-                QString filePath = url.toLocalFile();
-                QFileInfo fileInfo(filePath);
-                
-                // Check if it's an image
-                QStringList imageExtensions;
-                imageExtensions << "png" << "jpg" << "jpeg" << "gif" << "bmp" << "svg";
-                
-                if (imageExtensions.contains(fileInfo.suffix().toLower())) {
-                    // Insert as image
-                    QString imageMarkdown = QString("![%1](%2)")
-                        .arg(fileInfo.baseName(), filePath);
-                    cursor.insertText(imageMarkdown);
-                    cursor.insertText("\n");
-                } else {
-                    // Insert as link
-                    QString linkMarkdown = QString("[%1](%2)")
-                        .arg(fileInfo.fileName(), filePath);
-                    cursor.insertText(linkMarkdown);
-                    cursor.insertText("\n");
-                }
-            }
-        }
-        
-        event->acceptProposedAction();
-    } else {
-        QPlainTextEdit::dropEvent(event);
-    }
-}
-
-void MarkdownEditor::setupEditor()
-{
-    QFont font;
-    font.setFamily("Sans Serif");
-    font.setStyleHint(QFont::SansSerif);
-    font.setPointSize(11);
-    setFont(font);
-    
-    QFontMetrics metrics(font);
-    setTabStopDistance(4 * metrics.horizontalAdvance(' '));
-    
-    setLineWrapMode(QPlainTextEdit::WidgetWidth);
-    setWordWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);
-    
-    QPalette p = palette();
-    p.setColor(QPalette::Base, QColor(255, 255, 255));
-    p.setColor(QPalette::Text, QColor(0, 0, 0));
-    setPalette(p);
-}
-
-int MarkdownEditor::lineNumberAreaWidth()
-{
-    int digits = 1;
-    int max = qMax(1, blockCount());
-    while (max >= 10) {
-        max /= 10;
-        ++digits;
-    }
-    
-    int space = 10 + fontMetrics().horizontalAdvance(QLatin1Char('9')) * digits;
-    return space;
-}
-
-void MarkdownEditor::updateLineNumberAreaWidth(int /* newBlockCount */)
-{
-    setViewportMargins(lineNumberAreaWidth(), 0, 0, 0);
-}
-
-void MarkdownEditor::updateLineNumberArea(const QRect &rect, int dy)
-{
-    if (dy)
-        lineNumberArea->scroll(0, dy);
-    else
-        lineNumberArea->update(0, rect.y(), lineNumberArea->width(), rect.height());
-    
-    if (rect.contains(viewport()->rect()))
-        updateLineNumberAreaWidth(0);
-}
-
-void MarkdownEditor::resizeEvent(QResizeEvent *e)
-{
-    QPlainTextEdit::resizeEvent(e);
-    
-    QRect cr = contentsRect();
-    lineNumberArea->setGeometry(QRect(cr.left(), cr.top(),
-                                     lineNumberAreaWidth(), cr.height()));
-}
-
-void MarkdownEditor::highlightCurrentLine()
-{
-    QList<QTextEdit::ExtraSelection> extraSelections;
-    
-    if (!isReadOnly()) {
-        QTextEdit::ExtraSelection selection;
-        
-        QColor lineColor = QColor(Qt::yellow).lighter(160);
-        
-        selection.format.setBackground(lineColor);
-        selection.format.setProperty(QTextFormat::FullWidthSelection, true);
-        selection.cursor = textCursor();
-        selection.cursor.clearSelection();
-        extraSelections.append(selection);
-    }
-    
-    setExtraSelections(extraSelections);
-}
-
-void MarkdownEditor::lineNumberAreaPaintEvent(QPaintEvent *event)
-{
-    QPainter painter(lineNumberArea);
-    painter.fillRect(event->rect(), QColor(240, 240, 240));
-    
-    QTextBlock block = firstVisibleBlock();
-    int blockNumber = block.blockNumber();
-    int top = qRound(blockBoundingGeometry(block).translated(contentOffset()).top());
-    int bottom = top + qRound(blockBoundingRect(block).height());
-    
-    while (block.isValid() && top <= event->rect().bottom()) {
-        if (block.isVisible() && bottom >= event->rect().top()) {
-            QString number = QString::number(blockNumber + 1);
-            painter.setPen(QColor(120, 120, 120));
-            painter.drawText(0, top, lineNumberArea->width() - 5, fontMetrics().height(),
-                           Qt::AlignRight, number);
-        }
-        
-        block = block.next();
-        top = bottom;
-        bottom = top + qRound(blockBoundingRect(block).height());
-        ++blockNumber;
-    }
-}
-
-void MarkdownEditor::setCurrentFilePath(const QString &filePath)
-{
-    m_currentFilePath = filePath;
-}
-
-void MarkdownEditor::insertFromMimeData(const QMimeData *source)
-{
-    // Check if clipboard contains an image
-    if (source->hasImage()) {
-        QImage image = qvariant_cast<QImage>(source->imageData());
-        if (!image.isNull()) {
-            QString imagePath = saveImageFromClipboard(image);
-            if (!imagePath.isEmpty()) {
-                // Insert markdown image syntax
-                QTextCursor cursor = textCursor();
-                cursor.insertText(QString("![image](%1)").arg(imagePath));
-                return;
-            }
-        }
-    }
-    
-    // Default behavior for other content
-    QPlainTextEdit::insertFromMimeData(source);
-}
-
-QString MarkdownEditor::saveImageFromClipboard(const QImage &image)
-{
-    // Check if we have a current file path
-    if (m_currentFilePath.isEmpty()) {
-        QMessageBox::warning(this, tr("Cannot Save Image"), 
-                           tr("Please save the document first before pasting images."));
-        return QString();
-    }
-    
-    // Get the directory and base name of the current file
-    QFileInfo fileInfo(m_currentFilePath);
-    QDir fileDir = fileInfo.absoluteDir();
-    QString baseName = fileInfo.baseName();
-    
-    // Sanitize the base name for safe folder creation (Unix and Windows)
-    QString imagesDirName = baseName;
-    imagesDirName.replace(QRegularExpression("[<>:\"/\\\\|?*]"), "_");
-    if (imagesDirName.isEmpty()) {
-        imagesDirName = "images";
-    }
-    QString imagesDirPath = fileDir.filePath(imagesDirName);
-    QDir imagesDir(imagesDirPath);
-    
-    if (!imagesDir.exists()) {
-        if (!fileDir.mkdir(imagesDirName)) {
-            QMessageBox::warning(this, tr("Cannot Create Directory"), 
-                               tr("Failed to create directory '%1'.").arg(imagesDirName));
-            return QString();
-        }
-    }
-    
-    // Find the next available number in sequence
-    int nextNumber = 1;
-    QRegularExpression imagePattern("^image_(\\d+)\\.png$");
-    
-    QStringList existingFiles = imagesDir.entryList(QStringList() << "image_*.png", QDir::Files);
-    for (const QString &file : existingFiles) {
-        QRegularExpressionMatch match = imagePattern.match(file);
-        if (match.hasMatch()) {
-            int num = match.captured(1).toInt();
-            if (num >= nextNumber) {
-                nextNumber = num + 1;
-            }
-        }
-    }
-    
-    // Suggest filename
-    QString suggestedName = QString("image_%1.png").arg(nextNumber, 3, 10, QChar('0'));
-    
-    // Ask user for filename
-    bool ok;
-    QString fileName = QInputDialog::getText(this, tr("Save Image"),
-                                            tr("Enter image filename:"),
-                                            QLineEdit::Normal,
-                                            suggestedName, &ok);
-    
-    if (!ok || fileName.isEmpty()) {
-        return QString(); // User cancelled
-    }
-    
-    // Ensure .png extension
-    if (!fileName.endsWith(".png", Qt::CaseInsensitive)) {
-        fileName += ".png";
-    }
-    
-    // Check if file already exists
-    QString fullPath = imagesDir.filePath(fileName);
-    if (QFileInfo::exists(fullPath)) {
-        QMessageBox::StandardButton reply = QMessageBox::question(this, 
-            tr("File Exists"),
-            tr("File '%1' already exists. Overwrite?").arg(fileName),
-            QMessageBox::Yes | QMessageBox::No);
-        
-        if (reply != QMessageBox::Yes) {
-            return QString(); // User chose not to overwrite
-        }
-    }
-    
-    // Save the image
-    if (image.save(fullPath, "PNG")) {
-        return imagesDirName + "/" + fileName; // Return relative path with subdirectory
-    }
-    
-    QMessageBox::warning(this, tr("Save Failed"), 
-                        tr("Failed to save image to '%1'.").arg(fileName));
+QString MarkdownEditor::saveImageFromClipboard(const QImage &image) {
+  // Check if we have a current file path
+  if (m_currentFilePath.isEmpty()) {
+    QMessageBox::warning(
+        this, tr("Cannot Save Image"),
+        tr("Please save the document first before pasting images."));
     return QString();
+  }
+
+  // Get the directory and base name of the current file
+  QFileInfo fileInfo(m_currentFilePath);
+  QDir fileDir = fileInfo.absoluteDir();
+  QString baseName = fileInfo.baseName();
+
+  // Sanitize the base name for safe folder creation (Unix and Windows)
+  QString imagesDirName = baseName;
+  imagesDirName.replace(QRegularExpression("[<>:\"/\\\\|?*]"), "_");
+  if (imagesDirName.isEmpty()) {
+    imagesDirName = "images";
+  }
+  QString imagesDirPath = fileDir.filePath(imagesDirName);
+  QDir imagesDir(imagesDirPath);
+
+  if (!imagesDir.exists()) {
+    if (!fileDir.mkdir(imagesDirName)) {
+      QMessageBox::warning(
+          this, tr("Cannot Create Directory"),
+          tr("Failed to create directory '%1'.").arg(imagesDirName));
+      return QString();
+    }
+  }
+
+  // Find the next available number in sequence
+  int nextNumber = 1;
+  QRegularExpression imagePattern("^image_(\\d+)\\.png$");
+
+  QStringList existingFiles =
+      imagesDir.entryList(QStringList() << "image_*.png", QDir::Files);
+  for (const QString &file : existingFiles) {
+    QRegularExpressionMatch match = imagePattern.match(file);
+    if (match.hasMatch()) {
+      int num = match.captured(1).toInt();
+      if (num >= nextNumber) {
+        nextNumber = num + 1;
+      }
+    }
+  }
+
+  // Suggest filename
+  QString suggestedName =
+      QString("image_%1.png").arg(nextNumber, 3, 10, QChar('0'));
+
+  // Ask user for filename
+  bool ok;
+  QString fileName =
+      QInputDialog::getText(this, tr("Save Image"), tr("Enter image filename:"),
+                            QLineEdit::Normal, suggestedName, &ok);
+
+  if (!ok || fileName.isEmpty()) {
+    return QString(); // User cancelled
+  }
+
+  // Ensure .png extension
+  if (!fileName.endsWith(".png", Qt::CaseInsensitive)) {
+    fileName += ".png";
+  }
+
+  // Check if file already exists
+  QString fullPath = imagesDir.filePath(fileName);
+  if (QFileInfo::exists(fullPath)) {
+    QMessageBox::StandardButton reply = QMessageBox::question(
+        this, tr("File Exists"),
+        tr("File '%1' already exists. Overwrite?").arg(fileName),
+        QMessageBox::Yes | QMessageBox::No);
+
+    if (reply != QMessageBox::Yes) {
+      return QString(); // User chose not to overwrite
+    }
+  }
+
+  // Save the image
+  if (image.save(fullPath, "PNG")) {
+    return imagesDirName + "/" +
+           fileName; // Return relative path with subdirectory
+  }
+
+  QMessageBox::warning(this, tr("Save Failed"),
+                       tr("Failed to save image to '%1'.").arg(fileName));
+  return QString();
 }

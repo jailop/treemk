@@ -1,3 +1,4 @@
+#include "defs.h"
 #include "markdownpreview.h"
 #include "thememanager.h"
 #include <QAction>
@@ -60,13 +61,13 @@ MarkdownPreview::MarkdownPreview(QWidget *parent)
   QShortcut *reloadShortcut = new QShortcut(QKeySequence(Qt::Key_F5), this);
   connect(reloadShortcut, &QShortcut::activated, this,
           &MarkdownPreview::reloadPreview);
-  
+
   // Connect to theme changes
   if (ThemeManager::instance()) {
     connect(ThemeManager::instance(), &ThemeManager::previewColorSchemeChanged,
             this, &MarkdownPreview::onThemeChanged);
-    connect(ThemeManager::instance(), &ThemeManager::themeChanged,
-            this, &MarkdownPreview::onThemeChanged);
+    connect(ThemeManager::instance(), &ThemeManager::themeChanged, this,
+            &MarkdownPreview::onThemeChanged);
   }
 }
 
@@ -86,18 +87,20 @@ void MarkdownPreview::setMarkdownContent(const QString &markdown) {
   QString baseStyleSheet = ThemeManager::instance()->getPreviewStyleSheet();
   QString imageStyleSheet = "img { max-width: 100%; height: auto; }";
   QString styleSheet = baseStyleSheet + "\n" + imageStyleSheet;
-  
+
   // Choose highlight.js theme based on current preview scheme
   QString highlightTheme = "github.min.css";
-  
+
   // Determine if we're in dark mode
-  QSettings settings("TreeMk", "TreeMk");
-  QString previewScheme = settings.value("appearance/previewColorScheme", "auto").toString();
+  QSettings settings(APP_LABEL, APP_LABEL);
+  QString previewScheme =
+      settings.value("appearance/previewColorScheme", "auto").toString();
   bool isDark = false;
-  
+
   if (previewScheme == "auto") {
     // Follow app/system theme
-    QString appTheme = settings.value("appearance/appTheme", "system").toString();
+    QString appTheme =
+        settings.value("appearance/appTheme", "system").toString();
     if (appTheme == "dark") {
       isDark = true;
     } else if (appTheme == "system") {
@@ -107,7 +110,7 @@ void MarkdownPreview::setMarkdownContent(const QString &markdown) {
   } else if (previewScheme == "dark") {
     isDark = true;
   }
-  
+
   if (isDark) {
     highlightTheme = "github-dark.min.css";
   }
@@ -147,7 +150,8 @@ void MarkdownPreview::setMarkdownContent(const QString &markdown) {
               "    hljs.highlightElement(block);"
               "  });"
               "  if (savedScrollPercentage > 0) {"
-              "    window.scrollTo(0, document.body.scrollHeight * savedScrollPercentage);"
+              "    window.scrollTo(0, document.body.scrollHeight * "
+              "savedScrollPercentage);"
               "  }"
               "});"
               "</script>"

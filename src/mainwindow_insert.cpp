@@ -1,16 +1,16 @@
-#include "mainwindow.h"
-#include "tabeditor.h"
-#include "markdowneditor.h"
 #include "formuladialog.h"
-#include <QFileDialog>
-#include <QInputDialog>
-#include <QMessageBox>
-#include <QTextCursor>
-#include <QTextBlock>
-#include <QFileInfo>
+#include "mainwindow.h"
+#include "markdowneditor.h"
+#include "tabeditor.h"
 #include <QDir>
 #include <QFile>
+#include <QFileDialog>
+#include <QFileInfo>
+#include <QInputDialog>
+#include <QMessageBox>
 #include <QStatusBar>
+#include <QTextBlock>
+#include <QTextCursor>
 
 void MainWindow::insertImage() {
   TabEditor *tab = currentTabEditor();
@@ -18,7 +18,8 @@ void MainWindow::insertImage() {
     return;
 
   QString imagePath = QFileDialog::getOpenFileName(
-      this, tr("Select Image"), currentFolder.isEmpty() ? QDir::homePath() : currentFolder,
+      this, tr("Select Image"),
+      currentFolder.isEmpty() ? QDir::homePath() : currentFolder,
       tr("Images (*.png *.jpg *.jpeg *.gif *.bmp *.svg)"));
 
   if (imagePath.isEmpty()) {
@@ -109,8 +110,7 @@ void MainWindow::attachDocument() {
 
     statusBar()->showMessage(tr("Document attached: %1").arg(fileName), 3000);
   } else {
-    QMessageBox::warning(this, tr("Error"),
-                         tr("Could not copy the document."));
+    QMessageBox::warning(this, tr("Error"), tr("Could not copy the document."));
   }
 }
 
@@ -320,12 +320,11 @@ void MainWindow::insertLink() {
     return;
   }
 
-  QString linkText =
-      selectedText.isEmpty()
-          ? QInputDialog::getText(this, tr("Insert Link"),
-                                  tr("Enter link text:"), QLineEdit::Normal,
-                                  url, &ok)
-          : selectedText;
+  QString linkText = selectedText.isEmpty()
+                         ? QInputDialog::getText(this, tr("Insert Link"),
+                                                 tr("Enter link text:"),
+                                                 QLineEdit::Normal, url, &ok)
+                         : selectedText;
 
   if (!ok || linkText.isEmpty()) {
     return;

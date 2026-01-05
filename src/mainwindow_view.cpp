@@ -1,15 +1,15 @@
+#include "linkparser.h"
 #include "mainwindow.h"
-#include "tabeditor.h"
 #include "markdowneditor.h"
 #include "markdownpreview.h"
-#include "linkparser.h"
-#include <QTimer>
-#include <QFileInfo>
-#include <QFile>
+#include "tabeditor.h"
 #include <QDir>
+#include <QFile>
+#include <QFileInfo>
+#include <QListWidget>
 #include <QMessageBox>
 #include <QStatusBar>
-#include <QListWidget>
+#include <QTimer>
 
 void MainWindow::toggleSidebar() {
   leftTabWidget->setVisible(!leftTabWidget->isVisible());
@@ -29,7 +29,8 @@ void MainWindow::onWikiLinkClicked(const QString &linkTarget) {
     return;
   }
 
-  QString targetFile = linkParser->resolveLinkTarget(linkTarget, currentFilePath);
+  QString targetFile =
+      linkParser->resolveLinkTarget(linkTarget, currentFilePath);
 
   if (targetFile.isEmpty()) {
     statusBar()->showMessage(

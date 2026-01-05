@@ -1,518 +1,503 @@
 #include "filesystemtreeview.h"
-#include <QMouseEvent>
 #include <QContextMenuEvent>
-#include <QHeaderView>
+#include <QDebug>
 #include <QDir>
-#include <QMenu>
-#include <QInputDialog>
-#include <QMessageBox>
 #include <QFile>
 #include <QFileInfo>
-#include <QDebug>
+#include <QHeaderView>
+#include <QInputDialog>
+#include <QMenu>
+#include <QMessageBox>
+#include <QMouseEvent>
 
 FileSystemTreeView::FileSystemTreeView(QWidget *parent)
-    : QTreeView(parent), clipboardIsCut(false)
-{
-    setupModel();
-    setupView();
-    createContextMenu();
-    setupFileSystemWatcher();
+    : QTreeView(parent), clipboardIsCut(false) {
+  setupModel();
+  setupView();
+  createContextMenu();
+  setupFileSystemWatcher();
 }
 
-FileSystemTreeView::~FileSystemTreeView()
-{
+FileSystemTreeView::~FileSystemTreeView() {}
+
+void FileSystemTreeView::setupModel() {
+  fileSystemModel = new QFileSystemModel(this);
+  fileSystemModel->setReadOnly(false);
+  fileSystemModel->setFilter(QDir::AllDirs | QDir::Files |
+                             QDir::NoDotAndDotDot);
+
+  QStringList filters;
+  filters << "*.md" << "*.markdown";
+  fileSystemModel->setNameFilters(filters);
+  fileSystemModel->setNameFilterDisables(false);
+
+  setModel(fileSystemModel);
 }
 
-void FileSystemTreeView::setupModel()
-{
-    fileSystemModel = new QFileSystemModel(this);
-    fileSystemModel->setReadOnly(false);
-    fileSystemModel->setFilter(QDir::AllDirs | QDir::Files | QDir::NoDotAndDotDot);
-    
-    QStringList filters;
-    filters << "*.md" << "*.markdown";
-    fileSystemModel->setNameFilters(filters);
-    fileSystemModel->setNameFilterDisables(false);
-    
-    setModel(fileSystemModel);
+void FileSystemTreeView::setupView() {
+  setHeaderHidden(false);
+  setColumnHidden(1, true); // Hide size column
+  setColumnHidden(2, true); // Hide type column
+  setColumnHidden(3, true); // Hide date modified column
+
+  header()->setStretchLastSection(false);
+  header()->setSectionResizeMode(0, QHeaderView::Stretch);
+
+  setAnimated(true);
+  setIndentation(20);
+  setSortingEnabled(true);
+  sortByColumn(0, Qt::AscendingOrder);
+
+  setSelectionMode(QAbstractItemView::SingleSelection);
+  setSelectionBehavior(QAbstractItemView::SelectRows);
+
+  setEditTriggers(QAbstractItemView::EditKeyPressed);
+
+  connect(selectionModel(), &QItemSelectionModel::currentChanged, this,
+          &FileSystemTreeView::onSelectionChanged);
 }
 
-void FileSystemTreeView::setupView()
-{
-    setHeaderHidden(false);
-    setColumnHidden(1, true); // Hide size column
-    setColumnHidden(2, true); // Hide type column
-    setColumnHidden(3, true); // Hide date modified column
-    
-    header()->setStretchLastSection(false);
-    header()->setSectionResizeMode(0, QHeaderView::Stretch);
-    
-    setAnimated(true);
-    setIndentation(20);
-    setSortingEnabled(true);
-    sortByColumn(0, Qt::AscendingOrder);
-    
-    setSelectionMode(QAbstractItemView::SingleSelection);
-    setSelectionBehavior(QAbstractItemView::SelectRows);
-    
-    setEditTriggers(QAbstractItemView::EditKeyPressed);
-    
-    connect(selectionModel(), &QItemSelectionModel::currentChanged,
-            this, &FileSystemTreeView::onSelectionChanged);
+void FileSystemTreeView::createContextMenu() {
+  contextMenu = new QMenu(this);
+
+  newFileAction = new QAction(tr("New File"), this);
+  connect(newFileAction, &QAction::triggered, this,
+          &FileSystemTreeView::createNewFile);
+
+  newFolderAction = new QAction(tr("New Folder"), this);
+  connect(newFolderAction, &QAction::triggered, this,
+          &FileSystemTreeView::createNewFolder);
+
+  renameAction = new QAction(tr("Rename"), this);
+  renameAction->setShortcut(QKeySequence(Qt::Key_F2));
+  connect(renameAction, &QAction::triggered, this,
+          &FileSystemTreeView::renameItem);
+
+  deleteAction = new QAction(tr("Delete"), this);
+  deleteAction->setShortcut(QKeySequence::Delete);
+  connect(deleteAction, &QAction::triggered, this,
+          &FileSystemTreeView::deleteItem);
+
+  cutAction = new QAction(tr("Cut"), this);
+  cutAction->setShortcut(QKeySequence::Cut);
+  connect(cutAction, &QAction::triggered, this, &FileSystemTreeView::cutItem);
+
+  copyAction = new QAction(tr("Copy"), this);
+  copyAction->setShortcut(QKeySequence::Copy);
+  connect(copyAction, &QAction::triggered, this, &FileSystemTreeView::copyItem);
+
+  pasteAction = new QAction(tr("Paste"), this);
+  pasteAction->setShortcut(QKeySequence::Paste);
+  connect(pasteAction, &QAction::triggered, this,
+          &FileSystemTreeView::pasteItem);
+
+  refreshAction = new QAction(tr("Refresh"), this);
+  refreshAction->setShortcut(QKeySequence::Refresh);
+  connect(refreshAction, &QAction::triggered, this,
+          &FileSystemTreeView::refreshDirectory);
+
+  contextMenu->addAction(newFileAction);
+  contextMenu->addAction(newFolderAction);
+  contextMenu->addSeparator();
+  contextMenu->addAction(renameAction);
+  contextMenu->addAction(deleteAction);
+  contextMenu->addSeparator();
+  contextMenu->addAction(cutAction);
+  contextMenu->addAction(copyAction);
+  contextMenu->addAction(pasteAction);
+  contextMenu->addSeparator();
+  contextMenu->addAction(refreshAction);
+
+  addAction(newFileAction);
+  addAction(newFolderAction);
+  addAction(renameAction);
+  addAction(deleteAction);
+  addAction(cutAction);
+  addAction(copyAction);
+  addAction(pasteAction);
+  addAction(refreshAction);
 }
 
-void FileSystemTreeView::createContextMenu()
-{
-    contextMenu = new QMenu(this);
-    
-    newFileAction = new QAction(tr("New File"), this);
-    connect(newFileAction, &QAction::triggered, this, &FileSystemTreeView::createNewFile);
-    
-    newFolderAction = new QAction(tr("New Folder"), this);
-    connect(newFolderAction, &QAction::triggered, this, &FileSystemTreeView::createNewFolder);
-    
-    renameAction = new QAction(tr("Rename"), this);
-    renameAction->setShortcut(QKeySequence(Qt::Key_F2));
-    connect(renameAction, &QAction::triggered, this, &FileSystemTreeView::renameItem);
-    
-    deleteAction = new QAction(tr("Delete"), this);
-    deleteAction->setShortcut(QKeySequence::Delete);
-    connect(deleteAction, &QAction::triggered, this, &FileSystemTreeView::deleteItem);
-    
-    cutAction = new QAction(tr("Cut"), this);
-    cutAction->setShortcut(QKeySequence::Cut);
-    connect(cutAction, &QAction::triggered, this, &FileSystemTreeView::cutItem);
-    
-    copyAction = new QAction(tr("Copy"), this);
-    copyAction->setShortcut(QKeySequence::Copy);
-    connect(copyAction, &QAction::triggered, this, &FileSystemTreeView::copyItem);
-    
-    pasteAction = new QAction(tr("Paste"), this);
-    pasteAction->setShortcut(QKeySequence::Paste);
-    connect(pasteAction, &QAction::triggered, this, &FileSystemTreeView::pasteItem);
-    
-    refreshAction = new QAction(tr("Refresh"), this);
-    refreshAction->setShortcut(QKeySequence::Refresh);
-    connect(refreshAction, &QAction::triggered, this, &FileSystemTreeView::refreshDirectory);
-    
-    contextMenu->addAction(newFileAction);
-    contextMenu->addAction(newFolderAction);
-    contextMenu->addSeparator();
-    contextMenu->addAction(renameAction);
-    contextMenu->addAction(deleteAction);
-    contextMenu->addSeparator();
-    contextMenu->addAction(cutAction);
-    contextMenu->addAction(copyAction);
-    contextMenu->addAction(pasteAction);
-    contextMenu->addSeparator();
-    contextMenu->addAction(refreshAction);
-    
-    addAction(newFileAction);
-    addAction(newFolderAction);
-    addAction(renameAction);
-    addAction(deleteAction);
-    addAction(cutAction);
-    addAction(copyAction);
-    addAction(pasteAction);
-    addAction(refreshAction);
+void FileSystemTreeView::setupFileSystemWatcher() {
+  fileSystemWatcher = new QFileSystemWatcher(this);
+
+  connect(fileSystemWatcher, &QFileSystemWatcher::directoryChanged, this,
+          &FileSystemTreeView::onDirectoryChanged);
+  connect(fileSystemWatcher, &QFileSystemWatcher::fileChanged, this,
+          &FileSystemTreeView::onFileChanged);
 }
 
-void FileSystemTreeView::setupFileSystemWatcher()
-{
-    fileSystemWatcher = new QFileSystemWatcher(this);
-    
-    connect(fileSystemWatcher, &QFileSystemWatcher::directoryChanged,
-            this, &FileSystemTreeView::onDirectoryChanged);
-    connect(fileSystemWatcher, &QFileSystemWatcher::fileChanged,
-            this, &FileSystemTreeView::onFileChanged);
+void FileSystemTreeView::setRootPath(const QString &path) {
+  if (path.isEmpty() || !QDir(path).exists()) {
+    return;
+  }
+
+  if (!currentRootPath.isEmpty() &&
+      fileSystemWatcher->directories().contains(currentRootPath)) {
+    fileSystemWatcher->removePath(currentRootPath);
+  }
+
+  currentRootPath = path;
+  QModelIndex rootIndex = fileSystemModel->setRootPath(path);
+  setRootIndex(rootIndex);
+
+  if (rootIndex.isValid()) {
+    expand(rootIndex);
+  }
+
+  fileSystemWatcher->addPath(path);
+
+  addDirectoriesToWatcher(path);
 }
 
-void FileSystemTreeView::setRootPath(const QString &path)
-{
-    if (path.isEmpty() || !QDir(path).exists()) {
-        return;
-    }
-    
-    if (!currentRootPath.isEmpty() && fileSystemWatcher->directories().contains(currentRootPath)) {
-        fileSystemWatcher->removePath(currentRootPath);
-    }
-    
-    currentRootPath = path;
-    QModelIndex rootIndex = fileSystemModel->setRootPath(path);
-    setRootIndex(rootIndex);
-    
-    if (rootIndex.isValid()) {
-        expand(rootIndex);
-    }
-    
-    fileSystemWatcher->addPath(path);
-    
-    addDirectoriesToWatcher(path);
+QString FileSystemTreeView::currentFilePath() const {
+  QModelIndex index = currentIndex();
+  if (!index.isValid()) {
+    return QString();
+  }
+
+  return fileSystemModel->filePath(index);
 }
 
-QString FileSystemTreeView::currentFilePath() const
-{
-    QModelIndex index = currentIndex();
-    if (!index.isValid()) {
-        return QString();
+QString FileSystemTreeView::rootPath() const { return currentRootPath; }
+
+void FileSystemTreeView::onSelectionChanged(const QModelIndex &current,
+                                            const QModelIndex &previous) {
+  Q_UNUSED(previous);
+
+  if (!current.isValid()) {
+    return;
+  }
+
+  QString filePath = fileSystemModel->filePath(current);
+  QFileInfo fileInfo(filePath);
+
+  if (fileInfo.isFile()) {
+    if (!watchedFilePath.isEmpty() && watchedFilePath != filePath) {
+      if (fileSystemWatcher->files().contains(watchedFilePath)) {
+        fileSystemWatcher->removePath(watchedFilePath);
+      }
     }
-    
-    return fileSystemModel->filePath(index);
+
+    watchedFilePath = filePath;
+    if (!fileSystemWatcher->files().contains(filePath)) {
+      fileSystemWatcher->addPath(filePath);
+    }
+
+    emit fileSelected(filePath);
+  }
 }
 
-QString FileSystemTreeView::rootPath() const
-{
-    return currentRootPath;
+void FileSystemTreeView::onDirectoryChanged(const QString &path) {
+  Q_UNUSED(path);
+
+  addDirectoriesToWatcher(currentRootPath);
 }
 
-void FileSystemTreeView::onSelectionChanged(const QModelIndex &current, const QModelIndex &previous)
-{
-    Q_UNUSED(previous);
-    
-    if (!current.isValid()) {
-        return;
+void FileSystemTreeView::onFileChanged(const QString &path) {
+  if (path == fileSavingPath) {
+    fileSavingPath.clear();
+    if (!fileSystemWatcher->files().contains(path)) {
+      fileSystemWatcher->addPath(path);
     }
-    
-    QString filePath = fileSystemModel->filePath(current);
-    QFileInfo fileInfo(filePath);
-    
-    if (fileInfo.isFile()) {
-        if (!watchedFilePath.isEmpty() && watchedFilePath != filePath) {
-            if (fileSystemWatcher->files().contains(watchedFilePath)) {
-                fileSystemWatcher->removePath(watchedFilePath);
-            }
-        }
-        
-        watchedFilePath = filePath;
-        if (!fileSystemWatcher->files().contains(filePath)) {
-            fileSystemWatcher->addPath(filePath);
-        }
-        
-        emit fileSelected(filePath);
-    }
-}
-
-void FileSystemTreeView::onDirectoryChanged(const QString &path)
-{
-    Q_UNUSED(path);
-    
-    addDirectoriesToWatcher(currentRootPath);
-}
-
-void FileSystemTreeView::onFileChanged(const QString &path)
-{
-    if (path == fileSavingPath) {
-        fileSavingPath.clear();
-        if (!fileSystemWatcher->files().contains(path)) {
-            fileSystemWatcher->addPath(path);
-        }
-        return;
-    }
-    if (path == watchedFilePath) {
-        if (QFile::exists(path)) {
-            emit fileModifiedExternally(path);
-            if (!fileSystemWatcher->files().contains(path)) {
-                fileSystemWatcher->addPath(path);
-            }
-        } else {
-            watchedFilePath.clear();
-        }
-    }
-}
-
-void FileSystemTreeView::mouseDoubleClickEvent(QMouseEvent *event)
-{
-    QTreeView::mouseDoubleClickEvent(event);
-    
-    QModelIndex index = indexAt(event->pos());
-    if (!index.isValid()) {
-        return;
-    }
-    
-    QString filePath = fileSystemModel->filePath(index);
-    QFileInfo fileInfo(filePath);
-    
-    if (fileInfo.isFile()) {
-        emit fileDoubleClicked(filePath);
-    }
-}
-
-void FileSystemTreeView::contextMenuEvent(QContextMenuEvent *event)
-{
-    QModelIndex index = indexAt(event->pos());
-    bool hasSelection = index.isValid();
-    // bool isFile = false;
-    
-    if (hasSelection) {
-        QString filePath = fileSystemModel->filePath(index);
-        // isFile = QFileInfo(filePath).isFile();
-    }
-    
-    pasteAction->setEnabled(!clipboardPath.isEmpty());
-    renameAction->setEnabled(hasSelection);
-    deleteAction->setEnabled(hasSelection);
-    cutAction->setEnabled(hasSelection);
-    copyAction->setEnabled(hasSelection);
-    
-    contextMenu->exec(event->globalPos());
-}
-
-void FileSystemTreeView::createNewFile()
-{
-    QModelIndex index = currentIndex();
-    QString parentPath;
-    
-    if (index.isValid()) {
-        QString selectedPath = fileSystemModel->filePath(index);
-        QFileInfo fileInfo(selectedPath);
-        parentPath = fileInfo.isDir() ? selectedPath : fileInfo.absolutePath();
-    } else {
-        parentPath = currentRootPath;
-    }
-    
-    bool ok;
-    QString fileName = QInputDialog::getText(this, tr("New File"),
-                                            tr("File name:"), QLineEdit::Normal,
-                                            "untitled.md", &ok);
-    
-    if (!ok || fileName.isEmpty()) {
-        return;
-    }
-    
-    if (!fileName.endsWith(".md") && !fileName.endsWith(".markdown")) {
-        fileName += ".md";
-    }
-    
-    QString filePath = QDir(parentPath).filePath(fileName);
-    
-    if (QFile::exists(filePath)) {
-        QMessageBox::warning(this, tr("Error"), tr("File already exists!"));
-        return;
-    }
-    
-    QFile file(filePath);
-    if (!file.open(QIODevice::WriteOnly)) {
-        QMessageBox::warning(this, tr("Error"), tr("Failed to create file!"));
-        return;
-    }
-    file.close();
-}
-
-void FileSystemTreeView::createNewFolder()
-{
-    QModelIndex index = currentIndex();
-    QString parentPath;
-    
-    if (index.isValid()) {
-        QString selectedPath = fileSystemModel->filePath(index);
-        QFileInfo fileInfo(selectedPath);
-        parentPath = fileInfo.isDir() ? selectedPath : fileInfo.absolutePath();
-    } else {
-        parentPath = currentRootPath;
-    }
-    
-    bool ok;
-    QString folderName = QInputDialog::getText(this, tr("New Folder"),
-                                              tr("Folder name:"), QLineEdit::Normal,
-                                              "New Folder", &ok);
-    
-    if (!ok || folderName.isEmpty()) {
-        return;
-    }
-    
-    QString folderPath = QDir(parentPath).filePath(folderName);
-    
-    if (QDir(folderPath).exists()) {
-        QMessageBox::warning(this, tr("Error"), tr("Folder already exists!"));
-        return;
-    }
-    
-    if (!QDir().mkdir(folderPath)) {
-        QMessageBox::warning(this, tr("Error"), tr("Failed to create folder!"));
-    }
-}
-
-void FileSystemTreeView::renameItem()
-{
-    QModelIndex index = currentIndex();
-    if (!index.isValid()) {
-        return;
-    }
-    
-    edit(index);
-}
-
-void FileSystemTreeView::deleteItem()
-{
-    QModelIndex index = currentIndex();
-    if (!index.isValid()) {
-        return;
-    }
-    
-    QString filePath = fileSystemModel->filePath(index);
-    QFileInfo fileInfo(filePath);
-    
-    QString itemType = fileInfo.isDir() ? tr("folder") : tr("file");
-    QString itemName = fileInfo.fileName();
-    
-    QMessageBox::StandardButton reply = QMessageBox::question(
-        this, tr("Delete"),
-        tr("Are you sure you want to delete this %1?\n\n%2").arg(itemType, itemName),
-        QMessageBox::Yes | QMessageBox::No
-    );
-    
-    if (reply != QMessageBox::Yes) {
-        return;
-    }
-    
-    bool success = false;
-    
-    if (fileInfo.isDir()) {
-        QDir dir(filePath);
-        success = dir.removeRecursively();
-    } else {
-        success = QFile::remove(filePath);
-    }
-    
-    if (!success) {
-        QMessageBox::warning(this, tr("Error"), 
-                           tr("Failed to delete %1!").arg(itemType));
-    }
-}
-
-void FileSystemTreeView::cutItem()
-{
-    QModelIndex index = currentIndex();
-    if (!index.isValid()) {
-        return;
-    }
-    clipboardPath = fileSystemModel->filePath(index);
-    clipboardIsCut = true;
-}
-
-void FileSystemTreeView::copyItem()
-{
-    QModelIndex index = currentIndex();
-    if (!index.isValid()) {
-        return;
-    }
-    clipboardPath = fileSystemModel->filePath(index);
-    clipboardIsCut = false;
-}
-
-void FileSystemTreeView::pasteItem()
-{
-    if (clipboardPath.isEmpty()) {
-        return;
-    }
-    QModelIndex index = currentIndex();
-    QString targetPath;
-    if (index.isValid()) {
-        QString selectedPath = fileSystemModel->filePath(index);
-        QFileInfo fileInfo(selectedPath);
-        targetPath = fileInfo.isDir() ? selectedPath : fileInfo.absolutePath();
-    } else {
-        targetPath = currentRootPath;
-    }
-    QFileInfo sourceInfo(clipboardPath);
-    QString newPath = QDir(targetPath).filePath(sourceInfo.fileName());
-    if (QFile::exists(newPath)) {
-        QMessageBox::warning(this, tr("Error"), 
-                           tr("An item with this name already exists!"));
-        return;
-    }
-    bool success = false;
-    if (clipboardIsCut) {
-        if (sourceInfo.isDir()) {
-            success = QDir().rename(clipboardPath, newPath);
-        } else {
-            success = QFile::rename(clipboardPath, newPath);
-        }
-        
-        if (success) {
-            clipboardPath.clear();
-        }
-    } else {
-        if (sourceInfo.isDir()) {
-            success = copyDirectory(clipboardPath, newPath);
-        } else {
-            success = QFile::copy(clipboardPath, newPath);
-        }
-    }
-    if (!success) {
-        QMessageBox::warning(this, tr("Error"), tr("Failed to paste item!"));
-    }
-}
-
-bool FileSystemTreeView::copyDirectory(const QString &srcPath, const QString &dstPath)
-{
-    QDir srcDir(srcPath);
-    if (!srcDir.exists()) {
-        return false;
-    }
-    
-    QDir dstDir(dstPath);
-    if (!dstDir.exists()) {
-        if (!QDir().mkdir(dstPath)) {
-            return false;
-        }
-    }
-    
-    foreach (const QFileInfo &fileInfo, srcDir.entryInfoList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot)) {
-        QString srcFilePath = fileInfo.filePath();
-        QString dstFilePath = dstPath + "/" + fileInfo.fileName();
-        
-        if (fileInfo.isDir()) {
-            if (!copyDirectory(srcFilePath, dstFilePath)) {
-                return false;
-            }
-        } else {
-            if (!QFile::copy(srcFilePath, dstFilePath)) {
-                return false;
-            }
-        }
-    }
-    
-    return true;
-}
-
-void FileSystemTreeView::addDirectoriesToWatcher(const QString &path)
-{
-    QDir dir(path);
-    if (!dir.exists()) {
-        return;
-    }
-    
-    if (!fileSystemWatcher->directories().contains(path)) {
+    return;
+  }
+  if (path == watchedFilePath) {
+    if (QFile::exists(path)) {
+      emit fileModifiedExternally(path);
+      if (!fileSystemWatcher->files().contains(path)) {
         fileSystemWatcher->addPath(path);
+      }
+    } else {
+      watchedFilePath.clear();
     }
-    
-    foreach (const QFileInfo &fileInfo, dir.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot)) {
-        addDirectoriesToWatcher(fileInfo.filePath());
-    }
+  }
 }
 
-void FileSystemTreeView::refreshDirectory()
-{
-    if (currentRootPath.isEmpty()) {
-        return;
-    }
-    
-    QString savedPath = currentFilePath();
-    // QModelIndex currentIdx = currentIndex();
-    
-    setRootPath(currentRootPath);
-    
-    if (!savedPath.isEmpty() && QFile::exists(savedPath)) {
-        QModelIndex idx = fileSystemModel->index(savedPath);
-        if (idx.isValid()) {
-            setCurrentIndex(idx);
-            scrollTo(idx);
-        }
-    }
+void FileSystemTreeView::mouseDoubleClickEvent(QMouseEvent *event) {
+  QTreeView::mouseDoubleClickEvent(event);
+
+  QModelIndex index = indexAt(event->pos());
+  if (!index.isValid()) {
+    return;
+  }
+
+  QString filePath = fileSystemModel->filePath(index);
+  QFileInfo fileInfo(filePath);
+
+  if (fileInfo.isFile()) {
+    emit fileDoubleClicked(filePath);
+  }
 }
 
-void FileSystemTreeView::notifyFileSaving(const QString &filePath)
-{
-    fileSavingPath = filePath;
+void FileSystemTreeView::contextMenuEvent(QContextMenuEvent *event) {
+  QModelIndex index = indexAt(event->pos());
+  bool hasSelection = index.isValid();
+  // bool isFile = false;
+
+  if (hasSelection) {
+    QString filePath = fileSystemModel->filePath(index);
+    // isFile = QFileInfo(filePath).isFile();
+  }
+
+  pasteAction->setEnabled(!clipboardPath.isEmpty());
+  renameAction->setEnabled(hasSelection);
+  deleteAction->setEnabled(hasSelection);
+  cutAction->setEnabled(hasSelection);
+  copyAction->setEnabled(hasSelection);
+
+  contextMenu->exec(event->globalPos());
+}
+
+void FileSystemTreeView::createNewFile() {
+  QModelIndex index = currentIndex();
+  QString parentPath;
+
+  if (index.isValid()) {
+    QString selectedPath = fileSystemModel->filePath(index);
+    QFileInfo fileInfo(selectedPath);
+    parentPath = fileInfo.isDir() ? selectedPath : fileInfo.absolutePath();
+  } else {
+    parentPath = currentRootPath;
+  }
+
+  bool ok;
+  QString fileName =
+      QInputDialog::getText(this, tr("New File"), tr("File name:"),
+                            QLineEdit::Normal, "untitled.md", &ok);
+
+  if (!ok || fileName.isEmpty()) {
+    return;
+  }
+
+  if (!fileName.endsWith(".md") && !fileName.endsWith(".markdown")) {
+    fileName += ".md";
+  }
+
+  QString filePath = QDir(parentPath).filePath(fileName);
+
+  if (QFile::exists(filePath)) {
+    QMessageBox::warning(this, tr("Error"), tr("File already exists!"));
+    return;
+  }
+
+  QFile file(filePath);
+  if (!file.open(QIODevice::WriteOnly)) {
+    QMessageBox::warning(this, tr("Error"), tr("Failed to create file!"));
+    return;
+  }
+  file.close();
+}
+
+void FileSystemTreeView::createNewFolder() {
+  QModelIndex index = currentIndex();
+  QString parentPath;
+
+  if (index.isValid()) {
+    QString selectedPath = fileSystemModel->filePath(index);
+    QFileInfo fileInfo(selectedPath);
+    parentPath = fileInfo.isDir() ? selectedPath : fileInfo.absolutePath();
+  } else {
+    parentPath = currentRootPath;
+  }
+
+  bool ok;
+  QString folderName =
+      QInputDialog::getText(this, tr("New Folder"), tr("Folder name:"),
+                            QLineEdit::Normal, "New Folder", &ok);
+
+  if (!ok || folderName.isEmpty()) {
+    return;
+  }
+
+  QString folderPath = QDir(parentPath).filePath(folderName);
+
+  if (QDir(folderPath).exists()) {
+    QMessageBox::warning(this, tr("Error"), tr("Folder already exists!"));
+    return;
+  }
+
+  if (!QDir().mkdir(folderPath)) {
+    QMessageBox::warning(this, tr("Error"), tr("Failed to create folder!"));
+  }
+}
+
+void FileSystemTreeView::renameItem() {
+  QModelIndex index = currentIndex();
+  if (!index.isValid()) {
+    return;
+  }
+
+  edit(index);
+}
+
+void FileSystemTreeView::deleteItem() {
+  QModelIndex index = currentIndex();
+  if (!index.isValid()) {
+    return;
+  }
+
+  QString filePath = fileSystemModel->filePath(index);
+  QFileInfo fileInfo(filePath);
+
+  QString itemType = fileInfo.isDir() ? tr("folder") : tr("file");
+  QString itemName = fileInfo.fileName();
+
+  QMessageBox::StandardButton reply =
+      QMessageBox::question(this, tr("Delete"),
+                            tr("Are you sure you want to delete this %1?\n\n%2")
+                                .arg(itemType, itemName),
+                            QMessageBox::Yes | QMessageBox::No);
+
+  if (reply != QMessageBox::Yes) {
+    return;
+  }
+
+  bool success = false;
+
+  if (fileInfo.isDir()) {
+    QDir dir(filePath);
+    success = dir.removeRecursively();
+  } else {
+    success = QFile::remove(filePath);
+  }
+
+  if (!success) {
+    QMessageBox::warning(this, tr("Error"),
+                         tr("Failed to delete %1!").arg(itemType));
+  }
+}
+
+void FileSystemTreeView::cutItem() {
+  QModelIndex index = currentIndex();
+  if (!index.isValid()) {
+    return;
+  }
+  clipboardPath = fileSystemModel->filePath(index);
+  clipboardIsCut = true;
+}
+
+void FileSystemTreeView::copyItem() {
+  QModelIndex index = currentIndex();
+  if (!index.isValid()) {
+    return;
+  }
+  clipboardPath = fileSystemModel->filePath(index);
+  clipboardIsCut = false;
+}
+
+void FileSystemTreeView::pasteItem() {
+  if (clipboardPath.isEmpty()) {
+    return;
+  }
+  QModelIndex index = currentIndex();
+  QString targetPath;
+  if (index.isValid()) {
+    QString selectedPath = fileSystemModel->filePath(index);
+    QFileInfo fileInfo(selectedPath);
+    targetPath = fileInfo.isDir() ? selectedPath : fileInfo.absolutePath();
+  } else {
+    targetPath = currentRootPath;
+  }
+  QFileInfo sourceInfo(clipboardPath);
+  QString newPath = QDir(targetPath).filePath(sourceInfo.fileName());
+  if (QFile::exists(newPath)) {
+    QMessageBox::warning(this, tr("Error"),
+                         tr("An item with this name already exists!"));
+    return;
+  }
+  bool success = false;
+  if (clipboardIsCut) {
+    if (sourceInfo.isDir()) {
+      success = QDir().rename(clipboardPath, newPath);
+    } else {
+      success = QFile::rename(clipboardPath, newPath);
+    }
+
+    if (success) {
+      clipboardPath.clear();
+    }
+  } else {
+    if (sourceInfo.isDir()) {
+      success = copyDirectory(clipboardPath, newPath);
+    } else {
+      success = QFile::copy(clipboardPath, newPath);
+    }
+  }
+  if (!success) {
+    QMessageBox::warning(this, tr("Error"), tr("Failed to paste item!"));
+  }
+}
+
+bool FileSystemTreeView::copyDirectory(const QString &srcPath,
+                                       const QString &dstPath) {
+  QDir srcDir(srcPath);
+  if (!srcDir.exists()) {
+    return false;
+  }
+
+  QDir dstDir(dstPath);
+  if (!dstDir.exists()) {
+    if (!QDir().mkdir(dstPath)) {
+      return false;
+    }
+  }
+
+  foreach (
+      const QFileInfo &fileInfo,
+      srcDir.entryInfoList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot)) {
+    QString srcFilePath = fileInfo.filePath();
+    QString dstFilePath = dstPath + "/" + fileInfo.fileName();
+
+    if (fileInfo.isDir()) {
+      if (!copyDirectory(srcFilePath, dstFilePath)) {
+        return false;
+      }
+    } else {
+      if (!QFile::copy(srcFilePath, dstFilePath)) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
+void FileSystemTreeView::addDirectoriesToWatcher(const QString &path) {
+  QDir dir(path);
+  if (!dir.exists()) {
+    return;
+  }
+
+  if (!fileSystemWatcher->directories().contains(path)) {
+    fileSystemWatcher->addPath(path);
+  }
+
+  foreach (const QFileInfo &fileInfo,
+           dir.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+    addDirectoriesToWatcher(fileInfo.filePath());
+  }
+}
+
+void FileSystemTreeView::refreshDirectory() {
+  if (currentRootPath.isEmpty()) {
+    return;
+  }
+
+  QString savedPath = currentFilePath();
+  // QModelIndex currentIdx = currentIndex();
+
+  setRootPath(currentRootPath);
+
+  if (!savedPath.isEmpty() && QFile::exists(savedPath)) {
+    QModelIndex idx = fileSystemModel->index(savedPath);
+    if (idx.isValid()) {
+      setCurrentIndex(idx);
+      scrollTo(idx);
+    }
+  }
+}
+
+void FileSystemTreeView::notifyFileSaving(const QString &filePath) {
+  fileSavingPath = filePath;
 }

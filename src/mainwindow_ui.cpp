@@ -1,26 +1,26 @@
-#include "mainwindow.h"
 #include "filesystemtreeview.h"
-#include "outlinepanel.h"
-#include "tabeditor.h"
+#include "linkparser.h"
+#include "mainwindow.h"
 #include "markdowneditor.h"
 #include "markdownhighlighter.h"
 #include "markdownpreview.h"
-#include "linkparser.h"
+#include "outlinepanel.h"
 #include "settingsdialog.h"
 #include "shortcutsdialog.h"
+#include "tabeditor.h"
 #include "thememanager.h"
-#include <QMenuBar>
-#include <QMenu>
-#include <QToolBar>
-#include <QSplitter>
-#include <QTabWidget>
-#include <QVBoxLayout>
+#include <QDir>
+#include <QFileInfo>
 #include <QLabel>
 #include <QListWidget>
-#include <QFileInfo>
-#include <QDir>
+#include <QMenu>
+#include <QMenuBar>
+#include <QSplitter>
 #include <QStatusBar>
+#include <QTabWidget>
 #include <QTimer>
+#include <QToolBar>
+#include <QVBoxLayout>
 
 void MainWindow::createMenus() {
   fileMenu = menuBar()->addMenu(tr("&File"));
@@ -306,58 +306,46 @@ void MainWindow::writeSettings() {
 
 void MainWindow::openSettings() {
   SettingsDialog dialog(this);
-  connect(&dialog, &SettingsDialog::settingsChanged, this, &MainWindow::applySettings);
+  connect(&dialog, &SettingsDialog::settingsChanged, this,
+          &MainWindow::applySettings);
 
   dialog.exec();
 }
 
 void MainWindow::applySettings() {
-  // Apply application theme
   QString appTheme =
       settings->value("appearance/appTheme", "system").toString();
   if (ThemeManager::instance()) {
     ThemeManager::instance()->setAppTheme(appTheme);
   }
-
-  // Apply editor color scheme to all tabs
   QString editorScheme =
       settings->value("appearance/editorColorScheme", "auto").toString();
   if (ThemeManager::instance()) {
     ThemeManager::instance()->setEditorColorScheme(editorScheme);
   }
-
-  // Get the resolved scheme name for highlighter
   QString resolvedEditorScheme = "light";
   if (ThemeManager::instance()) {
-    resolvedEditorScheme = ThemeManager::instance()->getResolvedEditorColorSchemeName();
+    resolvedEditorScheme =
+        ThemeManager::instance()->getResolvedEditorColorSchemeName();
   }
-
   for (int i = 0; i < tabWidget->count(); ++i) {
     TabEditor *tab = qobject_cast<TabEditor *>(tabWidget->widget(i));
     if (tab && tab->editor()) {
-      // Apply editor color scheme
       if (ThemeManager::instance()) {
         tab->editor()->setPalette(ThemeManager::instance()->getEditorPalette());
         tab->editor()->setStyleSheet(
             ThemeManager::instance()->getEditorStyleSheet());
       }
-
-      // Update highlighter color scheme with resolved scheme
       MarkdownHighlighter *highlighter = tab->editor()->highlighter();
       if (highlighter) {
         highlighter->setColorScheme(resolvedEditorScheme);
-        
-        // Apply code syntax highlighting setting
         bool codeSyntaxEnabled =
             settings->value("editor/enableCodeSyntax", false).toBool();
         highlighter->setCodeSyntaxEnabled(codeSyntaxEnabled);
-        
-        // Force rehighlight to apply new colors
         highlighter->rehighlight();
       }
     }
   }
-
   // Apply auto-save settings
   if (settings->value("autoSaveEnabled", true).toBool()) {
     int interval = settings->value("autoSaveInterval", 60).toInt();
@@ -369,20 +357,17 @@ void MainWindow::applySettings() {
       autoSaveTimer->stop();
     }
   }
-
   // Apply preview color scheme
   QString previewScheme =
       settings->value("appearance/previewColorScheme", "auto").toString();
   if (ThemeManager::instance()) {
     ThemeManager::instance()->setPreviewColorScheme(previewScheme);
   }
-  
   // Get the resolved preview theme
   QString theme = settings->value("previewTheme", "light").toString();
   if (ThemeManager::instance()) {
     theme = ThemeManager::instance()->getResolvedPreviewColorSchemeName();
   }
-  
   // Apply theme to all tabs
   for (int i = 0; i < tabWidget->count(); ++i) {
     TabEditor *tab = qobject_cast<TabEditor *>(tabWidget->widget(i));
@@ -390,7 +375,6 @@ void MainWindow::applySettings() {
       tab->preview()->setTheme(theme);
     }
   }
-
   // Update theme action checkboxes
   if (previewThemeDarkAction && theme == "dark") {
     previewThemeDarkAction->setChecked(true);
@@ -399,15 +383,12 @@ void MainWindow::applySettings() {
   } else if (previewThemeLightAction) {
     previewThemeLightAction->setChecked(true);
   }
-
   // Apply editor settings to all tabs
   QString fontFamily = settings->value("editor/font", "Sans Serif").toString();
   int fontSize = settings->value("editor/fontSize", 11).toInt();
   int tabWidth = settings->value("editor/tabWidth", 4).toInt();
   bool wordWrap = settings->value("editor/wordWrap", true).toBool();
-
   QFont font(fontFamily, fontSize);
-
   for (int i = 0; i < tabWidget->count(); ++i) {
     TabEditor *tab = qobject_cast<TabEditor *>(tabWidget->widget(i));
     if (tab && tab->editor()) {
@@ -418,7 +399,6 @@ void MainWindow::applySettings() {
                                               : QPlainTextEdit::NoWrap);
     }
   }
-
   // Apply preview refresh rate
   int refreshRate = settings->value("preview/refreshRate", 500).toInt();
   if (previewUpdateTimer) {

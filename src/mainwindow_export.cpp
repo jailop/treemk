@@ -1,16 +1,16 @@
 #include "mainwindow.h"
-#include "tabeditor.h"
 #include "markdowneditor.h"
+#include "tabeditor.h"
+#include <QFile>
 #include <QFileDialog>
 #include <QFileInfo>
-#include <QFile>
-#include <QTextStream>
 #include <QMessageBox>
-#include <QProcess>
-#include <QTextDocument>
-#include <QPrinter>
 #include <QPrintDialog>
+#include <QPrinter>
+#include <QProcess>
 #include <QStatusBar>
+#include <QTextDocument>
+#include <QTextStream>
 
 void MainWindow::exportToHtml() {
   TabEditor *tab = currentTabEditor();
