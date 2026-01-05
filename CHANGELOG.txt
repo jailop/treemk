@@ -6,3 +6,8 @@
   widget
 - copy option in preview contextual menu
 - backlinks panel moved together with files and outline panels
+
+0.1.2 - 2025-01-04:
+
+- When a tab is saved, the file external change detection alert is
+ignored.

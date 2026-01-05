@@ -105,7 +105,6 @@ void MainWindow::save() {
   TabEditor *tab = currentTabEditor();
   if (!tab)
     return;
-
   if (tab->filePath().isEmpty()) {
     saveAs();
   } else {
@@ -154,18 +153,22 @@ void MainWindow::onFileDoubleClicked(const QString &filePath) {
 }
 
 void MainWindow::onFileModifiedExternally(const QString &filePath) {
+  TabEditor *tab = findTabByPath(filePath);
+  if (!tab) return;
+  if (tab->ownSaved()) {
+      // The file was modified by this app, so there is nothing to do.
+      // Just clear the flag
+      tab->clearOwnSaved();
+      return;
+  }
   QMessageBox::StandardButton reply = QMessageBox::question(
       this, tr("File Modified"),
       tr("The file %1 has been modified externally. Do you want to reload it?")
           .arg(QFileInfo(filePath).fileName()),
       QMessageBox::Yes | QMessageBox::No);
-
   if (reply == QMessageBox::Yes) {
-    TabEditor *tab = findTabByPath(filePath);
-    if (tab) {
-      tab->loadFile(filePath);
-      statusBar()->showMessage(tr("File reloaded"), 2000);
-    }
+    tab->loadFile(filePath);
+    statusBar()->showMessage(tr("File reloaded"), 2000);
   }
 }
 

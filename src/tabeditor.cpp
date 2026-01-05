@@ -12,7 +12,8 @@
 
 TabEditor::TabEditor(QWidget *parent)
     : QWidget(parent), m_editor(nullptr), m_preview(nullptr),
-      m_splitter(nullptr), m_previewTimer(nullptr), m_isModified(false) {
+      m_splitter(nullptr), m_previewTimer(nullptr), m_isModified(false),
+      m_ownSaved(false) {
   setupUI();
 }
 
@@ -86,7 +87,7 @@ bool TabEditor::saveFile() {
   if (m_filePath.isEmpty()) {
     return false;
   }
-
+  m_ownSaved = true;
   return saveFileAs(m_filePath);
 }
 
