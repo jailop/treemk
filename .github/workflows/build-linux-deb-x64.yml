@@ -29,9 +29,18 @@ jobs:
             libxcb-keysyms1 \
             libxcb-render-util0 \
             libxcb-xinerama0 \
-            libxcb-cursor0 \
-            libmd4c-dev \
-            libmd4c-html-dev
+            libxcb-cursor0
+      
+      - name: Build and Install md4c
+        run: |
+          git clone https://github.com/mity/md4c.git
+          cd md4c
+          mkdir build
+          cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Release
+          make -j$(nproc)
+          sudo make install
+          sudo ldconfig
       
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
