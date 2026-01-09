@@ -3,6 +3,9 @@ name: Build Linux DEB Package (x64)
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build-linux-deb-x64:
     name: Build Debian Package (x64)
