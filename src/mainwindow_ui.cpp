@@ -102,6 +102,9 @@ void MainWindow::createToolbar() {
   mainToolbar = addToolBar(tr("Main Toolbar"));
   mainToolbar->setObjectName("MainToolbar");
   mainToolbar->setMovable(false);
+  
+  // Set smaller icon size
+  mainToolbar->setIconSize(QSize(16, 16));
 
   // File operations
   mainToolbar->addAction(newAction);
