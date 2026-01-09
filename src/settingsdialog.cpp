@@ -1,4 +1,5 @@
 #include "settingsdialog.h"
+#include "defs.h"
 #include "shortcutsdialog.h"
 #include <QCheckBox>
 #include <QComboBox>
@@ -99,10 +100,12 @@ void SettingsDialog::setupEditorTab() {
   autoIndentCheckBox = new QCheckBox(tr("Auto-indent new lines"));
   behaviorLayout->addRow(autoIndentCheckBox);
 
-  autoCloseBracketsCheckBox = new QCheckBox(tr("Auto-close brackets and quotes"));
+  autoCloseBracketsCheckBox =
+      new QCheckBox(tr("Auto-close brackets and quotes"));
   behaviorLayout->addRow(autoCloseBracketsCheckBox);
 
-  enableWordPredictionCheckBox = new QCheckBox(tr("Enable word prediction (Tab to accept)"));
+  enableWordPredictionCheckBox =
+      new QCheckBox(tr("Enable word prediction (Tab to accept)"));
   enableWordPredictionCheckBox->setToolTip(
       tr("Predict words based on document frequency and patterns"));
   behaviorLayout->addRow(enableWordPredictionCheckBox);
@@ -311,7 +314,7 @@ void SettingsDialog::setupAppearanceTab() {
   editorSchemeLayout->addRow(tr("Color Scheme:"), editorColorSchemeComboBox);
 
   layout->addWidget(editorSchemeGroup);
-  
+
   // Preview Color Scheme
   QGroupBox *previewSchemeGroup = new QGroupBox(tr("Preview Color Scheme"));
   QFormLayout *previewSchemeLayout = new QFormLayout(previewSchemeGroup);
@@ -329,7 +332,7 @@ void SettingsDialog::setupAppearanceTab() {
 }
 
 void SettingsDialog::loadSettings() {
-  QSettings settings("TreeMk", "TreeMk");
+  QSettings settings(APP_LABEL, APP_LABEL);
 
   // Editor settings
   QString fontFamily = settings.value("editor/font", "Sans Serif").toString();
@@ -404,7 +407,7 @@ void SettingsDialog::loadSettings() {
   int editorSchemeIndex = editorColorSchemeComboBox->findData(editorScheme);
   if (editorSchemeIndex >= 0)
     editorColorSchemeComboBox->setCurrentIndex(editorSchemeIndex);
-    
+
   QString previewScheme =
       settings.value("appearance/previewColorScheme", "auto").toString();
   int previewSchemeIndex = previewColorSchemeComboBox->findData(previewScheme);
@@ -413,7 +416,7 @@ void SettingsDialog::loadSettings() {
 }
 
 void SettingsDialog::saveSettings() {
-  QSettings settings("TreeMk", "TreeMk");
+  QSettings settings(APP_LABEL, APP_LABEL);
 
   // Editor settings
   settings.setValue("editor/font", fontComboBox->currentFont().family());
@@ -426,8 +429,7 @@ void SettingsDialog::saveSettings() {
                     highlightCurrentLineCheckBox->isChecked());
   settings.setValue("editor/enableCodeSyntax",
                     enableCodeSyntaxCheckBox->isChecked());
-  settings.setValue("editor/autoIndent",
-                    autoIndentCheckBox->isChecked());
+  settings.setValue("editor/autoIndent", autoIndentCheckBox->isChecked());
   settings.setValue("editor/autoCloseBrackets",
                     autoCloseBracketsCheckBox->isChecked());
   settings.setValue("editor/enableWordPrediction",

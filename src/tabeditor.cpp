@@ -12,7 +12,8 @@
 
 TabEditor::TabEditor(QWidget *parent)
     : QWidget(parent), m_editor(nullptr), m_preview(nullptr),
-      m_splitter(nullptr), m_previewTimer(nullptr), m_isModified(false) {
+      m_splitter(nullptr), m_previewTimer(nullptr), m_isModified(false),
+      m_ownSaved(false) {
   setupUI();
 }
 
@@ -32,7 +33,7 @@ void TabEditor::setupUI() {
   m_preview = new MarkdownPreview(this);
   // TODO set base on the width of the layout container
   m_preview->setMinimumWidth(300);
-  
+
   m_splitter->addWidget(m_editor);
   m_splitter->addWidget(m_preview);
   m_splitter->setStretchFactor(0, 1);
@@ -86,7 +87,7 @@ bool TabEditor::saveFile() {
   if (m_filePath.isEmpty()) {
     return false;
   }
-
+  m_ownSaved = true;
   return saveFileAs(m_filePath);
 }
 

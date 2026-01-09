@@ -1,90 +1,39 @@
 #include "searchdialog.h"
-#include <QCheckBox>
+#include "ui_searchdialog.h"
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
-#include <QHBoxLayout>
-#include <QLabel>
-#include <QLineEdit>
-#include <QListWidget>
-#include <QPushButton>
 #include <QRegularExpression>
 #include <QTextStream>
-#include <QVBoxLayout>
 
 SearchDialog::SearchDialog(const QString &path, QWidget *parent)
-    : QDialog(parent), rootPath(path) {
-  setWindowTitle(tr("Search in Files"));
-  setMinimumSize(600, 400);
-
-  setupUI();
-}
-
-SearchDialog::~SearchDialog() {}
-
-void SearchDialog::setupUI() {
-  QVBoxLayout *mainLayout = new QVBoxLayout(this);
-
-  // Search input area
-  QHBoxLayout *searchLayout = new QHBoxLayout();
-  QLabel *searchLabel = new QLabel(tr("Search:"), this);
-  searchEdit = new QLineEdit(this);
-  searchButton = new QPushButton(tr("Search"), this);
-
-  searchLayout->addWidget(searchLabel);
-  searchLayout->addWidget(searchEdit);
-  searchLayout->addWidget(searchButton);
-
-  mainLayout->addLayout(searchLayout);
-
-  // Options
-  QHBoxLayout *optionsLayout = new QHBoxLayout();
-  caseSensitiveCheck = new QCheckBox(tr("Case sensitive"), this);
-  wholeWordCheck = new QCheckBox(tr("Whole word"), this);
-
-  optionsLayout->addWidget(caseSensitiveCheck);
-  optionsLayout->addWidget(wholeWordCheck);
-  optionsLayout->addStretch();
-
-  mainLayout->addLayout(optionsLayout);
-
-  // Results list
-  QLabel *resultsLabel = new QLabel(tr("Results:"), this);
-  mainLayout->addWidget(resultsLabel);
-
-  resultsView = new QListWidget(this);
-  mainLayout->addWidget(resultsView);
-
-  // Close button
-  QHBoxLayout *buttonLayout = new QHBoxLayout();
-  buttonLayout->addStretch();
-  closeButton = new QPushButton(tr("Close"), this);
-  buttonLayout->addWidget(closeButton);
-
-  mainLayout->addLayout(buttonLayout);
+    : QDialog(parent), ui(new Ui::SearchDialog), rootPath(path) {
+  ui->setupUi(this);
 
   // Connect signals
-  connect(searchButton, &QPushButton::clicked, this,
+  connect(ui->searchButton, &QPushButton::clicked, this,
           &SearchDialog::performSearch);
-  connect(searchEdit, &QLineEdit::returnPressed, this,
+  connect(ui->searchEdit, &QLineEdit::returnPressed, this,
           &SearchDialog::performSearch);
-  connect(resultsView, &QListWidget::itemDoubleClicked, this,
+  connect(ui->resultsView, &QListWidget::itemDoubleClicked, this,
           &SearchDialog::onResultDoubleClicked);
-  connect(closeButton, &QPushButton::clicked, this, &QDialog::accept);
+  connect(ui->closeButton, &QPushButton::clicked, this, &QDialog::accept);
 
-  searchEdit->setFocus();
+  ui->searchEdit->setFocus();
 }
 
+SearchDialog::~SearchDialog() { delete ui; }
+
 void SearchDialog::performSearch() {
-  QString query = searchEdit->text();
+  QString query = ui->searchEdit->text();
   if (query.isEmpty()) {
     return;
   }
 
-  resultsView->clear();
+  ui->resultsView->clear();
 
-  bool caseSensitive = caseSensitiveCheck->isChecked();
-  bool wholeWord = wholeWordCheck->isChecked();
+  bool caseSensitive = ui->caseSensitiveCheck->isChecked();
+  bool wholeWord = ui->wholeWordCheck->isChecked();
 
   QList<SearchResult> results = searchInFiles(query, caseSensitive, wholeWord);
 
@@ -98,19 +47,18 @@ void SearchDialog::performSearch() {
     item->setData(Qt::UserRole, result.filePath);
     item->setData(Qt::UserRole + 1, result.lineNumber);
     item->setToolTip(result.filePath);
-
-    resultsView->addItem(item);
+    ui->resultsView->addItem(item);
   }
 
   if (results.isEmpty()) {
     QListWidgetItem *item = new QListWidgetItem(tr("No results found"));
     item->setFlags(item->flags() & ~Qt::ItemIsEnabled);
-    resultsView->addItem(item);
+    ui->resultsView->addItem(item);
   }
 }
 
 void SearchDialog::onResultDoubleClicked() {
-  QListWidgetItem *item = resultsView->currentItem();
+  QListWidgetItem *item = ui->resultsView->currentItem();
   if (!item) {
     return;
   }

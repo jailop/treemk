@@ -1,6 +1,7 @@
 #include "thememanager.h"
 #include <QApplication>
 #include <QColor>
+#include <QFile>
 #include <QPalette>
 #include <QStyleHints>
 
@@ -18,7 +19,20 @@ ThemeManager::ThemeManager(QObject *parent)
       m_currentEditorScheme(EditorColorScheme::Auto),
       m_currentPreviewScheme(PreviewColorScheme::Auto), m_systemIsDark(false) {
   detectSystemTheme();
+  // Connect to system theme changes
+  QStyleHints *hints = QApplication::styleHints();
+  connect(hints, &QStyleHints::colorSchemeChanged, this, [this](Qt::ColorScheme colorScheme) {
+    bool wasDark = m_systemIsDark;
+    m_systemIsDark = (colorScheme == Qt::ColorScheme::Dark);
+    // Only reapply if system theme is active and the theme actually changed
+    if (m_currentAppTheme == AppTheme::System && wasDark != m_systemIsDark) {
+      applyAppTheme();
+      emit themeChanged();
+    }
+  });
 }
+
+ThemeManager::~ThemeManager() {}
 
 void ThemeManager::detectSystemTheme() {
   QStyleHints *hints = QApplication::styleHints();
@@ -85,6 +99,7 @@ void ThemeManager::applyAppTheme() {
 
 void ThemeManager::applyLightTheme() {
   QPalette palette;
+  // Light theme colors
   palette.setColor(QPalette::Window, QColor(240, 240, 240));
   palette.setColor(QPalette::WindowText, QColor(0, 0, 0));
   palette.setColor(QPalette::Base, QColor(255, 255, 255));
@@ -99,12 +114,11 @@ void ThemeManager::applyLightTheme() {
   palette.setColor(QPalette::Highlight, QColor(42, 130, 218));
   palette.setColor(QPalette::HighlightedText, Qt::white);
   qApp->setPalette(palette);
-  // qApp->setStyleSheet("");
+  qApp->setStyleSheet("");
 }
 
 void ThemeManager::applyDarkTheme() {
   QPalette palette;
-
   // Dark theme colors
   palette.setColor(QPalette::Window, QColor(53, 53, 53));
   palette.setColor(QPalette::WindowText, QColor(220, 220, 220));
@@ -119,15 +133,12 @@ void ThemeManager::applyDarkTheme() {
   palette.setColor(QPalette::Link, QColor(42, 130, 218));
   palette.setColor(QPalette::Highlight, QColor(42, 130, 218));
   palette.setColor(QPalette::HighlightedText, Qt::white);
-
   palette.setColor(QPalette::Disabled, QPalette::WindowText,
                    QColor(127, 127, 127));
   palette.setColor(QPalette::Disabled, QPalette::Text, QColor(127, 127, 127));
   palette.setColor(QPalette::Disabled, QPalette::ButtonText,
                    QColor(127, 127, 127));
-
   qApp->setPalette(palette);
-
   // Additional stylesheet for dark theme widgets
   QString styleSheet = R"(
         QToolTip {
@@ -155,14 +166,13 @@ void ThemeManager::applyDarkTheme() {
             border: none;
         }
     )";
+
   qApp->setStyleSheet(styleSheet);
 }
 
 QPalette ThemeManager::getEditorPalette() const {
   QPalette palette;
-
   EditorColorScheme effectiveScheme = m_currentEditorScheme;
-
   // If Auto, determine scheme based on app theme
   if (effectiveScheme == EditorColorScheme::Auto) {
     bool isDark = false;
@@ -174,41 +184,32 @@ QPalette ThemeManager::getEditorPalette() const {
     effectiveScheme =
         isDark ? EditorColorScheme::Dark : EditorColorScheme::Light;
   }
-
   switch (effectiveScheme) {
   case EditorColorScheme::Auto:
-    // Should not reach here
     break;
-
   case EditorColorScheme::Light:
     palette.setColor(QPalette::Base, QColor(255, 255, 255));
     palette.setColor(QPalette::Text, QColor(0, 0, 0));
     break;
-
   case EditorColorScheme::Dark:
     palette.setColor(QPalette::Base, QColor(30, 30, 30));
     palette.setColor(QPalette::Text, QColor(220, 220, 220));
     break;
-
   case EditorColorScheme::SolarizedLight:
     palette.setColor(QPalette::Base, QColor(253, 246, 227)); // #fdf6e3
     palette.setColor(QPalette::Text, QColor(101, 123, 131)); // #657b83
     break;
-
   case EditorColorScheme::SolarizedDark:
     palette.setColor(QPalette::Base, QColor(0, 43, 54));     // #002b36
     palette.setColor(QPalette::Text, QColor(131, 148, 150)); // #839496
     break;
   }
-
   return palette;
 }
 
 QString ThemeManager::getEditorStyleSheet() const {
   QString styleSheet;
-
   EditorColorScheme effectiveScheme = m_currentEditorScheme;
-
   // If Auto, determine scheme based on app theme
   if (effectiveScheme == EditorColorScheme::Auto) {
     bool isDark = false;
@@ -220,12 +221,10 @@ QString ThemeManager::getEditorStyleSheet() const {
     effectiveScheme =
         isDark ? EditorColorScheme::Dark : EditorColorScheme::Light;
   }
-
   switch (effectiveScheme) {
   case EditorColorScheme::Auto:
     // Should not reach here
     break;
-
   case EditorColorScheme::Light:
     styleSheet = R"(
             QPlainTextEdit {
@@ -236,7 +235,6 @@ QString ThemeManager::getEditorStyleSheet() const {
             }
         )";
     break;
-
   case EditorColorScheme::Dark:
     styleSheet = R"(
             QPlainTextEdit {
@@ -247,7 +245,6 @@ QString ThemeManager::getEditorStyleSheet() const {
             }
         )";
     break;
-
   case EditorColorScheme::SolarizedLight:
     styleSheet = R"(
             QPlainTextEdit {
@@ -258,7 +255,6 @@ QString ThemeManager::getEditorStyleSheet() const {
             }
         )";
     break;
-
   case EditorColorScheme::SolarizedDark:
     styleSheet = R"(
             QPlainTextEdit {
@@ -270,7 +266,6 @@ QString ThemeManager::getEditorStyleSheet() const {
         )";
     break;
   }
-
   return styleSheet;
 }
 
@@ -293,7 +288,6 @@ void ThemeManager::setPreviewColorScheme(const QString &schemeName) {
 
 QString ThemeManager::getPreviewStyleSheet() const {
   PreviewColorScheme effectiveScheme = m_currentPreviewScheme;
-
   // If Auto, determine scheme based on app theme
   if (effectiveScheme == PreviewColorScheme::Auto) {
     bool isDark = false;
@@ -305,70 +299,30 @@ QString ThemeManager::getPreviewStyleSheet() const {
     effectiveScheme =
         isDark ? PreviewColorScheme::Dark : PreviewColorScheme::Light;
   }
-
-  QString styleSheet;
-
+  QString cssFileName;
   switch (effectiveScheme) {
   case PreviewColorScheme::Auto:
     // Should not reach here
     break;
-
   case PreviewColorScheme::Light:
-    styleSheet = R"(
-            body {
-                background-color: #ffffff;
-                color: #000000;
-            }
-            a {
-                color: #0066cc;
-            }
-            pre, code {
-                background-color: #f5f5f5;
-                color: #000000;
-            }
-        )";
+    cssFileName = ":/css/theme-light.css";
     break;
-
   case PreviewColorScheme::Dark:
-    styleSheet = R"(
-            body {
-                background-color: #1e1e1e;
-                color: #dcdcdc;
-            }
-            a {
-                color: #4daafc;
-            }
-            pre, code {
-                background-color: #2d2d2d;
-                color: #dcdcdc;
-            }
-            h1, h2, h3, h4, h5, h6 {
-                color: #ffffff;
-            }
-            table {
-                border-color: #444444;
-            }
-            th {
-                background-color: #2d2d2d;
-                border-color: #444444;
-            }
-            td {
-                border-color: #444444;
-            }
-            blockquote {
-                border-left-color: #444444;
-                color: #aaaaaa;
-            }
-        )";
+    cssFileName = ":/css/theme-dark.css";
     break;
   }
-
+  QFile cssFile(cssFileName);
+  if (!cssFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+    qWarning() << "Failed to load theme CSS:" << cssFileName;
+    return "";
+  }
+  QString styleSheet = QString::fromUtf8(cssFile.readAll());
+  cssFile.close();
   return styleSheet;
 }
 
 QString ThemeManager::getResolvedEditorColorSchemeName() const {
   EditorColorScheme effectiveScheme = m_currentEditorScheme;
-
   // If Auto, determine scheme based on app theme
   if (effectiveScheme == EditorColorScheme::Auto) {
     bool isDark = false;
@@ -380,7 +334,6 @@ QString ThemeManager::getResolvedEditorColorSchemeName() const {
     effectiveScheme =
         isDark ? EditorColorScheme::Dark : EditorColorScheme::Light;
   }
-
   switch (effectiveScheme) {
   case EditorColorScheme::Auto:
     return "light"; // Fallback
@@ -399,7 +352,6 @@ QString ThemeManager::getResolvedEditorColorSchemeName() const {
 
 QString ThemeManager::getResolvedPreviewColorSchemeName() const {
   PreviewColorScheme effectiveScheme = m_currentPreviewScheme;
-
   // If Auto, determine scheme based on app theme
   if (effectiveScheme == PreviewColorScheme::Auto) {
     bool isDark = false;
@@ -411,7 +363,6 @@ QString ThemeManager::getResolvedPreviewColorSchemeName() const {
     effectiveScheme =
         isDark ? PreviewColorScheme::Dark : PreviewColorScheme::Light;
   }
-
   switch (effectiveScheme) {
   case PreviewColorScheme::Auto:
     return "light"; // Fallback
@@ -420,6 +371,5 @@ QString ThemeManager::getResolvedPreviewColorSchemeName() const {
   case PreviewColorScheme::Dark:
     return "dark";
   }
-
   return "light"; // Fallback
 }

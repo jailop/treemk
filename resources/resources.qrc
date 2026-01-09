@@ -10,4 +10,15 @@
         <file>icons/blockquote.svg</file>
         <file>icons/horizontal-rule.svg</file>
     </qresource>
+    <qresource prefix="/templates">
+        <file>preview-template.html</file>
+    </qresource>
+    <qresource prefix="/css">
+        <file>preview-base.css</file>
+        <file>preview-light.css</file>
+        <file>preview-dark.css</file>
+        <file>preview-sepia.css</file>
+        <file>theme-light.css</file>
+        <file>theme-dark.css</file>
+    </qresource>
 </RCC>

@@ -2,54 +2,48 @@
 #define SEARCHDIALOG_H
 
 #include <QDialog>
-#include <QString>
 #include <QList>
+#include <QString>
 
-class QLineEdit;
-class QListWidget;
-class QPushButton;
-class QCheckBox;
+namespace Ui {
+class SearchDialog;
+}
 
-struct SearchResult
-{
-    QString filePath;
-    QString fileName;
-    int lineNumber;
-    QString lineContent;
-    
-    SearchResult(const QString &path, const QString &name, int line, const QString &content)
-        : filePath(path), fileName(name), lineNumber(line), lineContent(content) {}
+struct SearchResult {
+  QString filePath;
+  QString fileName;
+  int lineNumber;
+  QString lineContent;
+
+  SearchResult(const QString &path, const QString &name, int line,
+               const QString &content)
+      : filePath(path), fileName(name), lineNumber(line), lineContent(content) {
+  }
 };
 
-class SearchDialog : public QDialog
-{
-    Q_OBJECT
+class SearchDialog : public QDialog {
+  Q_OBJECT
 
 public:
-    explicit SearchDialog(const QString &rootPath, QWidget *parent = nullptr);
-    ~SearchDialog();
+  explicit SearchDialog(const QString &rootPath, QWidget *parent = nullptr);
+  ~SearchDialog();
 
 signals:
-    void fileSelected(const QString &filePath, int lineNumber);
+  void fileSelected(const QString &filePath, int lineNumber);
 
 private slots:
-    void performSearch();
-    void onResultDoubleClicked();
+  void performSearch();
+  void onResultDoubleClicked();
 
 private:
-    void setupUI();
-    QList<SearchResult> searchInFiles(const QString &query, bool caseSensitive, bool wholeWord);
-    void scanDirectory(const QString &dirPath, const QString &query, bool caseSensitive, 
-                      bool wholeWord, QList<SearchResult> &results);
+  QList<SearchResult> searchInFiles(const QString &query, bool caseSensitive,
+                                    bool wholeWord);
+  void scanDirectory(const QString &dirPath, const QString &query,
+                     bool caseSensitive, bool wholeWord,
+                     QList<SearchResult> &results);
 
-    QString rootPath;
-    
-    QLineEdit *searchEdit;
-    QListWidget *resultsView;
-    QPushButton *searchButton;
-    QPushButton *closeButton;
-    QCheckBox *caseSensitiveCheck;
-    QCheckBox *wholeWordCheck;
+  Ui::SearchDialog *ui;
+  QString rootPath;
 };
 
 #endif // SEARCHDIALOG_H

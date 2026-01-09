@@ -4,12 +4,12 @@
 #include <QAction>
 #include <QActionGroup>
 #include <QApplication>
+#include <QFile>
 #include <QIcon>
-#include <QStyle>
+#include <QPainter>
 #include <QPalette>
 #include <QPixmap>
-#include <QPainter>
-#include <QFile>
+#include <QStyle>
 #include <QSvgRenderer>
 
 static QIcon iconWithFallback(const QString &themeName,
@@ -23,44 +23,46 @@ static QIcon iconWithFallback(const QString &themeName,
 
 static QIcon adaptiveSvgIcon(const QString &resourcePath) {
   QIcon icon;
-  
+
   // Load SVG file
   QFile file(resourcePath);
   if (!file.open(QIODevice::ReadOnly)) {
     return icon;
   }
-  
+
   QString svgContent = QString::fromUtf8(file.readAll());
   file.close();
-  
+
   // Get current palette colors
   QPalette palette = qApp->palette();
   QColor normalColor = palette.color(QPalette::WindowText);
-  QColor disabledColor = palette.color(QPalette::Disabled, QPalette::WindowText);
-  
+  QColor disabledColor =
+      palette.color(QPalette::Disabled, QPalette::WindowText);
+
   // Helper to create pixmap from SVG with specific color
-  auto createPixmap = [&svgContent](const QColor &color, const QSize &size) -> QPixmap {
+  auto createPixmap = [&svgContent](const QColor &color,
+                                    const QSize &size) -> QPixmap {
     QString coloredSvg = svgContent;
     coloredSvg.replace("currentColor", color.name());
-    
+
     QSvgRenderer renderer(coloredSvg.toUtf8());
     QPixmap pixmap(size);
     pixmap.fill(Qt::transparent);
-    
+
     QPainter painter(&pixmap);
     renderer.render(&painter);
-    
+
     return pixmap;
   };
-  
+
   // Create pixmaps for different states and sizes
   QList<QSize> sizes = {{16, 16}, {24, 24}, {32, 32}, {48, 48}};
-  
+
   for (const QSize &size : sizes) {
     icon.addPixmap(createPixmap(normalColor, size), QIcon::Normal);
     icon.addPixmap(createPixmap(disabledColor, size), QIcon::Disabled);
   }
-  
+
   return icon;
 }
 
@@ -96,8 +98,9 @@ void MainWindow::createActions() {
   saveAsAction->setToolTip(tr("Save document with a new name"));
   connect(saveAsAction, &QAction::triggered, this, &MainWindow::saveAs);
 
-  exportHtmlAction = new QAction(adaptiveSvgIcon(":/icons/icons/export-html.svg"),
-                                 tr("Export to &HTML..."), this);
+  exportHtmlAction =
+      new QAction(adaptiveSvgIcon(":/icons/icons/export-html.svg"),
+                  tr("Export to &HTML..."), this);
   exportHtmlAction->setStatusTip(tr("Export the document to HTML format"));
   exportHtmlAction->setToolTip(tr("Export to HTML"));
   connect(exportHtmlAction, &QAction::triggered, this,
@@ -109,16 +112,18 @@ void MainWindow::createActions() {
   exportPdfAction->setToolTip(tr("Export to PDF"));
   connect(exportPdfAction, &QAction::triggered, this, &MainWindow::exportToPdf);
 
-  exportDocxAction = new QAction(adaptiveSvgIcon(":/icons/icons/export-docx.svg"),
-                                 tr("Export to &Word..."), this);
+  exportDocxAction =
+      new QAction(adaptiveSvgIcon(":/icons/icons/export-docx.svg"),
+                  tr("Export to &Word..."), this);
   exportDocxAction->setStatusTip(
       tr("Export the document to Microsoft Word format"));
   exportDocxAction->setToolTip(tr("Export to Word"));
   connect(exportDocxAction, &QAction::triggered, this,
           &MainWindow::exportToDocx);
 
-  exportPlainTextAction = new QAction(adaptiveSvgIcon(":/icons/icons/export-text.svg"),
-                                      tr("Export to Plain &Text..."), this);
+  exportPlainTextAction =
+      new QAction(adaptiveSvgIcon(":/icons/icons/export-text.svg"),
+                  tr("Export to Plain &Text..."), this);
   exportPlainTextAction->setStatusTip(
       tr("Export the document to plain text format"));
   exportPlainTextAction->setToolTip(tr("Export to plain text"));
@@ -136,7 +141,7 @@ void MainWindow::createActions() {
 
   insertFormulaAction =
       new QAction(iconWithFallback("preferences-desktop-font",
-                                  QStyle::SP_FileDialogInfoView),
+                                   QStyle::SP_FileDialogInfoView),
                   tr("Insert &Formula..."), this);
   insertFormulaAction->setShortcut(QKeySequence(tr("Ctrl+Shift+M")));
   insertFormulaAction->setStatusTip(tr("Insert a LaTeX formula"));
@@ -196,39 +201,42 @@ void MainWindow::createActions() {
   insertCodeAction->setToolTip(tr("Insert inline code"));
   connect(insertCodeAction, &QAction::triggered, this, &MainWindow::insertCode);
 
-  insertCodeBlockAction = new QAction(adaptiveSvgIcon(":/icons/icons/code-block.svg"),
-                                      tr("Code &Block"), this);
+  insertCodeBlockAction = new QAction(
+      adaptiveSvgIcon(":/icons/icons/code-block.svg"), tr("Code &Block"), this);
   insertCodeBlockAction->setShortcut(QKeySequence(tr("Ctrl+Shift+C")));
   insertCodeBlockAction->setStatusTip(tr("Insert code block"));
   insertCodeBlockAction->setToolTip(tr("Insert code block"));
   connect(insertCodeBlockAction, &QAction::triggered, this,
           &MainWindow::insertCodeBlock);
 
-  insertListAction = new QAction(adaptiveSvgIcon(":/icons/icons/list-bullet.svg"),
-                                 tr("Bulleted &List"), this);
+  insertListAction =
+      new QAction(adaptiveSvgIcon(":/icons/icons/list-bullet.svg"),
+                  tr("Bulleted &List"), this);
   insertListAction->setShortcut(QKeySequence(tr("Ctrl+Shift+8")));
   insertListAction->setStatusTip(tr("Insert bulleted list"));
   insertListAction->setToolTip(tr("Insert bulleted list"));
   connect(insertListAction, &QAction::triggered, this, &MainWindow::insertList);
 
-  insertNumberedListAction = new QAction(
-      adaptiveSvgIcon(":/icons/icons/list-numbered.svg"), tr("&Numbered List"), this);
+  insertNumberedListAction =
+      new QAction(adaptiveSvgIcon(":/icons/icons/list-numbered.svg"),
+                  tr("&Numbered List"), this);
   insertNumberedListAction->setShortcut(QKeySequence(tr("Ctrl+Shift+7")));
   insertNumberedListAction->setStatusTip(tr("Insert numbered list"));
   insertNumberedListAction->setToolTip(tr("Insert numbered list"));
   connect(insertNumberedListAction, &QAction::triggered, this,
           &MainWindow::insertNumberedList);
 
-  insertBlockquoteAction = new QAction(adaptiveSvgIcon(":/icons/icons/blockquote.svg"),
-                                       tr("Block&quote"), this);
+  insertBlockquoteAction = new QAction(
+      adaptiveSvgIcon(":/icons/icons/blockquote.svg"), tr("Block&quote"), this);
   insertBlockquoteAction->setShortcut(QKeySequence(tr("Ctrl+Shift+.")));
   insertBlockquoteAction->setStatusTip(tr("Insert blockquote"));
   insertBlockquoteAction->setToolTip(tr("Insert blockquote"));
   connect(insertBlockquoteAction, &QAction::triggered, this,
           &MainWindow::insertBlockquote);
 
-  insertHorizontalRuleAction = new QAction(
-      adaptiveSvgIcon(":/icons/icons/horizontal-rule.svg"), tr("Horizontal &Rule"), this);
+  insertHorizontalRuleAction =
+      new QAction(adaptiveSvgIcon(":/icons/icons/horizontal-rule.svg"),
+                  tr("Horizontal &Rule"), this);
   insertHorizontalRuleAction->setShortcut(QKeySequence(tr("Ctrl+Shift+-")));
   insertHorizontalRuleAction->setStatusTip(tr("Insert horizontal rule"));
   insertHorizontalRuleAction->setToolTip(tr("Insert horizontal rule"));
@@ -388,17 +396,6 @@ void MainWindow::createActions() {
   connect(togglePreviewAction, &QAction::triggered, this,
           &MainWindow::togglePreview);
 
-  toggleBacklinksAction =
-      new QAction(iconWithFallback("go-jump", QStyle::SP_ArrowBack),
-                  tr("&Backlinks"), this);
-  toggleBacklinksAction->setCheckable(true);
-  toggleBacklinksAction->setChecked(false);
-  toggleBacklinksAction->setShortcut(QKeySequence(tr("Ctrl+Shift+B")));
-  toggleBacklinksAction->setStatusTip(tr("Toggle backlinks panel"));
-  toggleBacklinksAction->setToolTip(tr("Toggle backlinks panel"));
-  connect(toggleBacklinksAction, &QAction::triggered, this,
-          &MainWindow::toggleBacklinks);
-
   previewThemeLightAction = new QAction(tr("Light Theme"), this);
   previewThemeLightAction->setCheckable(true);
   previewThemeLightAction->setChecked(true);
@@ -436,13 +433,6 @@ void MainWindow::createActions() {
 
   aboutAction = new QAction(tr("&About"), this);
   aboutAction->setStatusTip(tr("Show the application's About box"));
-  aboutAction->setToolTip(tr("About TreeMk"));
+  aboutAction->setToolTip(tr("About the application"));
   connect(aboutAction, &QAction::triggered, this, &MainWindow::about);
-
-  /*
-  aboutQtAction = new QAction(tr("About &Qt"), this);
-  aboutQtAction->setStatusTip(tr("Show the Qt library's About box"));
-  aboutQtAction->setToolTip(tr("About Qt Framework"));
-  connect(aboutQtAction, &QAction::triggered, qApp, &QApplication::aboutQt);
-  */
 }

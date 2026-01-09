@@ -1,0 +1,148 @@
+#include "mainwindow.h"
+#include "markdowneditor.h"
+#include "quickopendialog.h"
+#include "searchdialog.h"
+#include "tabeditor.h"
+#include <QInputDialog>
+#include <QLineEdit>
+#include <QMessageBox>
+#include <QStatusBar>
+#include <QTextBlock>
+#include <QTextCursor>
+#include <QTextDocument>
+
+void MainWindow::find() {
+  TabEditor *tab = currentTabEditor();
+  if (!tab)
+    return;
+
+  bool ok;
+  QString searchText = QInputDialog::getText(this, tr("Find"), tr("Find text:"),
+                                             QLineEdit::Normal, "", &ok);
+
+  if (!ok || searchText.isEmpty()) {
+    return;
+  }
+
+  QTextCursor cursor = tab->editor()->textCursor();
+  QTextDocument::FindFlags flags;
+
+  QTextCursor foundCursor =
+      tab->editor()->document()->find(searchText, cursor, flags);
+
+  if (!foundCursor.isNull()) {
+    tab->editor()->setTextCursor(foundCursor);
+  } else {
+    QTextCursor startCursor = tab->editor()->textCursor();
+    startCursor.movePosition(QTextCursor::Start);
+    tab->editor()->setTextCursor(startCursor);
+
+    foundCursor =
+        tab->editor()->document()->find(searchText, startCursor, flags);
+
+    if (!foundCursor.isNull()) {
+      tab->editor()->setTextCursor(foundCursor);
+    } else {
+      statusBar()->showMessage(tr("Text not found"), 2000);
+    }
+  }
+}
+
+void MainWindow::findAndReplace() {
+  TabEditor *tab = currentTabEditor();
+  if (!tab)
+    return;
+
+  bool okFind, okReplace;
+  QString searchText =
+      QInputDialog::getText(this, tr("Find and Replace"), tr("Find text:"),
+                            QLineEdit::Normal, "", &okFind);
+
+  if (!okFind || searchText.isEmpty()) {
+    return;
+  }
+
+  QString replaceText =
+      QInputDialog::getText(this, tr("Find and Replace"), tr("Replace with:"),
+                            QLineEdit::Normal, "", &okReplace);
+
+  if (!okReplace) {
+    return;
+  }
+
+  QTextCursor cursor = tab->editor()->textCursor();
+  cursor.movePosition(QTextCursor::Start);
+  tab->editor()->setTextCursor(cursor);
+
+  int replaceCount = 0;
+  QTextDocument::FindFlags flags;
+
+  while (true) {
+    QTextCursor foundCursor =
+        tab->editor()->document()->find(searchText, cursor, flags);
+
+    if (foundCursor.isNull()) {
+      break;
+    }
+
+    foundCursor.insertText(replaceText);
+    cursor = foundCursor;
+    replaceCount++;
+  }
+
+  if (replaceCount > 0) {
+    statusBar()->showMessage(tr("Replaced %1 occurrence(s)").arg(replaceCount),
+                             3000);
+  } else {
+    statusBar()->showMessage(tr("Text not found"), 2000);
+  }
+}
+
+void MainWindow::searchInFiles() {
+  if (currentFolder.isEmpty()) {
+    QMessageBox::information(
+        this, tr("Search in Files"),
+        tr("Please open a folder first to search within."));
+    return;
+  }
+
+  SearchDialog dialog(currentFolder, this);
+  connect(&dialog, &SearchDialog::fileSelected, this,
+          &MainWindow::onSearchResultSelected);
+  dialog.exec();
+}
+
+void MainWindow::onSearchResultSelected(const QString &filePath,
+                                        int lineNumber) {
+  if (loadFile(filePath)) {
+    jumpToLine(lineNumber);
+  }
+}
+
+void MainWindow::quickOpen() {
+  if (currentFolder.isEmpty()) {
+    QMessageBox::information(this, tr("Quick Open"),
+                             tr("Please open a folder first."));
+    return;
+  }
+
+  QuickOpenDialog dialog(currentFolder, recentFiles, this);
+  if (dialog.exec() == QDialog::Accepted) {
+    QString selectedFile = dialog.getSelectedFile();
+    if (!selectedFile.isEmpty()) {
+      loadFile(selectedFile);
+    }
+  }
+}
+
+void MainWindow::jumpToLine(int lineNumber) {
+  TabEditor *tab = currentTabEditor();
+  if (!tab)
+    return;
+
+  QTextBlock block =
+      tab->editor()->document()->findBlockByLineNumber(lineNumber - 1);
+  QTextCursor cursor(block);
+  tab->editor()->setTextCursor(cursor);
+  tab->editor()->centerCursor();
+}

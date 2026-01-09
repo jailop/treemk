@@ -43,10 +43,22 @@ endif()
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
+# UI files directory
+set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_SOURCE_DIR}/ui)
+
+# Source files
 set(SOURCES
     src/main.cpp
     src/mainwindow.cpp
+    src/mainwindow_about.cpp
     src/mainwindow_actions.cpp
+    src/mainwindow_file.cpp
+    src/mainwindow_edit.cpp
+    src/mainwindow_insert.cpp
+    src/mainwindow_export.cpp
+    src/mainwindow_tabs.cpp
+    src/mainwindow_view.cpp
+    src/mainwindow_ui.cpp
     src/tabeditor.cpp
     src/filesystemtreeview.cpp
     src/markdowneditor.cpp
@@ -85,17 +97,28 @@ set(RESOURCES
     resources/resources.qrc
 )
 
+# UI files
+set(UI_FILES
+    ui/formuladialog.ui
+    ui/searchdialog.ui
+    ui/quickopendialog.ui
+    ui/shortcutsdialog.ui
+)
+
+# Platform-specific executable configuration
 if(WIN32)
     add_executable(${PROJECT_NAME} WIN32
         ${SOURCES}
         ${HEADERS}
         ${RESOURCES}
+        ${UI_FILES}
     )
 elseif(APPLE)
     add_executable(${PROJECT_NAME} MACOSX_BUNDLE
         ${SOURCES}
         ${HEADERS}
         ${RESOURCES}
+        ${UI_FILES}
     )
     set_target_properties(${PROJECT_NAME} PROPERTIES
         MACOSX_BUNDLE TRUE
@@ -106,6 +129,7 @@ else()
         ${SOURCES}
         ${HEADERS}
         ${RESOURCES}
+        ${UI_FILES}
     )
 endif()
 
