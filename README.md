@@ -16,6 +16,7 @@ managing interconnected notes.
 - Multi-tab editing
 - Markdown preview with syntax highlighting
 - LaTeX formula rendering (inline `$...$` and block `$$...$$`)
+- Mermaid diagram rendering in preview
 - Image embedding support
 - Export to HTML, PDF, and DOCX (with Pandoc)
 
@@ -42,6 +43,20 @@ accessed via CDN:
 
 - KaTeX is used for rendering LaTeX formulas.
 - highlight.js is used for syntax highlighting in code blocks.
+- Mermaid.js is used for rendering diagrams.
+
+### Optional: Mermaid Support in Exports
+
+To render Mermaid diagrams when exporting to HTML, PDF, or DOCX with Pandoc,
+you need to install `mermaid-filter`:
+
+```bash
+npm install -g mermaid-filter
+```
+
+If `mermaid-filter` is available in your PATH, it will be automatically used
+during export. Otherwise, Mermaid code blocks will be exported as regular
+code blocks.
 
 ## Building from Source
 

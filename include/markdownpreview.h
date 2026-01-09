@@ -37,6 +37,7 @@ private:
   QString basePath;
   bool latexEnabled;
   double lastScrollPercentage;
+  QString lastMarkdownContent;
 };
 
 #endif // MARKDOWNPREVIEW_H

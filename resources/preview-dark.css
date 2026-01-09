@@ -1,0 +1,9 @@
+body { background-color: #1e1e1e; color: #d4d4d4; }
+h1, h2 { border-bottom-color: #4d4d4d; }
+code { background-color: #2d2d2d; color: #d4d4d4; }
+pre { background-color: #2d2d2d; }
+blockquote { border-left-color: #4d4d4d; color: #b4b4b4; }
+hr { background-color: #4d4d4d; }
+table th, table td { border-color: #4d4d4d; }
+a { color: #4da6ff; }
+a.wiki-link { color: #4ade80; }

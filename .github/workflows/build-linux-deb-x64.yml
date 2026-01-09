@@ -1,0 +1,68 @@
+name: Build Linux DEB Package (x64)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-linux-deb-x64:
+    name: Build Debian Package (x64)
+    runs-on: ubuntu-22.04
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            cmake \
+            ninja-build \
+            libgl1-mesa-dev \
+            libxkbcommon-x11-0 \
+            libxcb-icccm4 \
+            libxcb-image0 \
+            libxcb-keysyms1 \
+            libxcb-render-util0 \
+            libxcb-xinerama0 \
+            libxcb-cursor0 \
+            libmd4c-dev \
+            libmd4c-html-dev
+      
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.5.0'
+          modules: 'qtwebengine qtwebchannel qtpositioning qtsvg'
+      
+      - name: Configure CMake
+        run: |
+          mkdir build
+          cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=/usr
+      
+      - name: Build Application
+        run: |
+          cd build
+          make -j$(nproc)
+      
+      - name: Create DEB Package
+        run: |
+          cd build
+          cpack -G DEB
+      
+      - name: Upload DEB Package
+        uses: actions/upload-artifact@v4
+        with:
+          name: TreeMk-Debian-x64
+          path: build/TreeMk-*.deb
+      
+      - name: Upload to Latest Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          files: build/TreeMk-*.deb
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

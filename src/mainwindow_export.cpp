@@ -19,33 +19,35 @@ void MainWindow::exportToHtml() {
                          tr("Please save the document before exporting."));
     return;
   }
-
   QString outputPath = QFileDialog::getSaveFileName(
       this, tr("Export to HTML"),
       currentFilePath.left(currentFilePath.lastIndexOf('.')) + ".html",
       tr("HTML Files (*.html)"));
-
   if (outputPath.isEmpty()) {
     return;
   }
-
   if (tab->isModified()) {
     save();
   }
-
   QStringList pandocArgs;
   pandocArgs << currentFilePath << "-o" << outputPath << "--standalone"
              << "--mathjax";
-
+  // Add Mermaid filter if available with proper working directory
+  QProcess checkFilter;
+  checkFilter.start("which", QStringList() << "mermaid-filter");
+  if (checkFilter.waitForFinished(2000) && checkFilter.exitCode() == 0) {
+    pandocArgs << "--filter" << "mermaid-filter";
+  }
   QProcess pandoc;
+  // Set working directory to a writable location for mermaid-filter
+  QString workDir = QFileInfo(currentFilePath).absolutePath();
+  pandoc.setWorkingDirectory(workDir);
   pandoc.start("pandoc", pandocArgs);
-
   if (!pandoc.waitForFinished(30000)) {
     QMessageBox::warning(this, tr("Export Failed"),
                          tr("Pandoc process timed out."));
     return;
   }
-
   if (pandoc.exitCode() != 0) {
     QMessageBox::warning(
         this, tr("Export Failed"),
@@ -79,8 +81,19 @@ void MainWindow::exportToPdf() {
 
   QStringList pandocArgs;
   pandocArgs << currentFilePath << "-o" << outputPath << "--pdf-engine=xelatex";
+  
+  // Add Mermaid filter if available with proper working directory
+  QProcess checkFilter;
+  checkFilter.start("which", QStringList() << "mermaid-filter");
+  if (checkFilter.waitForFinished(2000) && checkFilter.exitCode() == 0) {
+    pandocArgs.insert(pandocArgs.size() - 2, "--filter");
+    pandocArgs.insert(pandocArgs.size() - 2, "mermaid-filter");
+  }
 
   QProcess pandoc;
+  // Set working directory to a writable location for mermaid-filter
+  QString workDir = QFileInfo(currentFilePath).absolutePath();
+  pandoc.setWorkingDirectory(workDir);
   pandoc.start("pandoc", pandocArgs);
 
   if (!pandoc.waitForFinished(60000)) {
@@ -122,8 +135,19 @@ void MainWindow::exportToDocx() {
 
   QStringList pandocArgs;
   pandocArgs << currentFilePath << "-o" << outputPath;
+  
+  // Add Mermaid filter if available with proper working directory
+  QProcess checkFilter;
+  checkFilter.start("which", QStringList() << "mermaid-filter");
+  if (checkFilter.waitForFinished(2000) && checkFilter.exitCode() == 0) {
+    pandocArgs.insert(pandocArgs.size() - 2, "--filter");
+    pandocArgs.insert(pandocArgs.size() - 2, "mermaid-filter");
+  }
 
   QProcess pandoc;
+  // Set working directory to a writable location for mermaid-filter
+  QString workDir = QFileInfo(currentFilePath).absolutePath();
+  pandoc.setWorkingDirectory(workDir);
   pandoc.start("pandoc", pandocArgs);
 
   if (!pandoc.waitForFinished(30000)) {
