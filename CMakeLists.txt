@@ -31,7 +31,6 @@ find_package(Qt6 REQUIRED COMPONENTS
     Svg
 )
 
-# Find md4c library
 if(WIN32)
     find_package(md4c CONFIG REQUIRED)
     set(MD4C_LIBRARIES md4c::md4c-html)
@@ -43,10 +42,8 @@ endif()
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
-# UI files directory
 set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_SOURCE_DIR}/ui)
 
-# Source files
 set(SOURCES
     src/main.cpp
     src/mainwindow.cpp
@@ -97,7 +94,6 @@ set(RESOURCES
     resources/resources.qrc
 )
 
-# UI files
 set(UI_FILES
     ui/formuladialog.ui
     ui/searchdialog.ui
@@ -105,7 +101,6 @@ set(UI_FILES
     ui/shortcutsdialog.ui
 )
 
-# Platform-specific executable configuration
 if(WIN32)
     add_executable(${PROJECT_NAME} WIN32
         ${SOURCES}
@@ -142,7 +137,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     ${MD4C_LIBRARIES}
 )
 
-# Platform-specific installation
 if(WIN32)
     install(TARGETS ${PROJECT_NAME}
         RUNTIME DESTINATION .
@@ -160,7 +154,6 @@ elseif(APPLE)
     install(TARGETS ${PROJECT_NAME}
         BUNDLE DESTINATION .
     )
-    # Deploy Qt dependencies on macOS
     if(Qt6_DIR)
         get_target_property(QMAKE_EXECUTABLE Qt6::qmake IMPORTED_LOCATION)
         get_filename_component(QT_BIN_DIR "${QMAKE_EXECUTABLE}" DIRECTORY)
@@ -175,28 +168,24 @@ else()
     )
 endif()
 
-# Enable testing
 option(BUILD_TESTS "Build the test suite" ON)
 if(BUILD_TESTS)
     enable_testing()
     add_subdirectory(tests)
 endif()
 
-# CPack Configuration for installers
 set(CPACK_PACKAGE_NAME "TreeMk")
 set(CPACK_PACKAGE_VENDOR "TreeMk")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Markdown editor with wiki-style linking")
 set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "TreeMk")
 
-# Set license file if it exists
 if(EXISTS "${CMAKE_SOURCE_DIR}/LICENSE")
     set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE")
 else()
     message(WARNING "LICENSE file not found - installer will not include license")
 endif()
 
-# Windows NSIS installer
 if(WIN32)
     set(CPACK_GENERATOR "NSIS")
     set(CPACK_NSIS_DISPLAY_NAME "TreeMk")
@@ -213,20 +202,17 @@ if(WIN32)
     )
 endif()
 
-# Linux DEB package
 if(UNIX AND NOT APPLE)
     set(CPACK_GENERATOR "DEB")
     set(CPACK_DEBIAN_PACKAGE_MAINTAINER "TreeMk Developers")
     set(CPACK_DEBIAN_PACKAGE_SECTION "editors")
     set(CPACK_DEBIAN_PACKAGE_DEPENDS "libqt6core6, libqt6gui6, libqt6widgets6, libqt6webenginewidgets6, libmd4c-html0")
     
-    # Install desktop file if it exists
     if(EXISTS "${CMAKE_SOURCE_DIR}/resources/treemk.desktop")
         install(FILES resources/treemk.desktop
             DESTINATION share/applications)
     endif()
     
-    # Install icon if it exists
     if(EXISTS "${CMAKE_SOURCE_DIR}/resources/treemk.png")
         install(FILES resources/treemk.png
             DESTINATION share/icons/hicolor/256x256/apps)
@@ -234,4 +220,3 @@ if(UNIX AND NOT APPLE)
 endif()
 
 include(CPack)
-

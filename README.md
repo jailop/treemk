@@ -60,13 +60,18 @@ code blocks.
 
 ## Building from Source
 
-### Linux
+Linux:
 
 For Debian/Ubuntu-based systems, install the required packages:
 
 ```bash
-sudo apt update
 sudo apt install build-essential cmake qt6-base-dev qt6-webengine-dev pandoc
+```
+
+For Fedora:
+
+```bash
+sudo dnf install @development-tools cmake qt6-qtbase-devel qt6-qtwebengine-devel qt6-qtsvg-devel pandoc md4c-devel
 ```
 
 To build the app:
@@ -89,7 +94,7 @@ cmake --build .
 sudo cmake --install .
 ```
 
-### Windows
+Windows:
 
 Additional requirement requirement:
 
@@ -107,7 +112,7 @@ cmake .. -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="C:/Qt/6.x.x/msvc
 cmake --build .
 ```
 
-### macOS
+macOS:
 
 Additional requirement:
 
