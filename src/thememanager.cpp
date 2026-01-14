@@ -20,6 +20,7 @@ ThemeManager::ThemeManager(QObject *parent)
       m_currentPreviewScheme(PreviewColorScheme::Auto), m_systemIsDark(false) {
   detectSystemTheme();
   // Connect to system theme changes
+  /*
   QStyleHints *hints = QApplication::styleHints();
   connect(hints, &QStyleHints::colorSchemeChanged, this, [this](Qt::ColorScheme colorScheme) {
     bool wasDark = m_systemIsDark;
@@ -30,13 +31,16 @@ ThemeManager::ThemeManager(QObject *parent)
       emit themeChanged();
     }
   });
+  */
 }
 
 ThemeManager::~ThemeManager() {}
 
 void ThemeManager::detectSystemTheme() {
+  /* requires QT >= 6.5
   QStyleHints *hints = QApplication::styleHints();
   m_systemIsDark = (hints->colorScheme() == Qt::ColorScheme::Dark);
+  */
 }
 
 void ThemeManager::setAppTheme(AppTheme theme) {

@@ -65,7 +65,7 @@ Linux:
 For Debian/Ubuntu-based systems, install the required packages:
 
 ```bash
-sudo apt install build-essential cmake qt6-base-dev qt6-webengine-dev pandoc
+sudo apt install build-essential cmake qt6-base-dev qt6-webengine-dev qt6-svg-dev libmd4c-html0-dev pandoc
 ```
 
 For Fedora:

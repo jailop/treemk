@@ -19,6 +19,7 @@
 #include <QWebEnginePage>
 #include <QWebEngineProfile>
 #include <QWebEngineSettings>
+#include <QStyleHints>
 #include <md4c-html.h>
 
 class WikiLinkPage : public QWebEnginePage {
@@ -96,15 +97,17 @@ void MarkdownPreview::setMarkdownContent(const QString &markdown) {
       settings.value("appearance/previewColorScheme", "auto").toString();
   bool isDark = false;
   if (previewScheme == "auto") {
-    // Follow app/system theme
     QString appTheme =
         settings.value("appearance/appTheme", "system").toString();
     if (appTheme == "dark") {
       isDark = true;
-    } else if (appTheme == "system") {
+    } 
+    /*
+    else if (appTheme == "system") {
       QStyleHints *hints = QApplication::styleHints();
       isDark = (hints->colorScheme() == Qt::ColorScheme::Dark);
     }
+    */
   } else if (previewScheme == "dark") {
     isDark = true;
   }
