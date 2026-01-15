@@ -28,13 +28,6 @@ managing interconnected notes.
 - md4c (for preview rendering)
 - pandoc (for export features)
 
-For Qt, the following modules need to be available at compile time:
-
-- Qt6::Core
-- Qt6::Gui
-- Qt6::Widgets
-- Qt6::WebEngineWidgets
-
 pandoc is required to export notes to formats like HTML, PDF, and DOCX.
 pandoc needs to be installed separately.
 
@@ -44,8 +37,6 @@ accessed via CDN:
 - KaTeX is used for rendering LaTeX formulas.
 - highlight.js is used for syntax highlighting in code blocks.
 - Mermaid.js is used for rendering diagrams.
-
-### Optional: Mermaid Support in Exports
 
 To render Mermaid diagrams when exporting to HTML, PDF, or DOCX with Pandoc,
 you need to install `mermaid-filter`:
@@ -59,6 +50,19 @@ during export. Otherwise, Mermaid code blocks will be exported as regular
 code blocks.
 
 ## Building from Source
+
+Clone the repository:
+
+```bash
+git clone git@github.com:jailop/treemk.git
+cd treemk
+```
+
+For MacOS:
+
+```bash
+brew install cmake qt6
+```
 
 Linux:
 
@@ -87,11 +91,18 @@ cmake ..
 # Build
 cmake --build .
 
-# Run
+# Run for linux
 ./treemk
 
-# To install system-wide (optional)
+# Run MacOS
+open treemk.app
+
+# To install in Linux
 sudo cmake --install .
+
+# To create DMG in MacOS
+cd ..
+./create_dmg.sh
 ```
 
 Windows:
@@ -110,25 +121,4 @@ cmake .. -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="C:/Qt/6.x.x/msvc
 
 # Build
 cmake --build .
-```
-
-macOS:
-
-Additional requirement:
-
-- Xcode or Xcode Command Line Tools
-
-```bash
-# Create build directory
-mkdir build
-cd build
-
-# Configure with CMake (adjust CMAKE_PREFIX_PATH if needed)
-cmake .. -DCMAKE_PREFIX_PATH="~/Qt/6.x.x/macos"
-
-# Build
-cmake --build .
-
-# Run
-open treemk.app
 ```
