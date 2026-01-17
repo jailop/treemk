@@ -16,6 +16,7 @@
 #include <QSpinBox>
 #include <QTabWidget>
 #include <QVBoxLayout>
+#include <QScrollArea>
 
 SettingsDialog::SettingsDialog(QWidget *parent) : QDialog(parent) {
   setWindowTitle(tr("Preferences"));
@@ -30,28 +31,23 @@ SettingsDialog::~SettingsDialog() {}
 void SettingsDialog::setupUI() {
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
 
-  tabWidget = new QTabWidget(this);
-  setupAppearanceTab();
-  setupEditorTab();
-   setupPreviewTab();
-   setupGeneralTab();
-   setupShortcutsTab();
+   tabWidget = new QTabWidget(this);
+   setupMainTab();
+   setupEditorTab();
 
   mainLayout->addWidget(tabWidget);
 
   // Dialog buttons
-  QDialogButtonBox *buttonBox = new QDialogButtonBox(
-      QDialogButtonBox::Ok | QDialogButtonBox::Cancel | QDialogButtonBox::Apply,
-      this);
+   QDialogButtonBox *buttonBox = new QDialogButtonBox(
+       QDialogButtonBox::Ok | QDialogButtonBox::Cancel,
+       this);
 
-  connect(buttonBox, &QDialogButtonBox::accepted, this, [this]() {
-    saveSettings();
-    // emit settingsChanged();
-    accept();
-  });
-  connect(buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
-  connect(buttonBox->button(QDialogButtonBox::Apply), &QPushButton::clicked,
-          this, &SettingsDialog::applySettings);
+    connect(buttonBox, &QDialogButtonBox::accepted, this, [this]() {
+      saveSettings();
+      emit settingsChanged();
+      accept();
+    });
+   connect(buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
   mainLayout->addWidget(buttonBox);
 }
 
@@ -115,180 +111,130 @@ void SettingsDialog::setupEditorTab() {
   tabWidget->addTab(editorTab, tr("Editor"));
 }
 
-void SettingsDialog::setupPreviewTab() {
-  QWidget *previewTab = new QWidget();
-  QVBoxLayout *layout = new QVBoxLayout(previewTab);
 
-  // Preview appearance group
-  QGroupBox *appearanceGroup = new QGroupBox(tr("Appearance"));
-  QFormLayout *appearanceLayout = new QFormLayout(appearanceGroup);
+
+
+
+
+
+void SettingsDialog::setupMainTab() {
+  QWidget *mainTab = new QWidget();
+  QVBoxLayout *mainLayout = new QVBoxLayout(mainTab);
+
+  // Use scroll area for long content
+  QScrollArea *scrollArea = new QScrollArea();
+  scrollArea->setWidgetResizable(true);
+  QWidget *contentWidget = new QWidget();
+  QVBoxLayout *layout = new QVBoxLayout(contentWidget);
+
+  // Theme group
+  QGroupBox *themeGroup = new QGroupBox(tr("Theme"));
+  QFormLayout *themeLayout = new QFormLayout(themeGroup);
 
   themeComboBox = new QComboBox();
+  themeComboBox->addItem(tr("System Default"), "system");
   themeComboBox->addItem(tr("Light"), "light");
   themeComboBox->addItem(tr("Dark"), "dark");
-  themeComboBox->addItem(tr("Sepia"), "sepia");
-  appearanceLayout->addRow(tr("Theme:"), themeComboBox);
-
-  previewFontSizeSpinBox = new QSpinBox();
-  previewFontSizeSpinBox->setRange(8, 72);
-  previewFontSizeSpinBox->setSuffix(tr(" pt"));
-  appearanceLayout->addRow(tr("Font Size:"), previewFontSizeSpinBox);
-
-  layout->addWidget(appearanceGroup);
-
-  // Custom CSS group
-  QGroupBox *cssGroup = new QGroupBox(tr("Custom Styling"));
-  QVBoxLayout *cssLayout = new QVBoxLayout(cssGroup);
-
-  QLabel *cssLabel =
-      new QLabel(tr("Custom CSS file (leave empty for default):"));
-  cssLayout->addWidget(cssLabel);
-
-  QHBoxLayout *cssFileLayout = new QHBoxLayout();
-  customCSSLineEdit = new QLineEdit();
-  customCSSLineEdit->setPlaceholderText(tr("Path to custom CSS file..."));
-  browseCSSButton = new QPushButton(tr("Browse..."));
-  connect(browseCSSButton, &QPushButton::clicked, this,
-          &SettingsDialog::onBrowseCustomCSS);
-
-  cssFileLayout->addWidget(customCSSLineEdit);
-  cssFileLayout->addWidget(browseCSSButton);
-  cssLayout->addLayout(cssFileLayout);
-
-  layout->addWidget(cssGroup);
-
-  // Performance group
-  QGroupBox *performanceGroup = new QGroupBox(tr("Performance"));
-  QFormLayout *performanceLayout = new QFormLayout(performanceGroup);
-
-  previewRefreshRateSpinBox = new QSpinBox();
-  previewRefreshRateSpinBox->setRange(100, 5000);
-  previewRefreshRateSpinBox->setSingleStep(100);
-  previewRefreshRateSpinBox->setSuffix(tr(" ms"));
-  performanceLayout->addRow(tr("Refresh Rate:"), previewRefreshRateSpinBox);
-
-  layout->addWidget(performanceGroup);
-  layout->addStretch();
-
-  tabWidget->addTab(previewTab, tr("Preview"));
-}
-
-void SettingsDialog::setupGeneralTab() {
-  QWidget *generalTab = new QWidget();
-  QVBoxLayout *layout = new QVBoxLayout(generalTab);
-
-  // Auto-save group
-  QGroupBox *autoSaveGroup = new QGroupBox(tr("Auto-Save"));
-  QVBoxLayout *autoSaveLayout = new QVBoxLayout(autoSaveGroup);
-
-  autoSaveEnabledCheck = new QCheckBox(tr("Enable auto-save"));
-  autoSaveLayout->addWidget(autoSaveEnabledCheck);
-
-  QFormLayout *autoSaveFormLayout = new QFormLayout();
-  autoSaveIntervalSpinBox = new QSpinBox();
-  autoSaveIntervalSpinBox->setRange(10, 600);
-  autoSaveIntervalSpinBox->setSuffix(tr(" seconds"));
-  autoSaveFormLayout->addRow(tr("Interval:"), autoSaveIntervalSpinBox);
-  autoSaveLayout->addLayout(autoSaveFormLayout);
-
-  layout->addWidget(autoSaveGroup);
-
-  // File locations group
-  QGroupBox *locationsGroup = new QGroupBox(tr("File Locations"));
-  QVBoxLayout *locationsLayout = new QVBoxLayout(locationsGroup);
-
-  QLabel *folderLabel = new QLabel(tr("Default folder for new files:"));
-  locationsLayout->addWidget(folderLabel);
-
-  QHBoxLayout *folderLayout = new QHBoxLayout();
-  defaultFolderLineEdit = new QLineEdit();
-  defaultFolderLineEdit->setPlaceholderText(
-      tr("Leave empty to use last opened folder"));
-  browseFolderButton = new QPushButton(tr("Browse..."));
-  connect(browseFolderButton, &QPushButton::clicked, this,
-          &SettingsDialog::onBrowseDefaultFolder);
-
-  folderLayout->addWidget(defaultFolderLineEdit);
-  folderLayout->addWidget(browseFolderButton);
-  locationsLayout->addLayout(folderLayout);
-
-  layout->addWidget(locationsGroup);
-
-  // Behavior group
-  QGroupBox *behaviorGroup = new QGroupBox(tr("Behavior"));
-  QVBoxLayout *behaviorLayout = new QVBoxLayout(behaviorGroup);
-
-  openLastFolderCheckBox = new QCheckBox(tr("Open last folder on startup"));
-  behaviorLayout->addWidget(openLastFolderCheckBox);
-
-  confirmDeleteCheckBox = new QCheckBox(tr("Confirm before deleting files"));
-  behaviorLayout->addWidget(confirmDeleteCheckBox);
-
-  restoreSessionCheckBox = new QCheckBox(tr("Restore open files on startup"));
-  behaviorLayout->addWidget(restoreSessionCheckBox);
-
-  layout->addWidget(behaviorGroup);
-  layout->addStretch();
-
-  // Connect auto-save checkbox to enable/disable interval spinbox
-  connect(autoSaveEnabledCheck, &QCheckBox::toggled, autoSaveIntervalSpinBox,
-          &QSpinBox::setEnabled);
-
-  tabWidget->addTab(generalTab, tr("General"));
-}
-
-
-
-void SettingsDialog::setupAppearanceTab() {
-  QWidget *appearanceTab = new QWidget();
-  QVBoxLayout *layout = new QVBoxLayout(appearanceTab);
-
-  // Application theme group
-  QGroupBox *appThemeGroup = new QGroupBox(tr("Application Theme"));
-  QFormLayout *appThemeLayout = new QFormLayout(appThemeGroup);
-
-  appThemeComboBox = new QComboBox();
-  appThemeComboBox->addItem(tr("System Default"), "system");
-  appThemeComboBox->addItem(tr("Light"), "light");
-  appThemeComboBox->addItem(tr("Dark"), "dark");
-  appThemeLayout->addRow(tr("Theme:"), appThemeComboBox);
+  themeLayout->addRow(tr("Theme:"), themeComboBox);
 
   QLabel *themeNote = new QLabel(tr("Note: Application restart may be required "
                                     "for theme changes to fully apply."));
   themeNote->setWordWrap(true);
   themeNote->setStyleSheet("color: gray; font-size: 9pt;");
-  appThemeLayout->addRow(themeNote);
+  themeLayout->addRow(themeNote);
 
-  layout->addWidget(appThemeGroup);
+  layout->addWidget(themeGroup);
 
-  // Editor color scheme group
-  QGroupBox *editorSchemeGroup = new QGroupBox(tr("Editor Color Scheme"));
-  QFormLayout *editorSchemeLayout = new QFormLayout(editorSchemeGroup);
+  // Preview appearance group
+  QGroupBox *previewGroup = new QGroupBox(tr("Preview"));
+  QFormLayout *previewLayout = new QFormLayout(previewGroup);
 
-  editorColorSchemeComboBox = new QComboBox();
-  editorColorSchemeComboBox->addItem(tr("Auto (Follow App Theme)"), "auto");
-  editorColorSchemeComboBox->addItem(tr("Light"), "light");
-  editorColorSchemeComboBox->addItem(tr("Dark"), "dark");
-  editorColorSchemeComboBox->addItem(tr("Solarized Light"), "solarized-light");
-  editorColorSchemeComboBox->addItem(tr("Solarized Dark"), "solarized-dark");
-  editorSchemeLayout->addRow(tr("Color Scheme:"), editorColorSchemeComboBox);
+  previewRefreshRateSpinBox = new QSpinBox();
+  previewRefreshRateSpinBox->setRange(100, 2000);
+  previewRefreshRateSpinBox->setSuffix(tr(" ms"));
+  previewLayout->addRow(tr("Refresh Rate:"), previewRefreshRateSpinBox);
 
-  layout->addWidget(editorSchemeGroup);
+  previewFontSizeSpinBox = new QSpinBox();
+  previewFontSizeSpinBox->setRange(8, 72);
+  previewFontSizeSpinBox->setSuffix(tr(" pt"));
+  previewLayout->addRow(tr("Font Size:"), previewFontSizeSpinBox);
 
-  // Preview Color Scheme
-  QGroupBox *previewSchemeGroup = new QGroupBox(tr("Preview Color Scheme"));
-  QFormLayout *previewSchemeLayout = new QFormLayout(previewSchemeGroup);
+  layout->addWidget(previewGroup);
 
-  previewColorSchemeComboBox = new QComboBox();
-  previewColorSchemeComboBox->addItem(tr("Auto (Follow App Theme)"), "auto");
-  previewColorSchemeComboBox->addItem(tr("Light"), "light");
-  previewColorSchemeComboBox->addItem(tr("Dark"), "dark");
-  previewSchemeLayout->addRow(tr("Color Scheme:"), previewColorSchemeComboBox);
+  // Custom CSS group
+  QGroupBox *cssGroup = new QGroupBox(tr("Custom Styling"));
+  QVBoxLayout *cssLayout = new QVBoxLayout(cssGroup);
 
-  layout->addWidget(previewSchemeGroup);
+  QLabel *cssLabel = new QLabel(tr("Custom CSS:"));
+  cssLayout->addWidget(cssLabel);
+
+  customCSSLineEdit = new QLineEdit();
+  cssLayout->addWidget(customCSSLineEdit);
+
+  QLabel *cssBrowseLabel = new QLabel(tr("You can load a custom CSS file to style the preview."));
+  cssBrowseLabel->setWordWrap(true);
+  cssBrowseLabel->setStyleSheet("color: gray; font-size: 9pt;");
+  cssLayout->addWidget(cssBrowseLabel);
+
+  browseCSSButton = new QPushButton(tr("Browse..."));
+  cssLayout->addWidget(browseCSSButton);
+  connect(browseCSSButton, &QPushButton::clicked, this,
+          &SettingsDialog::onBrowseCustomCSS);
+
+  layout->addWidget(cssGroup);
+
+  // General settings group
+  QGroupBox *generalGroup = new QGroupBox(tr("General"));
+  QFormLayout *generalLayout = new QFormLayout(generalGroup);
+
+  autoSaveEnabledCheck = new QCheckBox(tr("Enable auto-save"));
+  generalLayout->addRow(autoSaveEnabledCheck);
+
+  autoSaveIntervalSpinBox = new QSpinBox();
+  autoSaveIntervalSpinBox->setRange(1, 60);
+  autoSaveIntervalSpinBox->setSuffix(tr(" min"));
+  generalLayout->addRow(tr("Auto-save interval:"), autoSaveIntervalSpinBox);
+
+  defaultFolderLineEdit = new QLineEdit();
+  generalLayout->addRow(tr("Default folder:"), defaultFolderLineEdit);
+
+  browseFolderButton = new QPushButton(tr("Browse..."));
+  generalLayout->addRow(browseFolderButton);
+  connect(browseFolderButton, &QPushButton::clicked, this,
+          &SettingsDialog::onBrowseDefaultFolder);
+
+  confirmDeleteCheckBox = new QCheckBox(tr("Confirm before deleting files"));
+  generalLayout->addRow(confirmDeleteCheckBox);
+
+  openLastFolderCheckBox = new QCheckBox(tr("Open last folder on startup"));
+  generalLayout->addRow(openLastFolderCheckBox);
+
+  restoreSessionCheckBox = new QCheckBox(tr("Restore session on startup"));
+  generalLayout->addRow(restoreSessionCheckBox);
+
+  layout->addWidget(generalGroup);
+
+  // Shortcuts group
+  QGroupBox *shortcutsGroup = new QGroupBox(tr("Keyboard Shortcuts"));
+  QVBoxLayout *shortcutsLayout = new QVBoxLayout(shortcutsGroup);
+
+  QLabel *shortcutsLabel = new QLabel(tr("Configure keyboard shortcuts for editor and application actions."));
+  shortcutsLabel->setWordWrap(true);
+  shortcutsLayout->addWidget(shortcutsLabel);
+
+  configureShortcutsButton = new QPushButton(tr("Configure Shortcuts..."));
+  shortcutsLayout->addWidget(configureShortcutsButton);
+  connect(configureShortcutsButton, &QPushButton::clicked, this,
+          &SettingsDialog::onConfigureShortcuts);
+
+  layout->addWidget(shortcutsGroup);
+
   layout->addStretch();
 
-  tabWidget->addTab(appearanceTab, tr("Appearance"));
+  scrollArea->setWidget(contentWidget);
+  mainLayout->addWidget(scrollArea);
+
+  tabWidget->addTab(mainTab, tr("General"));
 }
 
 void SettingsDialog::loadSettings() {
@@ -314,13 +260,8 @@ void SettingsDialog::loadSettings() {
   enableWordPredictionCheckBox->setChecked(
       settings.value("editor/enableWordPrediction", true).toBool());
 
-  // Preview settings
-  QString theme = settings.value("previewTheme", "light").toString();
-  int themeIndex = themeComboBox->findData(theme);
-  if (themeIndex >= 0)
-    themeComboBox->setCurrentIndex(themeIndex);
-
-  previewRefreshRateSpinBox->setValue(
+   // Preview settings
+   previewRefreshRateSpinBox->setValue(
       settings.value("preview/refreshRate", 500).toInt());
   previewFontSizeSpinBox->setValue(
       settings.value("preview/fontSize", 14).toInt());
@@ -343,22 +284,10 @@ void SettingsDialog::loadSettings() {
       settings.value("general/restoreSession", true).toBool());
 
    // Appearance settings
-  QString appTheme = settings.value("appearance/appTheme", "system").toString();
-  int appThemeIndex = appThemeComboBox->findData(appTheme);
-  if (appThemeIndex >= 0)
-    appThemeComboBox->setCurrentIndex(appThemeIndex);
-
-  QString editorScheme =
-      settings.value("appearance/editorColorScheme", "auto").toString();
-  int editorSchemeIndex = editorColorSchemeComboBox->findData(editorScheme);
-  if (editorSchemeIndex >= 0)
-    editorColorSchemeComboBox->setCurrentIndex(editorSchemeIndex);
-
-  QString previewScheme =
-      settings.value("appearance/previewColorScheme", "auto").toString();
-  int previewSchemeIndex = previewColorSchemeComboBox->findData(previewScheme);
-  if (previewSchemeIndex >= 0)
-    previewColorSchemeComboBox->setCurrentIndex(previewSchemeIndex);
+   QString theme = settings.value("appearance/appTheme", "system").toString();
+   int themeIndex = themeComboBox->findData(theme);
+   if (themeIndex >= 0)
+     themeComboBox->setCurrentIndex(themeIndex);
 }
 
 void SettingsDialog::saveSettings() {
@@ -399,12 +328,15 @@ void SettingsDialog::saveSettings() {
                     restoreSessionCheckBox->isChecked());
 
    // Appearance settings
-  settings.setValue("appearance/appTheme",
-                    appThemeComboBox->currentData().toString());
-  settings.setValue("appearance/editorColorScheme",
-                    editorColorSchemeComboBox->currentData().toString());
-  settings.setValue("appearance/previewColorScheme",
-                    previewColorSchemeComboBox->currentData().toString());
+   QString theme = themeComboBox->currentData().toString();
+   settings.setValue("appearance/appTheme", theme);
+   if (theme == "system") {
+     settings.setValue("appearance/editorColorScheme", "auto");
+     settings.setValue("appearance/previewColorScheme", "auto");
+   } else {
+     settings.setValue("appearance/editorColorScheme", theme);
+     settings.setValue("appearance/previewColorScheme", theme);
+   }
 }
 
 void SettingsDialog::applySettings() {
@@ -445,39 +377,11 @@ QString SettingsDialog::getDefaultTheme() const {
 }
 
 QString SettingsDialog::getAppTheme() const {
-  return appThemeComboBox->currentData().toString();
+  return themeComboBox->currentData().toString();
 }
 
-QString SettingsDialog::getEditorColorScheme() const {
-  return editorColorSchemeComboBox->currentData().toString();
-}
 
-void SettingsDialog::setupShortcutsTab() {
-  QWidget *shortcutsTab = new QWidget();
-  QVBoxLayout *layout = new QVBoxLayout(shortcutsTab);
 
-  QLabel *infoLabel = new QLabel(tr("Configure keyboard shortcuts for editor "
-                                    "navigation and text manipulation."),
-                                 shortcutsTab);
-  infoLabel->setWordWrap(true);
-  layout->addWidget(infoLabel);
-
-  QPushButton *configureButton =
-      new QPushButton(tr("Configure Shortcuts..."), shortcutsTab);
-  configureButton->setMinimumHeight(40);
-  connect(configureButton, &QPushButton::clicked, this,
-          &SettingsDialog::onConfigureShortcuts);
-
-  QHBoxLayout *buttonLayout = new QHBoxLayout();
-  buttonLayout->addStretch();
-  buttonLayout->addWidget(configureButton);
-  buttonLayout->addStretch();
-
-  layout->addLayout(buttonLayout);
-  layout->addStretch();
-
-  tabWidget->addTab(shortcutsTab, tr("Shortcuts"));
-}
 
 void SettingsDialog::onConfigureShortcuts() {
   ShortcutsDialog *dialog = new ShortcutsDialog(this);

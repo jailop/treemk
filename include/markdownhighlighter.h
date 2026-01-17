@@ -14,6 +14,7 @@ public:
   void setRootPath(const QString &path);
   void setColorScheme(const QString &scheme);
   void setCodeSyntaxEnabled(bool enabled);
+  QString getColorScheme() const { return currentColorScheme; }
 
 public slots:
   void updateColorScheme();

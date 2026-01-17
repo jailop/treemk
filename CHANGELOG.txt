@@ -29,3 +29,5 @@ ignored.
 - Removed preferences related to wikilinks, because all options are
   supported by default
 - Preview styles updated
+- Preferences dialog simplified
+- Theme manager fixed

@@ -704,7 +704,13 @@ void MarkdownEditor::highlightCurrentLine() {
   if (!isReadOnly()) {
     QTextEdit::ExtraSelection selection;
 
-    QColor lineColor = QColor(Qt::yellow).lighter(160);
+    QString scheme = m_highlighter->getColorScheme();
+    QColor lineColor;
+    if (scheme.contains("dark", Qt::CaseInsensitive)) {
+      lineColor = QColor(64, 64, 64); // Subtle gray for dark themes
+    } else {
+      lineColor = QColor(Qt::yellow).lighter(160);
+    }
 
     selection.format.setBackground(lineColor);
     selection.format.setProperty(QTextFormat::FullWidthSelection, true);

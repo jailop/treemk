@@ -21,8 +21,7 @@ public:
   int getAutoSaveInterval() const;
   bool getAutoSaveEnabled() const;
   QString getDefaultTheme() const;
-  QString getAppTheme() const;
-  QString getEditorColorScheme() const;
+   QString getAppTheme() const;
 
 signals:
   void settingsChanged();
@@ -37,10 +36,7 @@ private slots:
 private:
   void setupUI();
   void setupEditorTab();
-  void setupPreviewTab();
-   void setupGeneralTab();
-   void setupAppearanceTab();
-  void setupShortcutsTab();
+   void setupMainTab();
   void loadSettings();
 
   QTabWidget *tabWidget;
@@ -57,9 +53,8 @@ private:
   QCheckBox *autoCloseBracketsCheckBox;
   QCheckBox *enableWordPredictionCheckBox;
 
-  // Preview settings
-  QComboBox *themeComboBox;
-  QSpinBox *previewRefreshRateSpinBox;
+   // Preview settings
+   QSpinBox *previewRefreshRateSpinBox;
   QSpinBox *previewFontSizeSpinBox;
   QLineEdit *customCSSLineEdit;
   QPushButton *browseCSSButton;
@@ -74,12 +69,11 @@ private:
   QCheckBox *restoreSessionCheckBox;
 
    // Appearance settings
-  QComboBox *appThemeComboBox;
-  QComboBox *editorColorSchemeComboBox;
-  QComboBox *previewColorSchemeComboBox;
+   QComboBox *themeComboBox;
 
-  QPushButton *saveButton;
-  QPushButton *cancelButton;
+   QPushButton *saveButton;
+   QPushButton *cancelButton;
+   QPushButton *configureShortcutsButton;
 };
 
 #endif // SETTINGSDIALOG_H
