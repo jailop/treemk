@@ -26,7 +26,8 @@ document.addEventListener('DOMContentLoaded', function() {
       {left: '$$', right: '$$', display: true},
       {left: '$', right: '$', display: false}
     ],
-    throwOnError: false
+    throwOnError: false,
+    strict: false
   });
   document.querySelectorAll('pre code').forEach((block) => {
     if (block.classList.contains('language-mermaid')) {

@@ -28,3 +28,4 @@ ignored.
 - Wikilinks don't to include `.md` extension (it is assumed by default)
 - Removed preferences related to wikilinks, because all options are
   supported by default
+- Preview styles updated
