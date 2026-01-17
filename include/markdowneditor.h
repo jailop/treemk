@@ -24,13 +24,15 @@ public:
   MarkdownHighlighter *getHighlighter() const;
   MarkdownHighlighter *highlighter() const { return getHighlighter(); }
 
-  QString getLinkAtPosition(int position) const;
-  QString getExternalLinkAtPosition(int position) const;
+   QString getLinkAtPosition(int position) const;
+   QString getExternalLinkAtPosition(int position) const;
+   QString getMarkdownLinkAtPosition(int position) const;
 
   void setCurrentFilePath(const QString &filePath);
 
-signals:
-  void wikiLinkClicked(const QString &linkTarget);
+ signals:
+   void wikiLinkClicked(const QString &linkTarget);
+   void markdownLinkClicked(const QString &linkTarget);
 
 protected:
   void resizeEvent(QResizeEvent *event) override;

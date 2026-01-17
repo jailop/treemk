@@ -130,6 +130,35 @@ QString MarkdownEditor::getExternalLinkAtPosition(int position) const {
   return QString();
 }
 
+QString MarkdownEditor::getMarkdownLinkAtPosition(int position) const {
+  QTextCursor cursor(document());
+  cursor.setPosition(position);
+
+  QString line = cursor.block().text();
+  int posInBlock = cursor.positionInBlock();
+
+  // Pattern for [text](url)
+  QRegularExpression markdownLinkPattern("\\[([^\\]]+)\\]\\(([^\\)]+)\\)");
+  QRegularExpressionMatchIterator matchIterator =
+      markdownLinkPattern.globalMatch(line);
+
+  while (matchIterator.hasNext()) {
+    QRegularExpressionMatch match = matchIterator.next();
+    int start = match.capturedStart();
+    int end = start + match.capturedLength();
+
+    if (posInBlock >= start && posInBlock <= end) {
+      QString url = match.captured(2).trimmed();
+      // Return any markdown link that is not an external URL
+      if (!url.startsWith("http://") && !url.startsWith("https://")) {
+        return url;
+      }
+    }
+  }
+
+  return QString();
+}
+
 void MarkdownEditor::mousePressEvent(QMouseEvent *event) {
   if (event->button() == Qt::LeftButton &&
       (event->modifiers() & Qt::ControlModifier)) {
@@ -140,6 +169,14 @@ void MarkdownEditor::mousePressEvent(QMouseEvent *event) {
     QString linkTarget = getLinkAtPosition(position);
     if (!linkTarget.isEmpty()) {
       emit wikiLinkClicked(linkTarget);
+      event->accept();
+      return;
+    }
+
+    // Try markdown link
+    QString markdownLink = getMarkdownLinkAtPosition(position);
+    if (!markdownLink.isEmpty()) {
+      emit markdownLinkClicked(markdownLink);
       event->accept();
       return;
     }
@@ -440,6 +477,14 @@ void MarkdownEditor::keyPressEvent(QKeyEvent *event) {
     QString linkTarget = getLinkAtPosition(position);
     if (!linkTarget.isEmpty()) {
       emit wikiLinkClicked(linkTarget);
+      event->accept();
+      return;
+    }
+
+    // Try markdown link
+    QString markdownLink = getMarkdownLinkAtPosition(position);
+    if (!markdownLink.isEmpty()) {
+      emit markdownLinkClicked(markdownLink);
       event->accept();
       return;
     }

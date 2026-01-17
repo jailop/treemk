@@ -54,7 +54,8 @@ private slots:
   void setPreviewThemeLight();
   void setPreviewThemeDark();
   void setPreviewThemeSepia();
-  void onWikiLinkClicked(const QString &linkTarget);
+   void onWikiLinkClicked(const QString &linkTarget);
+   void onMarkdownLinkClicked(const QString &linkTarget);
   void updateBacklinks();
   void searchInFiles();
   void openSettings();

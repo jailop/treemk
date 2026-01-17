@@ -17,8 +17,9 @@ public:
   void scrollToPercentage(double percentage);
   double currentScrollPercentage() const;
 
-signals:
-  void wikiLinkClicked(const QString &linkTarget);
+ signals:
+   void wikiLinkClicked(const QString &linkTarget);
+   void markdownLinkClicked(const QString &linkTarget);
 
 private slots:
   void showContextMenu(const QPoint &pos);

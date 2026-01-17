@@ -38,9 +38,8 @@ private:
   void setupUI();
   void setupEditorTab();
   void setupPreviewTab();
-  void setupGeneralTab();
-  void setupWikiLinksTab();
-  void setupAppearanceTab();
+   void setupGeneralTab();
+   void setupAppearanceTab();
   void setupShortcutsTab();
   void loadSettings();
 
@@ -74,13 +73,7 @@ private:
   QCheckBox *openLastFolderCheckBox;
   QCheckBox *restoreSessionCheckBox;
 
-  // Wiki links settings
-  QComboBox *wikiLinkFormatComboBox;
-  QCheckBox *relativeLinkPathsCheckBox;
-  QCheckBox *autoCompleteLinksCheckBox;
-  QCheckBox *showBacklinksCheckBox;
-
-  // Appearance settings
+   // Appearance settings
   QComboBox *appThemeComboBox;
   QComboBox *editorColorSchemeComboBox;
   QComboBox *previewColorSchemeComboBox;

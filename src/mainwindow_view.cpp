@@ -3,6 +3,7 @@
 #include "markdowneditor.h"
 #include "markdownpreview.h"
 #include "tabeditor.h"
+#include <QDesktopServices>
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
@@ -10,6 +11,7 @@
 #include <QMessageBox>
 #include <QStatusBar>
 #include <QTimer>
+#include <QUrl>
 
 void MainWindow::toggleSidebar() {
   leftTabWidget->setVisible(!leftTabWidget->isVisible());
@@ -25,7 +27,7 @@ void MainWindow::togglePreview() {
 void MainWindow::onWikiLinkClicked(const QString &linkTarget) {
   if (currentFolder.isEmpty()) {
     statusBar()->showMessage(tr("No folder opened. Cannot resolve wiki link."),
-                             3000);
+                              3000);
     return;
   }
 
@@ -48,28 +50,111 @@ void MainWindow::onWikiLinkClicked(const QString &linkTarget) {
         QMessageBox::Yes | QMessageBox::No);
 
     if (reply == QMessageBox::Yes) {
-      QFile file(targetFile);
-      if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        file.close();
-        loadFile(targetFile);
-      } else {
-        QMessageBox::warning(this, tr("Error"),
-                             tr("Could not create file: %1")
-                                 .arg(QFileInfo(targetFile).fileName()));
+      // Create new file
+      QString newFilePath = targetFile;
+      if (QFileInfo(newFilePath).suffix().isEmpty()) {
+        newFilePath += ".md";
       }
+      // Create the file with a basic template
+      QFile file(newFilePath);
+      if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        QTextStream out(&file);
+        out.setEncoding(QStringConverter::Utf8);
+        out << "# " << QFileInfo(newFilePath).baseName() << "\n\n";
+        out << "Created from link: " << linkTarget << "\n";
+        file.close();
+        // Load the newly created file
+        loadFile(newFilePath);
+      } else {
+        statusBar()->showMessage(tr("Failed to create file: %1").arg(newFilePath),
+                                 3000);
+      }
+    }
+  }
+}
+
+void MainWindow::onMarkdownLinkClicked(const QString &linkTarget) {
+  if (currentFolder.isEmpty()) {
+    statusBar()->showMessage(tr("No folder opened. Cannot resolve markdown link."),
+                              3000);
+    return;
+  }
+  QString resolvedPath;
+  if (QFileInfo(linkTarget).isAbsolute()) {
+    resolvedPath = linkTarget;
+  } else {
+    QFileInfo currentFileInfo(currentFilePath);
+    QDir currentDir = currentFileInfo.dir();
+    resolvedPath = currentDir.filePath(linkTarget);
+  }
+  resolvedPath = QFileInfo(resolvedPath).absoluteFilePath();
+  QString finalPath = resolvedPath;
+  bool shouldOpenInTreeMk = false;
+  if (QFileInfo(resolvedPath).exists()) {
+    finalPath = resolvedPath;
+    shouldOpenInTreeMk = resolvedPath.endsWith(".md", Qt::CaseInsensitive);
+  } else {
+    QFileInfo resolvedInfo(resolvedPath);
+    if (resolvedInfo.suffix().isEmpty()) {
+      // No extension - try .md first
+      QString mdPath = resolvedPath + ".md";
+      if (QFileInfo(mdPath).exists()) {
+        finalPath = mdPath;
+        shouldOpenInTreeMk = true;
+      } else {
+        // Use .md for creation
+        finalPath = mdPath;
+        shouldOpenInTreeMk = true;
+      }
+    } else {
+      // Has extension but doesn't exist - offer to create if it's .md
+      shouldOpenInTreeMk = resolvedPath.endsWith(".md", Qt::CaseInsensitive);
+      finalPath = resolvedPath;
+    }
+  }
+  if (QFileInfo(finalPath).exists()) {
+    if (shouldOpenInTreeMk) {
+      loadFile(finalPath);
+    } else {
+      QDesktopServices::openUrl(QUrl::fromLocalFile(finalPath));
+    }
+  } else {
+    // File doesn't exist - only offer to create .md files
+    if (shouldOpenInTreeMk) {
+      QMessageBox::StandardButton reply = QMessageBox::question(
+          this, tr("Create File"),
+          tr("The file '%1' does not exist. Do you want to create it?")
+              .arg(QFileInfo(finalPath).fileName()),
+          QMessageBox::Yes | QMessageBox::No);
+      if (reply == QMessageBox::Yes) {
+        // Create the file with a basic template
+        QFile file(finalPath);
+        if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+          QTextStream out(&file);
+          out.setEncoding(QStringConverter::Utf8);
+          out << "# " << QFileInfo(finalPath).baseName() << "\n\n";
+          out << "Created from markdown link: " << linkTarget << "\n";
+          file.close();
+          // Load the newly created file
+          loadFile(finalPath);
+        } else {
+          statusBar()->showMessage(tr("Failed to create file: %1").arg(finalPath),
+                                   3000);
+        }
+      }
+    } else {
+      // For non-.md files that don't exist, show an error
+      statusBar()->showMessage(tr("File not found: %1").arg(finalPath), 3000);
     }
   }
 }
 
 void MainWindow::updateBacklinks() {
   backlinksView->clear();
-
   if (currentFilePath.isEmpty() || currentFolder.isEmpty()) {
     return;
   }
-
   QVector<QString> backlinks = linkParser->getBacklinks(currentFilePath);
-
   for (const QString &backlink : backlinks) {
     QListWidgetItem *item =
         new QListWidgetItem(QFileInfo(backlink).fileName(), backlinksView);

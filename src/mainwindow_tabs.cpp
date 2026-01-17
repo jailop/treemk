@@ -42,25 +42,23 @@ TabEditor *MainWindow::createNewTab() {
     tab->editor()->highlighter()->setCodeSyntaxEnabled(codeSyntaxEnabled);
   }
 
-  // Apply preview theme
   QString previewTheme = settings->value("previewTheme", "light").toString();
   tab->preview()->setTheme(previewTheme);
 
-  // Connect wiki link clicks from editor
-  connect(tab->editor(), &MarkdownEditor::wikiLinkClicked, this,
-          &MainWindow::onWikiLinkClicked);
+   connect(tab->editor(), &MarkdownEditor::wikiLinkClicked, this,
+           &MainWindow::onWikiLinkClicked);
+   connect(tab->editor(), &MarkdownEditor::markdownLinkClicked, this,
+           &MainWindow::onMarkdownLinkClicked);
+   connect(tab->preview(), &MarkdownPreview::wikiLinkClicked, this,
+           &MainWindow::onWikiLinkClicked);
+   connect(tab->preview(), &MarkdownPreview::markdownLinkClicked, this,
+           &MainWindow::onMarkdownLinkClicked);
 
-  // Connect wiki link clicks from preview
-  connect(tab->preview(), &MarkdownPreview::wikiLinkClicked, this,
-          &MainWindow::onWikiLinkClicked);
-
-  // Connect shared outline clicks to jump to line in current editor
   if (outlineView) {
     connect(outlineView, &OutlinePanel::headerClicked, this,
             &MainWindow::jumpToLine, Qt::UniqueConnection);
   }
 
-  // Connect editor text changes to update outline
   connect(tab->editor(), &MarkdownEditor::textChanged, this, [this]() {
     TabEditor *currentTab = currentTabEditor();
     if (currentTab && outlineView) {
@@ -69,7 +67,6 @@ TabEditor *MainWindow::createNewTab() {
     }
   });
 
-  // Connect modification signal
   connect(tab, &TabEditor::modificationChanged, this,
           [this, tab](bool modified) {
             int index = tabWidget->indexOf(tab);
@@ -82,7 +79,6 @@ TabEditor *MainWindow::createNewTab() {
             }
           });
 
-  // Connect file path changes
   connect(tab, &TabEditor::filePathChanged, this, [this, tab](const QString &) {
     int index = tabWidget->indexOf(tab);
     if (index >= 0) {
@@ -94,7 +90,6 @@ TabEditor *MainWindow::createNewTab() {
   int index = tabWidget->addTab(tab, tr("Untitled"));
   tabWidget->setCurrentIndex(index);
 
-  // Initialize outline for the new tab (empty content)
   if (outlineView) {
     outlineView->updateOutline(tab->editor()->toPlainText());
   }

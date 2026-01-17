@@ -21,3 +21,10 @@ ignored.
 
 - updated installation instructions for Debian
 - disable system color scheme detection (versions incompatibility)
+
+2026-01-17:
+
+- Support for wikilinks [..](..) added
+- Wikilinks don't to include `.md` extension (it is assumed by default)
+- Removed preferences related to wikilinks, because all options are
+  supported by default

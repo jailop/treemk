@@ -33,10 +33,9 @@ void SettingsDialog::setupUI() {
   tabWidget = new QTabWidget(this);
   setupAppearanceTab();
   setupEditorTab();
-  setupPreviewTab();
-  setupGeneralTab();
-  setupWikiLinksTab();
-  setupShortcutsTab();
+   setupPreviewTab();
+   setupGeneralTab();
+   setupShortcutsTab();
 
   mainLayout->addWidget(tabWidget);
 
@@ -238,46 +237,7 @@ void SettingsDialog::setupGeneralTab() {
   tabWidget->addTab(generalTab, tr("General"));
 }
 
-void SettingsDialog::setupWikiLinksTab() {
-  QWidget *wikiTab = new QWidget();
-  QVBoxLayout *layout = new QVBoxLayout(wikiTab);
 
-  // Link format group
-  QGroupBox *formatGroup = new QGroupBox(tr("Link Format"));
-  QFormLayout *formatLayout = new QFormLayout(formatGroup);
-
-  wikiLinkFormatComboBox = new QComboBox();
-  wikiLinkFormatComboBox->addItem("[[Note]]", "double-bracket");
-  wikiLinkFormatComboBox->addItem("[[Note|Display]]", "with-display");
-  wikiLinkFormatComboBox->addItem("[Display](note.md)", "markdown");
-  formatLayout->addRow(tr("Default Format:"), wikiLinkFormatComboBox);
-
-  layout->addWidget(formatGroup);
-
-  // Link behavior group
-  QGroupBox *behaviorGroup = new QGroupBox(tr("Link Behavior"));
-  QVBoxLayout *behaviorLayout = new QVBoxLayout(behaviorGroup);
-
-  relativeLinkPathsCheckBox = new QCheckBox(tr("Use relative paths for links"));
-  relativeLinkPathsCheckBox->setToolTip(
-      tr("Convert absolute paths to relative when inserting links"));
-  behaviorLayout->addWidget(relativeLinkPathsCheckBox);
-
-  autoCompleteLinksCheckBox =
-      new QCheckBox(tr("Enable auto-completion for wiki links"));
-  autoCompleteLinksCheckBox->setToolTip(tr("Show suggestions when typing [["));
-  behaviorLayout->addWidget(autoCompleteLinksCheckBox);
-
-  showBacklinksCheckBox = new QCheckBox(tr("Show backlinks panel"));
-  showBacklinksCheckBox->setToolTip(
-      tr("Display files that link to the current note"));
-  behaviorLayout->addWidget(showBacklinksCheckBox);
-
-  layout->addWidget(behaviorGroup);
-  layout->addStretch();
-
-  tabWidget->addTab(wikiTab, tr("Wiki Links"));
-}
 
 void SettingsDialog::setupAppearanceTab() {
   QWidget *appearanceTab = new QWidget();
@@ -382,21 +342,7 @@ void SettingsDialog::loadSettings() {
   restoreSessionCheckBox->setChecked(
       settings.value("general/restoreSession", true).toBool());
 
-  // Wiki links settings
-  QString linkFormat =
-      settings.value("wikiLinks/format", "double-bracket").toString();
-  int linkFormatIndex = wikiLinkFormatComboBox->findData(linkFormat);
-  if (linkFormatIndex >= 0)
-    wikiLinkFormatComboBox->setCurrentIndex(linkFormatIndex);
-
-  relativeLinkPathsCheckBox->setChecked(
-      settings.value("wikiLinks/relativePaths", true).toBool());
-  autoCompleteLinksCheckBox->setChecked(
-      settings.value("wikiLinks/autoComplete", true).toBool());
-  showBacklinksCheckBox->setChecked(
-      settings.value("wikiLinks/showBacklinks", true).toBool());
-
-  // Appearance settings
+   // Appearance settings
   QString appTheme = settings.value("appearance/appTheme", "system").toString();
   int appThemeIndex = appThemeComboBox->findData(appTheme);
   if (appThemeIndex >= 0)
@@ -452,17 +398,7 @@ void SettingsDialog::saveSettings() {
   settings.setValue("general/restoreSession",
                     restoreSessionCheckBox->isChecked());
 
-  // Wiki links settings
-  settings.setValue("wikiLinks/format",
-                    wikiLinkFormatComboBox->currentData().toString());
-  settings.setValue("wikiLinks/relativePaths",
-                    relativeLinkPathsCheckBox->isChecked());
-  settings.setValue("wikiLinks/autoComplete",
-                    autoCompleteLinksCheckBox->isChecked());
-  settings.setValue("wikiLinks/showBacklinks",
-                    showBacklinksCheckBox->isChecked());
-
-  // Appearance settings
+   // Appearance settings
   settings.setValue("appearance/appTheme",
                     appThemeComboBox->currentData().toString());
   settings.setValue("appearance/editorColorScheme",

@@ -27,20 +27,27 @@ public:
   WikiLinkPage(MarkdownPreview *parent)
       : QWebEnginePage(parent), preview(parent) {}
 
-protected:
-  bool acceptNavigationRequest(const QUrl &url, NavigationType type,
-                               bool isMainFrame) override {
-    if (url.scheme() == "wiki") {
-      emit preview->wikiLinkClicked(url.path());
-      return false;
-    }
-    // Open external links (http/https) in system browser
-    if (url.scheme() == "http" || url.scheme() == "https") {
-      QDesktopServices::openUrl(url);
-      return false;
-    }
-    return QWebEnginePage::acceptNavigationRequest(url, type, isMainFrame);
-  }
+ protected:
+   bool acceptNavigationRequest(const QUrl &url, NavigationType type,
+                                bool isMainFrame) override {
+     if (url.scheme() == "wiki") {
+       emit preview->wikiLinkClicked(url.path());
+       return false;
+     }
+     if (url.scheme() == "markdown") {
+       emit preview->markdownLinkClicked(url.path());
+       return false;
+     }
+     if (url.isLocalFile() && url.toLocalFile().endsWith(".md", Qt::CaseInsensitive)) {
+       emit preview->markdownLinkClicked(url.toLocalFile());
+       return false;
+     }
+     if (url.scheme() == "http" || url.scheme() == "https") {
+       QDesktopServices::openUrl(url);
+       return false;
+     }
+     return QWebEnginePage::acceptNavigationRequest(url, type, isMainFrame);
+   }
 
 private:
   MarkdownPreview *preview;
@@ -244,6 +251,27 @@ QString MarkdownPreview::processWikiLinks(const QString &html) {
       QRegularExpression(
           "<x-wikilink data-target=\"([^\"]+)\">([^<]+)</x-wikilink>"),
       "<a href=\"wiki:\\1\" class=\"wiki-link\">\\2</a>");
+
+  // Process standard markdown links [text](url)
+  // md4c outputs: <a href="url">text</a>
+  QRegularExpression linkPattern("<a href=\"([^\"]*)\">([^<]*)</a>");
+  QRegularExpressionMatchIterator linkIt = linkPattern.globalMatch(result);
+  // Collect matches in reverse order to avoid position shifts
+  QList<QRegularExpressionMatch> linkMatches;
+  while (linkIt.hasNext()) {
+    linkMatches.prepend(linkIt.next());
+  }
+  for (const QRegularExpressionMatch &match : linkMatches) {
+    QString href = match.captured(1);
+    QString text = match.captured(2);
+    QString replacement;
+    if (href.startsWith("http://") || href.startsWith("https://")) {
+      replacement = QString("<a href=\"%1\">%2</a>").arg(href, text);
+    } else {
+      replacement = QString("<a href=\"markdown:%1\" class=\"markdown-link\">%2</a>").arg(href, text);
+    }
+    result.replace(match.capturedStart(), match.capturedLength(), replacement);
+  }
   return result;
 }
 
