@@ -31,3 +31,4 @@ ignored.
 - Preview styles updated
 - Preferences dialog simplified
 - Theme manager fixed
+- Experimental tasks lists started

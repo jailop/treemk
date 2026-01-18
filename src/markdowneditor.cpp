@@ -511,8 +511,6 @@ void MarkdownEditor::keyPressEvent(QKeyEvent *event) {
   bool autoIndent = settings.value("editor/autoIndent", true).toBool();
   bool autoCloseBrackets =
       settings.value("editor/autoCloseBrackets", true).toBool();
-  bool lineBreakEnabled = settings.value("editor/lineBreakEnabled", false).toBool();
-  int lineBreakColumns = settings.value("editor/lineBreakColumns", 80).toInt();
 
   if (autoIndent &&
       (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter)) {
