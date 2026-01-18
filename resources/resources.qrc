@@ -20,5 +20,6 @@
         <file>preview-sepia.css</file>
         <file>theme-light.css</file>
         <file>theme-dark.css</file>
+        <file>task-list.css</file>
     </qresource>
 </RCC>

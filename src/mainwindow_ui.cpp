@@ -54,11 +54,14 @@ void MainWindow::createMenus() {
   editMenu->addAction(copyAction);
   editMenu->addAction(pasteAction);
   editMenu->addSeparator();
-  editMenu->addAction(findAction);
-  editMenu->addAction(findReplaceAction);
-  editMenu->addAction(searchInFilesAction);
-  editMenu->addSeparator();
-  editMenu->addAction(quickOpenAction);
+   editMenu->addAction(findAction);
+   editMenu->addAction(findReplaceAction);
+   editMenu->addAction(searchInFilesAction);
+   editMenu->addSeparator();
+   editMenu->addAction(breakLinesAction);
+   editMenu->addAction(joinLinesAction);
+   editMenu->addSeparator();
+   editMenu->addAction(quickOpenAction);
 
   insertMenu = menuBar()->addMenu(tr("&Insert"));
   insertMenu->addAction(insertImageAction);
@@ -69,9 +72,10 @@ void MainWindow::createMenus() {
   insertMenu->addAction(insertLinkAction);
   insertMenu->addSeparator();
   insertMenu->addAction(insertHeaderAction);
-  insertMenu->addAction(insertBoldAction);
-  insertMenu->addAction(insertItalicAction);
-  insertMenu->addSeparator();
+   insertMenu->addAction(insertBoldAction);
+   insertMenu->addAction(insertItalicAction);
+   insertMenu->addAction(insertStrikethroughAction);
+   insertMenu->addSeparator();
   insertMenu->addAction(insertCodeAction);
   insertMenu->addAction(insertCodeBlockAction);
   insertMenu->addSeparator();

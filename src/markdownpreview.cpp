@@ -95,17 +95,23 @@ void MarkdownPreview::setMarkdownContent(const QString &markdown) {
   // Get the appropriate stylesheet with max-width for images
   QString baseStyleSheet = ThemeManager::instance()->getPreviewStyleSheet();
   QString imageStyleSheet = "img { max-width: 100%; height: auto; }";
-  QString styleSheet = baseStyleSheet + "\n" + imageStyleSheet;
+  QString taskStyles;
+  QFile taskFile(":/css/task-list.css");
+  if (taskFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+    taskStyles = QString::fromUtf8(taskFile.readAll());
+    taskFile.close();
+  }
+  QString previewStyleSheet = baseStyleSheet + "\n" + imageStyleSheet + "\n" + taskStyles;
   // Choose highlight.js theme based on current preview scheme
   QString highlightTheme = "github.min.css";
   // Determine if we're in dark mode
-  QSettings settings(APP_LABEL, APP_LABEL);
+  QSettings appSettings(APP_LABEL, APP_LABEL);
   QString previewScheme =
-      settings.value("appearance/previewColorScheme", "auto").toString();
+      appSettings.value("appearance/previewColorScheme", "auto").toString();
   bool isDark = false;
   if (previewScheme == "auto") {
     QString appTheme =
-        settings.value("appearance/appTheme", "system").toString();
+        appSettings.value("appearance/appTheme", "system").toString();
     if (appTheme == "dark") {
       isDark = true;
     } 
@@ -118,9 +124,9 @@ void MarkdownPreview::setMarkdownContent(const QString &markdown) {
   } else if (previewScheme == "dark") {
     isDark = true;
   }
-  if (isDark) {
-    highlightTheme = "github-dark.min.css";
-  }
+  // Add custom CSS
+  QString customCSS = appSettings.value("preview/customCSS", "").toString();
+  previewStyleSheet += "\n" + customCSS;
   // Load HTML template from resources
   QFile templateFile(":/templates/preview-template.html");
   if (!templateFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
@@ -133,7 +139,7 @@ void MarkdownPreview::setMarkdownContent(const QString &markdown) {
   QString mermaidTheme = isDark ? "dark" : "default";
   fullHtml.replace("HIGHLIGHT_THEME", highlightTheme);
   fullHtml.replace("MERMAID_THEME", mermaidTheme);
-  fullHtml.replace("CUSTOM_STYLESHEET", styleSheet);
+  fullHtml.replace("CUSTOM_STYLESHEET", previewStyleSheet);
   fullHtml.replace("SCROLL_PERCENTAGE", QString::number(lastScrollPercentage));
   fullHtml.replace("MARKDOWN_CONTENT", html);
   // Use setHtml with baseUrl to allow loading local images

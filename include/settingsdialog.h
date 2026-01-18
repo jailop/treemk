@@ -52,6 +52,8 @@ private:
   QCheckBox *autoIndentCheckBox;
   QCheckBox *autoCloseBracketsCheckBox;
   QCheckBox *enableWordPredictionCheckBox;
+  QCheckBox *lineBreakCheckBox;
+  QSpinBox *lineBreakColumnsSpinBox;
 
    // Preview settings
    QSpinBox *previewRefreshRateSpinBox;

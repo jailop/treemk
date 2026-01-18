@@ -51,8 +51,12 @@ private:
   QTextCharFormat brokenWikiLinkFormat;
   QTextCharFormat inclusionLinkFormat;
   QTextCharFormat brokenInclusionLinkFormat;
-  QTextCharFormat inlineLatexFormat;
-  QTextCharFormat blockLatexFormat;
+   QTextCharFormat inlineLatexFormat;
+   QTextCharFormat blockLatexFormat;
+   QTextCharFormat strikethroughFormat;
+   QTextCharFormat taskPendingFormat;
+   QTextCharFormat taskDoneFormat;
+   QTextCharFormat taskPartialFormat;
 
   QString rootPath;
   QString currentColorScheme;

@@ -165,7 +165,15 @@ void MarkdownEditor::mousePressEvent(QMouseEvent *event) {
     QTextCursor cursor = cursorForPosition(event->pos());
     int position = cursor.position();
 
-    // Try wiki link first
+    // Try task toggle first
+    QString taskMarker = getTaskMarkerAtPosition(position);
+    if (!taskMarker.isEmpty()) {
+      toggleTaskAtPosition(position);
+      event->accept();
+      return;
+    }
+
+    // Try wiki link
     QString linkTarget = getLinkAtPosition(position);
     if (!linkTarget.isEmpty()) {
       emit wikiLinkClicked(linkTarget);
@@ -503,6 +511,8 @@ void MarkdownEditor::keyPressEvent(QKeyEvent *event) {
   bool autoIndent = settings.value("editor/autoIndent", true).toBool();
   bool autoCloseBrackets =
       settings.value("editor/autoCloseBrackets", true).toBool();
+  bool lineBreakEnabled = settings.value("editor/lineBreakEnabled", false).toBool();
+  int lineBreakColumns = settings.value("editor/lineBreakColumns", 80).toInt();
 
   if (autoIndent &&
       (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter)) {
@@ -510,15 +520,24 @@ void MarkdownEditor::keyPressEvent(QKeyEvent *event) {
     QTextCursor cursor = textCursor();
     QString currentLine = cursor.block().text();
 
-    // Calculate leading whitespace
     int indent = 0;
-    for (QChar ch : currentLine) {
-      if (ch == ' ')
-        indent++;
-      else if (ch == '\t')
-        indent += 4; // Treat tab as 4 spaces
-      else
-        break;
+
+    // Check if current line is a list item
+    QRegularExpression listPattern("^(\\s*)([-*+]|[0-9]+\\.)\\s+");
+    QRegularExpressionMatch match = listPattern.match(currentLine);
+    if (match.hasMatch()) {
+      // For list items, indent continuation to align with the text after the marker
+      indent = match.capturedLength(1) + match.capturedLength(2) + 1; // marker + space
+    } else {
+      // Calculate leading whitespace for other cases
+      for (QChar ch : currentLine) {
+        if (ch == ' ')
+          indent++;
+        else if (ch == '\t')
+          indent += 4; // Treat tab as 4 spaces
+        else
+          break;
+      }
     }
 
     // Insert newline and indentation
@@ -573,6 +592,20 @@ void MarkdownEditor::keyPressEvent(QKeyEvent *event) {
         (event->text() == "`" && nextChar == "`")) {
       cursor.movePosition(QTextCursor::Right, QTextCursor::MoveAnchor);
       setTextCursor(cursor);
+      event->accept();
+      return;
+    }
+  }
+
+  // Ctrl+Space to toggle task on current line
+  if (event->key() == Qt::Key_Space && (event->modifiers() & Qt::ControlModifier)) {
+    QTextCursor cursor = textCursor();
+    QString line = cursor.block().text();
+    QRegularExpression taskPattern("[-*+] \\[([ xX.]?)\\]");
+    QRegularExpressionMatch match = taskPattern.match(line);
+    if (match.hasMatch()) {
+      int markerPos = match.capturedStart(1);
+      toggleTaskAtPosition(cursor.block().position() + markerPos);
       event->accept();
       return;
     }
@@ -857,6 +890,165 @@ QString MarkdownEditor::saveImageFromClipboard(const QImage &image) {
   }
 
   QMessageBox::warning(this, tr("Save Failed"),
-                       tr("Failed to save image to '%1'.").arg(fileName));
+                        tr("Failed to save image to '%1'.").arg(fileName));
   return QString();
+}
+
+QString MarkdownEditor::getTaskMarkerAtPosition(int position) const {
+  QTextCursor cursor(document());
+  cursor.setPosition(position);
+  QString line = cursor.block().text();
+  int posInBlock = cursor.positionInBlock();
+
+  QRegularExpression taskPattern("[-*+] \\[([ xX.]?)\\]");
+  QRegularExpressionMatchIterator matchIterator = taskPattern.globalMatch(line);
+
+  while (matchIterator.hasNext()) {
+    QRegularExpressionMatch match = matchIterator.next();
+    int start = match.capturedStart();
+    int end = start + match.capturedLength();
+    if (posInBlock >= start && posInBlock <= end) {
+      return match.captured(1);
+    }
+  }
+  return QString();
+}
+
+void MarkdownEditor::toggleTaskAtPosition(int position) {
+  QTextCursor cursor(document());
+  cursor.setPosition(position);
+  QString line = cursor.block().text();
+
+  QRegularExpression taskPattern("- \\[([ xX.]?)\\]");
+  QRegularExpressionMatch match = taskPattern.match(line);
+  if (match.hasMatch()) {
+    QString marker = match.captured(1);
+    QString newMarker;
+    if (marker == " ") {
+      newMarker = "X";
+    } else if (marker == "X") {
+      newMarker = " ";
+    } else if (marker == ".") {
+      newMarker = "X";
+    } else {
+      newMarker = "X";
+    }
+
+    cursor.select(QTextCursor::BlockUnderCursor);
+    QString newLine = line;
+    newLine.replace(match.capturedStart(1), match.capturedLength(1), newMarker);
+    cursor.insertText(newLine);
+
+    updateParentTask(cursor.block());
+  }
+}
+
+void MarkdownEditor::updateParentTask(const QTextBlock &block) {
+  int currentIndent = getIndentLevel(block);
+  QTextBlock parentBlock = findParentBlock(block, currentIndent);
+  if (parentBlock.isValid()) {
+    updateTaskState(parentBlock);
+    updateParentTask(parentBlock);
+  }
+}
+
+QTextBlock MarkdownEditor::findParentBlock(const QTextBlock &block, int currentIndent) {
+  QTextBlock current = block.previous();
+  while (current.isValid()) {
+    int indent = getIndentLevel(current);
+    if (indent < currentIndent) {
+      QString line = current.text();
+      QRegularExpression taskPattern("[-*+] \\[([ xX.]?)\\]");
+      if (taskPattern.match(line).hasMatch()) {
+        return current;
+      }
+    }
+    current = current.previous();
+  }
+  return QTextBlock();
+}
+
+void MarkdownEditor::updateTaskState(const QTextBlock &block) {
+  QVector<QTextBlock> children = findChildBlocks(block);
+  bool hasDone = false;
+  bool hasPending = false;
+  for (const QTextBlock &child : children) {
+    QString line = child.text();
+    QRegularExpression taskPattern("[-*+] \\[([ xX.]?)\\]");
+    QRegularExpressionMatch match = taskPattern.match(line);
+    if (match.hasMatch()) {
+      QString marker = match.captured(1);
+      if (marker == "X") {
+        hasDone = true;
+      } else if (marker == " ") {
+        hasPending = true;
+      } else if (marker == ".") {
+        hasDone = true;
+        hasPending = true;
+      }
+    }
+  }
+  QString newMarker;
+  if (hasDone && hasPending) {
+    newMarker = ".";
+  } else if (hasDone) {
+    newMarker = "X";
+  } else {
+    newMarker = " ";
+  }
+
+  QString line = block.text();
+  QRegularExpression taskPattern("[-*+] \\[([ xX.]?)\\]");
+  QRegularExpressionMatch match = taskPattern.match(line);
+  if (match.hasMatch()) {
+    QString oldMarker = match.captured(1);
+    if (oldMarker != newMarker) {
+      QTextCursor cursor(document());
+      cursor.setPosition(block.position() + match.capturedStart(1));
+      cursor.setPosition(block.position() + match.capturedStart(1) + match.capturedLength(1), QTextCursor::KeepAnchor);
+      cursor.insertText(newMarker);
+    }
+  }
+}
+
+QVector<QTextBlock> MarkdownEditor::findChildBlocks(const QTextBlock &block) {
+  QVector<QTextBlock> children;
+  int parentIndent = getIndentLevel(block);
+  int childIndent = -1;
+  QTextBlock current = block.next();
+  while (current.isValid()) {
+    int indent = getIndentLevel(current);
+    if (indent <= parentIndent) {
+      break;
+    }
+    QString line = current.text();
+    QRegularExpression taskPattern("[-*+] \\[([ xX.]?)\\]");
+    if (taskPattern.match(line).hasMatch()) {
+      if (childIndent == -1) {
+        childIndent = indent;
+      }
+      if (indent == childIndent) {
+        children.append(current);
+      } else if (indent < childIndent) {
+        break;
+      }
+    }
+    current = current.next();
+  }
+  return children;
+}
+
+int MarkdownEditor::getIndentLevel(const QTextBlock &block) {
+  QString text = block.text();
+  int indent = 0;
+  for (QChar ch : text) {
+    if (ch == ' ') {
+      indent++;
+    } else if (ch == '\t') {
+      indent += 4;
+    } else {
+      break;
+    }
+  }
+  return indent;
 }

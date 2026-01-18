@@ -228,6 +228,22 @@ void MainWindow::insertItalic() {
     cursor.insertText("**");
     cursor.movePosition(QTextCursor::Left, QTextCursor::MoveAnchor, 1);
     tab->editor()->setTextCursor(cursor);
+   }
+}
+
+void MainWindow::insertStrikethrough() {
+  TabEditor *tab = currentTabEditor();
+  if (!tab)
+    return;
+
+  QTextCursor cursor = tab->editor()->textCursor();
+  if (cursor.hasSelection()) {
+    QString selected = cursor.selectedText();
+    cursor.insertText(QString("~~%1~~").arg(selected));
+  } else {
+    cursor.insertText("~~~~");
+    cursor.movePosition(QTextCursor::Left, QTextCursor::MoveAnchor, 2);
+    tab->editor()->setTextCursor(cursor);
   }
 }
 

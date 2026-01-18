@@ -66,8 +66,9 @@ private slots:
   void insertWikiLink();
   void attachDocument();
   void insertHeader();
-  void insertBold();
-  void insertItalic();
+   void insertBold();
+   void insertItalic();
+   void insertStrikethrough();
   void insertCode();
   void insertCodeBlock();
   void insertList();
@@ -86,7 +87,9 @@ private slots:
   void exportToPdf();
   void exportToDocx();
   void exportToPlainText();
-  void showKeyboardShortcuts();
+   void showKeyboardShortcuts();
+   void breakLines();
+   void joinLines();
 
 private:
   void createActions();
@@ -126,8 +129,9 @@ private:
   QAction *insertWikiLinkAction;
   QAction *attachDocumentAction;
   QAction *insertHeaderAction;
-  QAction *insertBoldAction;
-  QAction *insertItalicAction;
+   QAction *insertBoldAction;
+   QAction *insertItalicAction;
+   QAction *insertStrikethroughAction;
   QAction *insertCodeAction;
   QAction *insertCodeBlockAction;
   QAction *insertListAction;
@@ -145,8 +149,10 @@ private:
   QAction *findAction;
   QAction *findReplaceAction;
   QAction *searchInFilesAction;
-  QAction *quickOpenAction;
-  QAction *closeTabAction;
+   QAction *quickOpenAction;
+   QAction *breakLinesAction;
+   QAction *joinLinesAction;
+   QAction *closeTabAction;
   QAction *closeAllTabsAction;
   QAction *toggleSidebarAction;
   QAction *togglePreviewAction;

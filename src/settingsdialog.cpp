@@ -99,13 +99,24 @@ void SettingsDialog::setupEditorTab() {
       new QCheckBox(tr("Auto-close brackets and quotes"));
   behaviorLayout->addRow(autoCloseBracketsCheckBox);
 
-  enableWordPredictionCheckBox =
-      new QCheckBox(tr("Enable word prediction (Tab to accept)"));
-  enableWordPredictionCheckBox->setToolTip(
-      tr("Predict words based on document frequency and patterns"));
-  behaviorLayout->addRow(enableWordPredictionCheckBox);
+   enableWordPredictionCheckBox =
+       new QCheckBox(tr("Enable word prediction (Tab to accept)"));
+   enableWordPredictionCheckBox->setToolTip(
+       tr("Predict words based on document frequency and patterns"));
+   behaviorLayout->addRow(enableWordPredictionCheckBox);
 
-  layout->addWidget(behaviorGroup);
+   lineBreakCheckBox = new QCheckBox(tr("Enable line breaking"));
+   behaviorLayout->addRow(lineBreakCheckBox);
+
+   lineBreakColumnsSpinBox = new QSpinBox();
+   lineBreakColumnsSpinBox->setRange(40, 200);
+   lineBreakColumnsSpinBox->setValue(80);
+   lineBreakColumnsSpinBox->setSuffix(tr(" columns"));
+   behaviorLayout->addRow(tr("Line break columns:"), lineBreakColumnsSpinBox);
+
+   connect(lineBreakCheckBox, &QCheckBox::toggled, lineBreakColumnsSpinBox, &QSpinBox::setEnabled);
+
+   layout->addWidget(behaviorGroup);
   layout->addStretch();
 
   tabWidget->addTab(editorTab, tr("Editor"));
@@ -257,10 +268,15 @@ void SettingsDialog::loadSettings() {
       settings.value("editor/autoIndent", true).toBool());
   autoCloseBracketsCheckBox->setChecked(
       settings.value("editor/autoCloseBrackets", true).toBool());
-  enableWordPredictionCheckBox->setChecked(
-      settings.value("editor/enableWordPrediction", true).toBool());
+   enableWordPredictionCheckBox->setChecked(
+       settings.value("editor/enableWordPrediction", true).toBool());
+   lineBreakCheckBox->setChecked(
+       settings.value("editor/lineBreakEnabled", false).toBool());
+   lineBreakColumnsSpinBox->setValue(
+       settings.value("editor/lineBreakColumns", 80).toInt());
+   lineBreakColumnsSpinBox->setEnabled(lineBreakCheckBox->isChecked());
 
-   // Preview settings
+    // Preview settings
    previewRefreshRateSpinBox->setValue(
       settings.value("preview/refreshRate", 500).toInt());
   previewFontSizeSpinBox->setValue(
@@ -307,10 +323,12 @@ void SettingsDialog::saveSettings() {
   settings.setValue("editor/autoIndent", autoIndentCheckBox->isChecked());
   settings.setValue("editor/autoCloseBrackets",
                     autoCloseBracketsCheckBox->isChecked());
-  settings.setValue("editor/enableWordPrediction",
-                    enableWordPredictionCheckBox->isChecked());
+   settings.setValue("editor/enableWordPrediction",
+                     enableWordPredictionCheckBox->isChecked());
+   settings.setValue("editor/lineBreakEnabled", lineBreakCheckBox->isChecked());
+   settings.setValue("editor/lineBreakColumns", lineBreakColumnsSpinBox->value());
 
-  // Preview settings
+   // Preview settings
   settings.setValue("previewTheme", themeComboBox->currentData().toString());
   settings.setValue("preview/refreshRate", previewRefreshRateSpinBox->value());
   settings.setValue("preview/fontSize", previewFontSizeSpinBox->value());

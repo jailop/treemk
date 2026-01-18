@@ -27,6 +27,8 @@ public:
    QString getLinkAtPosition(int position) const;
    QString getExternalLinkAtPosition(int position) const;
    QString getMarkdownLinkAtPosition(int position) const;
+  QString getTaskMarkerAtPosition(int position) const;
+  void toggleTaskAtPosition(int position);
 
   void setCurrentFilePath(const QString &filePath);
 
@@ -61,6 +63,12 @@ private:
   void showPrediction();
   void hidePrediction();
   void acceptPrediction();
+
+  void updateParentTask(const QTextBlock &block);
+  QTextBlock findParentBlock(const QTextBlock &block, int currentIndent);
+  void updateTaskState(const QTextBlock &block);
+  QVector<QTextBlock> findChildBlocks(const QTextBlock &block);
+  int getIndentLevel(const QTextBlock &block);
 
   LineNumberArea *lineNumberArea;
   MarkdownHighlighter *m_highlighter;

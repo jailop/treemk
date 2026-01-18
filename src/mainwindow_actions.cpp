@@ -1,6 +1,8 @@
 #include "mainwindow.h"
-#include "markdowneditor.h"
 #include "tabeditor.h"
+#include "markdowneditor.h"
+#include "defs.h"
+#include "shortcutmanager.h"
 #include <QAction>
 #include <QActionGroup>
 #include <QApplication>
@@ -10,6 +12,8 @@
 #include <QPalette>
 #include <QPixmap>
 #include <QStyle>
+#include <QRegularExpression>
+#include <QTextCursor>
 #include <QSvgRenderer>
 
 static QIcon iconWithFallback(const QString &themeName,
@@ -184,16 +188,20 @@ void MainWindow::createActions() {
   insertBoldAction->setToolTip(tr("Make text bold"));
   connect(insertBoldAction, &QAction::triggered, this, &MainWindow::insertBold);
 
-  insertItalicAction = new QAction(
-      iconWithFallback("format-text-italic", QStyle::SP_DialogApplyButton),
-      tr("&Italic"), this);
-  insertItalicAction->setShortcut(QKeySequence::Italic);
-  insertItalicAction->setStatusTip(tr("Make text italic"));
-  insertItalicAction->setToolTip(tr("Make text italic"));
-  connect(insertItalicAction, &QAction::triggered, this,
-          &MainWindow::insertItalic);
+   insertItalicAction = new QAction(
+       iconWithFallback("format-text-italic", QStyle::SP_DialogApplyButton),
+       tr("&Italic"), this);
+   insertItalicAction->setShortcut(QKeySequence::Italic);
+   insertItalicAction->setStatusTip(tr("Make text italic"));
+   insertItalicAction->setToolTip(tr("Make text italic"));
+   connect(insertItalicAction, &QAction::triggered, this,
+           &MainWindow::insertItalic);
 
-  insertCodeAction =
+   insertStrikethroughAction = new QAction(tr("Strikethrough"), this);
+   insertStrikethroughAction->setStatusTip(tr("Strike out selected text"));
+   connect(insertStrikethroughAction, &QAction::triggered, this, &MainWindow::insertStrikethrough);
+
+   insertCodeAction =
       new QAction(iconWithFallback("text-x-generic", QStyle::SP_ComputerIcon),
                   tr("Inline &Code"), this);
   insertCodeAction->setShortcut(QKeySequence(tr("Ctrl+`")));
@@ -372,9 +380,19 @@ void MainWindow::createActions() {
   quickOpenAction->setShortcut(QKeySequence(tr("Ctrl+P")));
   quickOpenAction->setStatusTip(tr("Quickly open a file"));
   quickOpenAction->setToolTip(tr("Quick open"));
-  connect(quickOpenAction, &QAction::triggered, this, &MainWindow::quickOpen);
+   connect(quickOpenAction, &QAction::triggered, this, &MainWindow::quickOpen);
 
-  toggleSidebarAction =
+   breakLinesAction = new QAction(tr("Break Lines"), this);
+   breakLinesAction->setShortcut(QKeySequence(tr("Ctrl+Shift+B")));
+   breakLinesAction->setStatusTip(tr("Break lines according to preferences (Ctrl+Shift+B)"));
+   connect(breakLinesAction, &QAction::triggered, this, &MainWindow::breakLines);
+
+   joinLinesAction = new QAction(tr("Join Lines"), this);
+   joinLinesAction->setShortcut(QKeySequence(tr("Ctrl+Shift+J")));
+   joinLinesAction->setStatusTip(tr("Join lines back into paragraphs (Ctrl+Shift+J)"));
+   connect(joinLinesAction, &QAction::triggered, this, &MainWindow::joinLines);
+
+   toggleSidebarAction =
       new QAction(iconWithFallback("view-sidetree", QStyle::SP_DirIcon),
                   tr("&Sidebar"), this);
   toggleSidebarAction->setCheckable(true);
@@ -431,8 +449,95 @@ void MainWindow::createActions() {
   connect(keyboardShortcutsAction, &QAction::triggered, this,
           &MainWindow::showKeyboardShortcuts);
 
-  aboutAction = new QAction(tr("&About"), this);
-  aboutAction->setStatusTip(tr("Show the application's About box"));
-  aboutAction->setToolTip(tr("About the application"));
-  connect(aboutAction, &QAction::triggered, this, &MainWindow::about);
+   aboutAction = new QAction(tr("&About"), this);
+   aboutAction->setStatusTip(tr("Show the application's About box"));
+   aboutAction->setToolTip(tr("About the application"));
+   connect(aboutAction, &QAction::triggered, this, &MainWindow::about);
+}
+
+void MainWindow::breakLines() {
+  TabEditor *tab = currentTabEditor();
+  if (!tab) return;
+
+  QSettings settings(APP_LABEL, APP_LABEL);
+  bool enabled = settings.value("editor/lineBreakEnabled", false).toBool();
+  if (!enabled) return;
+
+  int columns = settings.value("editor/lineBreakColumns", 80).toInt();
+
+  QTextCursor cursor = tab->editor()->textCursor();
+  bool hasSelection = cursor.hasSelection();
+  int start = hasSelection ? cursor.selectionStart() : 0;
+  int end = hasSelection ? cursor.selectionEnd() : tab->editor()->document()->characterCount() - 1;
+
+  cursor.setPosition(start);
+  cursor.setPosition(end, QTextCursor::KeepAnchor);
+  QString text = cursor.selectedText();
+
+  QStringList lines = text.split('\n');
+
+  QString newText;
+
+  for (const QString &line : lines) {
+
+    QString current = line;
+
+    while (current.length() > columns) {
+
+      int spacePos = current.lastIndexOf(' ', columns - 1);
+
+      if (spacePos > 0) {
+
+        newText += current.left(spacePos) + "\n";
+
+        current = current.mid(spacePos + 1).trimmed();
+
+      } else {
+
+        // No space found, break at column limit
+
+        newText += current.left(columns) + "\n";
+
+        current = current.mid(columns);
+
+      }
+
+    }
+
+    newText += current + "\n";
+
+  }
+
+  newText.chop(1); // remove last \n
+
+  cursor.insertText(newText);
+}
+
+void MainWindow::joinLines() {
+  TabEditor *tab = currentTabEditor();
+  if (!tab) return;
+
+  QTextCursor cursor = tab->editor()->textCursor();
+  bool hasSelection = cursor.hasSelection();
+  QString text;
+
+  if (hasSelection) {
+    int start = cursor.selectionStart();
+    int end = cursor.selectionEnd();
+    cursor.setPosition(start);
+    cursor.setPosition(end, QTextCursor::KeepAnchor);
+    text = cursor.selectedText();
+    // For selected text, join all lines with spaces
+    text.replace("\n", " ");
+  } else {
+    text = tab->editor()->toPlainText();
+    // For whole document, join lines within paragraphs
+    text.replace(QRegularExpression("([^\n])\n([^\n])"), "\\1 \\2");
+  }
+
+  if (hasSelection) {
+    cursor.insertText(text);
+  } else {
+    tab->editor()->setPlainText(text);
+  }
 }

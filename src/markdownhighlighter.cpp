@@ -15,9 +15,9 @@ void MarkdownHighlighter::setupFormats() {
   HighlightingRule rule;
 
   // Determine colors based on scheme
-  QColor headerColor, textColor, codeColor, linkColor, listColor, quoteColor,
-      latexColor;
-  QColor codeBg, wikiLinkColor, brokenLinkColor;
+   QColor headerColor, textColor, codeColor, linkColor, listColor, quoteColor,
+       latexColor, strikethroughColor;
+   QColor codeBg, wikiLinkColor, brokenLinkColor;
 
   if (currentColorScheme == "dark") {
     headerColor = QColor(255, 165, 0);
@@ -30,6 +30,7 @@ void MarkdownHighlighter::setupFormats() {
     codeBg = QColor(45, 45, 45);
     wikiLinkColor = QColor(156, 220, 254);   // Light blue
     brokenLinkColor = QColor(240, 113, 120); // Light red
+    strikethroughColor = QColor(150, 150, 150);
   } else if (currentColorScheme == "solarized-light") {
     headerColor = QColor(38, 139, 210); // blue
     textColor = QColor(101, 123, 131);
@@ -41,6 +42,7 @@ void MarkdownHighlighter::setupFormats() {
     codeBg = QColor(238, 232, 213);
     wikiLinkColor = QColor(42, 161, 152);   // cyan
     brokenLinkColor = QColor(211, 54, 130); // magenta
+    strikethroughColor = QColor(147, 161, 161);
   } else if (currentColorScheme == "solarized-dark") {
     headerColor = QColor(38, 139, 210); // blue
     textColor = QColor(131, 148, 150);
@@ -52,6 +54,7 @@ void MarkdownHighlighter::setupFormats() {
     codeBg = QColor(7, 54, 66);
     wikiLinkColor = QColor(42, 161, 152);   // cyan
     brokenLinkColor = QColor(211, 54, 130); // magenta
+    strikethroughColor = QColor(88, 110, 117);
   } else {                                  // light
     headerColor = QColor(0, 0, 139);
     textColor = QColor(0, 0, 0);
@@ -63,7 +66,15 @@ void MarkdownHighlighter::setupFormats() {
     codeBg = QColor(240, 240, 240);
     wikiLinkColor = QColor(0, 128, 128);
     brokenLinkColor = QColor(178, 34, 34);
+    strikethroughColor = QColor(128, 128, 128);
   }
+
+  strikethroughFormat.setFontStrikeOut(true);
+  strikethroughFormat.setForeground(strikethroughColor);
+
+  taskPendingFormat.setForeground(QColor(255, 0, 0)); // red
+  taskDoneFormat.setForeground(QColor(0, 255, 0)); // green
+  taskPartialFormat.setForeground(QColor(255, 255, 0)); // yellow
 
   // Headers (H1-H6)
   h1Format.setForeground(headerColor);
@@ -344,6 +355,33 @@ void MarkdownHighlighter::highlightBlock(const QString &text) {
       QRegularExpressionMatch match = matchIterator.next();
       setFormat(match.capturedStart(), match.capturedLength(), rule.format);
     }
+  }
+
+  // Highlight strikethrough ~~text~~
+  QRegularExpression strikethroughRegex("~~(.*?)~~");
+  QRegularExpressionMatchIterator it = strikethroughRegex.globalMatch(text);
+  while (it.hasNext()) {
+    QRegularExpressionMatch match = it.next();
+    int start = match.capturedStart(1);
+    int length = match.capturedLength(1);
+    setFormat(start, length, strikethroughFormat);
+  }
+
+  // Highlight tasks - [ ], - [X], - [.]
+  QRegularExpression taskRegex("[-*+] \\[([ xX.]?)\\]");
+  QRegularExpressionMatchIterator taskIt = taskRegex.globalMatch(text);
+  while (taskIt.hasNext()) {
+    QRegularExpressionMatch match = taskIt.next();
+    QString state = match.captured(1);
+    QTextCharFormat format;
+    if (state == "X") {
+      format = taskDoneFormat;
+    } else if (state == ".") {
+      format = taskPartialFormat;
+    } else {
+      format = taskPendingFormat;
+    }
+    setFormat(match.capturedStart(), match.capturedLength(), format);
   }
 
   // Handle wiki links separately for validation
