@@ -36,3 +36,4 @@ ignored.
 1.5.0 - 2026-01-29
 
 - Fixed editor theme selection at start
+- Fixed system theme awareness for the markdown editor
