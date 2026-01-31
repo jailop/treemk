@@ -91,6 +91,9 @@ TabEditor *MainWindow::createNewTab() {
     outlineView->updateOutline(tab->editor()->toPlainText());
   }
 
+  // Apply current view mode to the newly created tab
+  applyViewMode(currentViewMode);
+
   return tab;
 }
 
@@ -147,6 +150,9 @@ void MainWindow::onTabChanged(int index) {
     } else {
       setWindowTitle(APP_LABEL);
     }
+    
+    // Apply current view mode to the newly active tab
+    applyViewMode(currentViewMode);
   }
 }
 

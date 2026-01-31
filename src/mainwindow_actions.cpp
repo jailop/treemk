@@ -414,6 +414,15 @@ void MainWindow::createActions() {
   connect(togglePreviewAction, &QAction::triggered, this,
           &MainWindow::togglePreview);
 
+  cycleViewModeAction = new QAction(
+      iconWithFallback("view-split-left-right", QStyle::SP_FileDialogContentsView),
+      tr("Cycle View Mode (Next: Editor Only)"), this);
+  cycleViewModeAction->setShortcut(QKeySequence(tr("Ctrl+Shift+P")));
+  cycleViewModeAction->setStatusTip(tr("Cycle between Editor+Preview / Editor Only / Preview Only"));
+  cycleViewModeAction->setToolTip(tr("Cycle view mode (Ctrl+Shift+P)"));
+  connect(cycleViewModeAction, &QAction::triggered, this,
+          &MainWindow::cycleViewMode);
+
   previewThemeLightAction = new QAction(tr("Light Theme"), this);
   previewThemeLightAction->setCheckable(true);
   previewThemeLightAction->setChecked(true);

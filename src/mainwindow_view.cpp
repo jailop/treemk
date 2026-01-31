@@ -24,6 +24,68 @@ void MainWindow::togglePreview() {
   }
 }
 
+void MainWindow::applyViewMode(ViewMode mode) {
+  TabEditor *tab = currentTabEditor();
+  if (!tab) return;
+  
+  switch (mode) {
+    case ViewMode_Both:
+      tab->editor()->setVisible(true);
+      tab->preview()->setVisible(true);
+      statusBar()->showMessage(tr("View Mode: Editor + Preview"), 2000);
+      break;
+    case ViewMode_EditorOnly:
+      tab->editor()->setVisible(true);
+      tab->preview()->setVisible(false);
+      statusBar()->showMessage(tr("View Mode: Editor Only"), 2000);
+      break;
+    case ViewMode_PreviewOnly:
+      tab->editor()->setVisible(false);
+      tab->preview()->setVisible(true);
+      statusBar()->showMessage(tr("View Mode: Preview Only"), 2000);
+      break;
+  }
+  
+  currentViewMode = mode;
+}
+
+void MainWindow::cycleViewMode() {
+  // Cycle through view modes
+  switch (currentViewMode) {
+    case ViewMode_Both:
+      currentViewMode = ViewMode_EditorOnly;
+      break;
+    case ViewMode_EditorOnly:
+      currentViewMode = ViewMode_PreviewOnly;
+      break;
+    case ViewMode_PreviewOnly:
+      currentViewMode = ViewMode_Both;
+      break;
+  }
+  
+  applyViewMode(currentViewMode);
+  
+  // Update action text to show next mode
+  QString nextModeText;
+  switch (currentViewMode) {
+    case ViewMode_Both:
+      nextModeText = tr("Cycle View Mode (Next: Editor Only)");
+      break;
+    case ViewMode_EditorOnly:
+      nextModeText = tr("Cycle View Mode (Next: Preview Only)");
+      break;
+    case ViewMode_PreviewOnly:
+      nextModeText = tr("Cycle View Mode (Next: Both)");
+      break;
+  }
+  if (cycleViewModeAction) {
+    cycleViewModeAction->setText(nextModeText);
+  }
+  
+  // Save to settings
+  settings->setValue("viewMode", static_cast<int>(currentViewMode));
+}
+
 void MainWindow::onWikiLinkClicked(const QString &linkTarget) {
   if (currentFolder.isEmpty()) {
     statusBar()->showMessage(tr("No folder opened. Cannot resolve wiki link."),
