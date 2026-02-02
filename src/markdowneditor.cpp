@@ -517,12 +517,42 @@ void MarkdownEditor::keyPressEvent(QKeyEvent *event) {
     // Get current line text to calculate indentation
     QTextCursor cursor = textCursor();
     QString currentLine = cursor.block().text();
-
-    int indent = 0;
+    int cursorPosInBlock = cursor.positionInBlock();
 
     // Check if current line is a list item
     QRegularExpression listPattern("^(\\s*)([-*+]|[0-9]+\\.)\\s+");
     QRegularExpressionMatch match = listPattern.match(currentLine);
+    
+    if (match.hasMatch()) {
+      QString whitespace = match.captured(1);
+      QString bullet = match.captured(2);
+      
+      // Check if cursor is at the end of the line (after all content)
+      bool isAtEnd = cursorPosInBlock >= currentLine.length();
+      
+      if (isAtEnd) {
+        // Check if the line contains only the bullet (empty list item)
+        QString lineAfterBullet = currentLine.mid(match.capturedLength());
+        bool isEmptyListItem = lineAfterBullet.trimmed().isEmpty();
+        
+        if (isEmptyListItem) {
+          // User pressed Enter on an empty list item - exit list mode
+          cursor.insertText("\n" + whitespace);
+          setTextCursor(cursor);
+          event->accept();
+          return;
+        } else {
+          // Auto-continue list with same bullet
+          cursor.insertText("\n" + whitespace + bullet + " ");
+          setTextCursor(cursor);
+          event->accept();
+          return;
+        }
+      }
+    }
+
+    int indent = 0;
+
     if (match.hasMatch()) {
       // For list items, indent continuation to align with the text after the marker
       indent = match.capturedLength(1) + match.capturedLength(2) + 1; // marker + space
