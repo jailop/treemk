@@ -2,6 +2,7 @@
 #include "markdowneditor.h"
 #include "markdownhighlighter.h"
 #include "shortcutmanager.h"
+#include "thememanager.h"
 #include <QApplication>
 #include <QClipboard>
 #include <QDateTime>
@@ -48,9 +49,43 @@ MarkdownEditor::MarkdownEditor(QWidget *parent)
 
   connect(document(), &QTextDocument::modificationChanged, this,
           &MarkdownEditor::setModified);
+
+  // Connect to theme changes
+  if (ThemeManager::instance()) {
+    connect(ThemeManager::instance(), &ThemeManager::themeChanged, this,
+            &MarkdownEditor::onThemeChanged);
+    connect(ThemeManager::instance(), &ThemeManager::editorColorSchemeChanged,
+            this, &MarkdownEditor::onThemeChanged);
+  }
+
+  // Apply initial theme
+  onThemeChanged();
 }
 
 MarkdownEditor::~MarkdownEditor() {}
+
+void MarkdownEditor::onThemeChanged() {
+  // Update editor palette and stylesheet from ThemeManager
+  if (ThemeManager::instance()) {
+    setPalette(ThemeManager::instance()->getEditorPalette());
+    setStyleSheet(ThemeManager::instance()->getEditorStyleSheet());
+
+    // Update highlighter color scheme
+    if (m_highlighter) {
+      QString resolvedScheme =
+          ThemeManager::instance()->getResolvedEditorColorSchemeName();
+      m_highlighter->setColorScheme(resolvedScheme);
+    }
+
+    // Update line number area to repaint with new colors
+    if (lineNumberArea) {
+      lineNumberArea->update();
+    }
+
+    // Update current line highlighting
+    highlightCurrentLine();
+  }
+}
 
 bool MarkdownEditor::isModified() const { return document()->isModified(); }
 
@@ -719,10 +754,7 @@ void MarkdownEditor::setupEditor() {
   setLineWrapMode(QPlainTextEdit::WidgetWidth);
   setWordWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);
 
-  QPalette p = palette();
-  p.setColor(QPalette::Base, QColor(255, 255, 255));
-  p.setColor(QPalette::Text, QColor(0, 0, 0));
-  setPalette(p);
+  // Theme is applied via onThemeChanged() - no hardcoded colors here
 }
 
 int MarkdownEditor::lineNumberAreaWidth() {
@@ -785,7 +817,26 @@ void MarkdownEditor::highlightCurrentLine() {
 
 void MarkdownEditor::lineNumberAreaPaintEvent(QPaintEvent *event) {
   QPainter painter(lineNumberArea);
-  painter.fillRect(event->rect(), QColor(240, 240, 240));
+  
+  // Use theme-aware colors for line number area
+  QColor backgroundColor;
+  QColor textColor;
+  
+  // Detect if we're in a dark theme by checking the editor's background
+  QColor editorBg = palette().color(QPalette::Base);
+  bool isDark = (editorBg.lightness() < 128);
+  
+  if (isDark) {
+    // Dark theme: darker gray background, lighter text
+    backgroundColor = QColor(45, 45, 45);
+    textColor = QColor(160, 160, 160);
+  } else {
+    // Light theme: light gray background, darker text
+    backgroundColor = QColor(240, 240, 240);
+    textColor = QColor(120, 120, 120);
+  }
+  
+  painter.fillRect(event->rect(), backgroundColor);
 
   QTextBlock block = firstVisibleBlock();
   int blockNumber = block.blockNumber();
@@ -796,7 +847,7 @@ void MarkdownEditor::lineNumberAreaPaintEvent(QPaintEvent *event) {
   while (block.isValid() && top <= event->rect().bottom()) {
     if (block.isVisible() && bottom >= event->rect().top()) {
       QString number = QString::number(blockNumber + 1);
-      painter.setPen(QColor(120, 120, 120));
+      painter.setPen(textColor);
       painter.drawText(0, top, lineNumberArea->width() - 5,
                        fontMetrics().height(), Qt::AlignRight, number);
     }

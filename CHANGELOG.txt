@@ -32,3 +32,13 @@ ignored.
 - Preferences dialog simplified
 - Theme manager fixed
 - Experimental tasks lists started
+
+0.1.5 - 2026-01-29
+
+- Fixed editor theme selection at start
+- Fixed system theme awareness for the markdown editor
+
+0.1.6 - 2026-01-31
+
+- Editor and preview panel visibility toogle
+- Fixed width of preview panel at start
