@@ -42,3 +42,7 @@ ignored.
 
 - Editor and preview panel visibility toogle
 - Fixed width of preview panel at start
+
+0.1.7 (in progress)
+
+- Github workflows removed
