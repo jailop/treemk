@@ -31,10 +31,11 @@ MainWindow::MainWindow(QWidget *parent)
        breakLinesAction(nullptr), joinLinesAction(nullptr),
        closeTabAction(nullptr), closeAllTabsAction(nullptr),
       toggleSidebarAction(nullptr), togglePreviewAction(nullptr),
+      cycleViewModeAction(nullptr),
       previewThemeLightAction(nullptr), previewThemeDarkAction(nullptr),
       previewThemeSepiaAction(nullptr), settingsAction(nullptr),
       aboutAction(nullptr), aboutQtAction(nullptr),
-      keyboardShortcutsAction(nullptr) {
+      keyboardShortcutsAction(nullptr), currentViewMode(ViewMode_Both) {
   settings = new QSettings(APP_LABEL, APP_LABEL, this);
   linkParser = new LinkParser();
   setWindowTitle("TreeMk - Markdown Editor");

@@ -31,13 +31,19 @@ void TabEditor::setupUI() {
   connect(m_editor, &MarkdownEditor::cursorPositionChanged, this,
           &TabEditor::syncPreviewScroll);
   m_preview = new MarkdownPreview(this);
-  // TODO set base on the width of the layout container
   m_preview->setMinimumWidth(300);
 
   m_splitter->addWidget(m_editor);
   m_splitter->addWidget(m_preview);
   m_splitter->setStretchFactor(0, 1);
   m_splitter->setStretchFactor(1, 1);
+  
+  // Set equal sizes for editor and preview (50/50 split)
+  // Use a large initial size that will be adjusted by the layout
+  QList<int> sizes;
+  sizes << 1000 << 1000;  // Equal sizes
+  m_splitter->setSizes(sizes);
+  
   mainLayout->addWidget(m_splitter);
   m_previewTimer = new QTimer(this);
   m_previewTimer->setSingleShot(true);

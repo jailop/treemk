@@ -88,7 +88,7 @@ void MainWindow::createMenus() {
 
   viewMenu = menuBar()->addMenu(tr("&View"));
   viewMenu->addAction(toggleSidebarAction);
-  viewMenu->addAction(togglePreviewAction);
+  viewMenu->addAction(cycleViewModeAction);
   viewMenu->addSeparator();
   QMenu *previewThemeMenu = viewMenu->addMenu(tr("Preview Theme"));
   previewThemeMenu->addAction(previewThemeLightAction);
@@ -148,7 +148,7 @@ void MainWindow::createToolbar() {
 
   // View toggles
   mainToolbar->addAction(toggleSidebarAction);
-  mainToolbar->addAction(togglePreviewAction);
+  mainToolbar->addAction(cycleViewModeAction);
 }
 
 void MainWindow::createLayout() {
@@ -239,8 +239,29 @@ void MainWindow::readSettings() {
   leftTabWidget->setVisible(sidebarVisible);
   toggleSidebarAction->setChecked(sidebarVisible);
 
-   // Load recent folders
-   recentFolders = settings->value("recentFolders").toStringList();
+  // Load and apply view mode
+  int savedViewMode = settings->value("viewMode", ViewMode_Both).toInt();
+  currentViewMode = static_cast<ViewMode>(savedViewMode);
+  
+  // Update action text based on current mode
+  QString nextModeText;
+  switch (currentViewMode) {
+    case ViewMode_Both:
+      nextModeText = tr("Cycle View Mode (Next: Editor Only)");
+      break;
+    case ViewMode_EditorOnly:
+      nextModeText = tr("Cycle View Mode (Next: Preview Only)");
+      break;
+    case ViewMode_PreviewOnly:
+      nextModeText = tr("Cycle View Mode (Next: Both)");
+      break;
+  }
+  if (cycleViewModeAction) {
+    cycleViewModeAction->setText(nextModeText);
+  }
+
+  // Load recent folders
+  recentFolders = settings->value("recentFolders").toStringList();
 
    // Determine which folder to open
    QString folderToOpen;
@@ -295,6 +316,7 @@ void MainWindow::readSettings() {
        }
      }
 
+<<<<<<< HEAD
      // Open each file from the session
      for (const QString &filePath : openFiles) {
        if (QFileInfo::exists(filePath)) {
@@ -307,6 +329,16 @@ void MainWindow::readSettings() {
        tabWidget->setCurrentIndex(activeTabIndex);
      }
    }
+=======
+    // Restore the active tab
+    if (activeTabIndex >= 0 && activeTabIndex < tabWidget->count()) {
+      tabWidget->setCurrentIndex(activeTabIndex);
+    }
+  }
+  
+  // Apply view mode to current tab
+  applyViewMode(currentViewMode);
+>>>>>>> 57b55571a0ed78e7e2aad58f90164cef988acd6a
 }
 
 void MainWindow::writeSettings() {
@@ -314,6 +346,7 @@ void MainWindow::writeSettings() {
   settings->setValue("size", size());
   settings->setValue("mainSplitter", mainSplitter->saveState());
   settings->setValue("sidebarVisible", leftTabWidget->isVisible());
+  settings->setValue("viewMode", static_cast<int>(currentViewMode));
   settings->setValue("lastFolder", currentFolder);
   settings->setValue("recentFolders", recentFolders);
 

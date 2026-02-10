@@ -46,11 +46,12 @@ protected:
   void insertFromMimeData(const QMimeData *source) override;
   void paintEvent(QPaintEvent *event) override;
 
-private slots:
+ private slots:
   void updateLineNumberAreaWidth(int newBlockCount);
   void highlightCurrentLine();
   void updateLineNumberArea(const QRect &rect, int dy);
   void onTextChanged();
+  void onThemeChanged();
 
 private:
   void setupEditor();

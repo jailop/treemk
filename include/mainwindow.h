@@ -4,6 +4,12 @@
 #include <QMainWindow>
 #include <QSettings>
 
+enum ViewMode {
+  ViewMode_Both,       // Editor + Preview visible (default)
+  ViewMode_EditorOnly, // Only Editor visible
+  ViewMode_PreviewOnly // Only Preview visible
+};
+
 class QAction;
 class QMenu;
 class QSplitter;
@@ -45,6 +51,7 @@ private slots:
   void about();
   void toggleSidebar();
   void togglePreview();
+  void cycleViewMode();
   void onFileSelected(const QString &filePath);
   void onFileDoubleClicked(const QString &filePath);
   void onFileModifiedExternally(const QString &filePath);
@@ -105,6 +112,7 @@ private:
   bool maybeSave();
   bool saveFile(const QString &filePath);
   bool loadFile(const QString &filePath);
+  void applyViewMode(ViewMode mode);
 
   TabEditor *currentTabEditor() const;
   TabEditor *createNewTab();
@@ -158,6 +166,7 @@ private:
   QAction *closeAllTabsAction;
   QAction *toggleSidebarAction;
   QAction *togglePreviewAction;
+  QAction *cycleViewModeAction;
   QAction *previewThemeLightAction;
   QAction *previewThemeDarkAction;
   QAction *previewThemeSepiaAction;
@@ -191,7 +200,8 @@ private:
    QString m_startupPath;
    QString m_startupFile;
 
-   QSettings *settings;
+  QSettings *settings;
+  ViewMode currentViewMode;
 };
 
 #endif // MAINWINDOW_H
