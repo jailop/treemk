@@ -57,15 +57,24 @@ MainWindow::MainWindow(QWidget *parent)
   connect(previewUpdateTimer, &QTimer::timeout, this,
           &MainWindow::updatePreview);
 
-  // Create UI components in order
-  createLayout();
-  createActions();
-  createMenus();
-  createToolbar();
-  readSettings();
+   // Create UI components in order
+   createLayout();
+   createActions();
+   createMenus();
+   createToolbar();
+   // Note: readSettings() is called after setStartupArguments() in main.cpp
 }
 
 MainWindow::~MainWindow() { delete linkParser; }
+
+void MainWindow::setStartupArguments(const QString &path, const QString &file) {
+  m_startupPath = path;
+  m_startupFile = file;
+}
+
+void MainWindow::initializeSettings() {
+  readSettings();
+}
 
 void MainWindow::closeEvent(QCloseEvent *event) {
   if (maybeSave()) {

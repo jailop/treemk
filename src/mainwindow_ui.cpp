@@ -239,53 +239,74 @@ void MainWindow::readSettings() {
   leftTabWidget->setVisible(sidebarVisible);
   toggleSidebarAction->setChecked(sidebarVisible);
 
-  // Load recent folders
-  recentFolders = settings->value("recentFolders").toStringList();
+   // Load recent folders
+   recentFolders = settings->value("recentFolders").toStringList();
 
-  QString lastFolder = settings->value("lastFolder").toString();
-  if (!lastFolder.isEmpty() && QDir(lastFolder).exists()) {
-    treeView->setRootPath(lastFolder);
-    currentFolder = lastFolder;
+   // Determine which folder to open
+   QString folderToOpen;
+   if (!m_startupPath.isEmpty()) {
+     // Use startup path from command-line argument
+     folderToOpen = m_startupPath;
+   } else {
+     // Use last opened folder
+     folderToOpen = settings->value("lastFolder").toString();
+   }
 
-    TabEditor *tab = currentTabEditor();
-    if (tab && tab->editor()->getHighlighter()) {
-      tab->editor()->getHighlighter()->setRootPath(lastFolder);
-    }
+   if (!folderToOpen.isEmpty() && QDir(folderToOpen).exists()) {
+     treeView->setRootPath(folderToOpen);
+     currentFolder = folderToOpen;
 
-    linkParser->buildLinkIndex(lastFolder);
+     TabEditor *tab = currentTabEditor();
+     if (tab && tab->editor()->getHighlighter()) {
+       tab->editor()->getHighlighter()->setRootPath(folderToOpen);
+     }
 
-    statusBar()->showMessage(tr("Opened folder: %1").arg(lastFolder));
-  }
+     linkParser->buildLinkIndex(folderToOpen);
 
-  // Restore open files from last session (if enabled in preferences)
-  bool restoreSession =
-      settings->value("general/restoreSession", true).toBool();
-  QStringList openFiles = settings->value("session/openFiles").toStringList();
-  int activeTabIndex = settings->value("session/activeTab", -1).toInt();
+     statusBar()->showMessage(tr("Opened folder: %1").arg(folderToOpen));
+   }
 
-  if (restoreSession && !openFiles.isEmpty()) {
-    // Close the default empty tab if it exists and is empty
-    if (tabWidget->count() == 1) {
-      TabEditor *firstTab = qobject_cast<TabEditor *>(tabWidget->widget(0));
-      if (firstTab && firstTab->filePath().isEmpty() &&
-          !firstTab->editor()->isModified()) {
-        tabWidget->removeTab(0);
-        delete firstTab;
-      }
-    }
+   // Restore open files from last session (if enabled in preferences)
+   bool restoreSession =
+       settings->value("general/restoreSession", true).toBool();
+   QStringList openFiles = settings->value("session/openFiles").toStringList();
+   int activeTabIndex = settings->value("session/activeTab", -1).toInt();
 
-    // Open each file from the session
-    for (const QString &filePath : openFiles) {
-      if (QFileInfo::exists(filePath)) {
-        loadFile(filePath);
-      }
-    }
+   if (!m_startupFile.isEmpty()) {
+     // If a specific file was provided via command-line, open it
+     // Close the default empty tab if it exists
+     if (tabWidget->count() == 1) {
+       TabEditor *firstTab = qobject_cast<TabEditor *>(tabWidget->widget(0));
+       if (firstTab && firstTab->filePath().isEmpty() &&
+           !firstTab->editor()->isModified()) {
+         tabWidget->removeTab(0);
+         delete firstTab;
+       }
+     }
+     loadFile(m_startupFile);
+   } else if (restoreSession && !openFiles.isEmpty()) {
+     // Close the default empty tab if it exists and is empty
+     if (tabWidget->count() == 1) {
+       TabEditor *firstTab = qobject_cast<TabEditor *>(tabWidget->widget(0));
+       if (firstTab && firstTab->filePath().isEmpty() &&
+           !firstTab->editor()->isModified()) {
+         tabWidget->removeTab(0);
+         delete firstTab;
+       }
+     }
 
-    // Restore the active tab
-    if (activeTabIndex >= 0 && activeTabIndex < tabWidget->count()) {
-      tabWidget->setCurrentIndex(activeTabIndex);
-    }
-  }
+     // Open each file from the session
+     for (const QString &filePath : openFiles) {
+       if (QFileInfo::exists(filePath)) {
+         loadFile(filePath);
+       }
+     }
+
+     // Restore the active tab
+     if (activeTabIndex >= 0 && activeTabIndex < tabWidget->count()) {
+       tabWidget->setCurrentIndex(activeTabIndex);
+     }
+   }
 }
 
 void MainWindow::writeSettings() {
