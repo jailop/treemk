@@ -46,3 +46,11 @@ ignored.
 0.1.7 (in progress)
 
 - Github workflows removed
+
+0.1.8 - 2026-02-10
+
+- now it is able to open file or directory from the command line
+
+0.2.2
+
+- it just a jump in versions

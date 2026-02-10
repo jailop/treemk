@@ -35,6 +35,8 @@ class MainWindow : public QMainWindow {
 public:
   explicit MainWindow(QWidget *parent = nullptr);
   ~MainWindow();
+  void setStartupArguments(const QString &path, const QString &file);
+  void initializeSettings();
 
 protected:
   void closeEvent(QCloseEvent *event) override;
@@ -189,12 +191,14 @@ private:
   QListWidget *backlinksView;
   LinkParser *linkParser;
 
-  QStringList recentFiles;
-  QStringList recentFolders;
-  QString currentFolder;
-  QString currentFilePath;
-  QTimer *autoSaveTimer;
-  QTimer *previewUpdateTimer;
+   QStringList recentFiles;
+   QStringList recentFolders;
+   QString currentFolder;
+   QString currentFilePath;
+   QTimer *autoSaveTimer;
+   QTimer *previewUpdateTimer;
+   QString m_startupPath;
+   QString m_startupFile;
 
   QSettings *settings;
   ViewMode currentViewMode;
