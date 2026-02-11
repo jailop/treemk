@@ -61,8 +61,7 @@ jobs:
         run: |
           cmake -B build \
                 -DCMAKE_BUILD_TYPE=Release \
-                -DCMAKE_PREFIX_PATH="${Qt6_DIR}" \
-                -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
+                -DCMAKE_PREFIX_PATH="${Qt6_DIR}"
       
       - name: Build
         run: cmake --build build --parallel
@@ -79,8 +78,9 @@ jobs:
           chmod +x create_dmg.sh
           ./create_dmg.sh
           
-          # Rename to include macOS suffix for clarity
-          mv TreeMk-${{ env.VERSION }}.dmg TreeMk-${{ env.VERSION }}-macOS.dmg
+          # Detect architecture and rename with suffix
+          ARCH=$(uname -m)
+          mv TreeMk-${{ env.VERSION }}.dmg TreeMk-${{ env.VERSION }}-macOS-${ARCH}.dmg
           ls -lh TreeMk-*.dmg
       
       - name: Upload artifacts
