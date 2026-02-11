@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 APP_NAME="TreeMk"
-VERSION="0.2.0"
+VERSION="${VERSION:-0.5.0}"
 BUILD_DIR="build"
 DMG_NAME="${APP_NAME}-${VERSION}"
 

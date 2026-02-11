@@ -1,0 +1,201 @@
+name: RPM Build and Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Release tag to upload to (e.g., v0.2.0)'
+        required: false
+        default: ''
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+  
+jobs:
+  build-rpm:
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:latest
+    
+    steps:
+      - name: Install dependencies
+        run: |
+          dnf install -y git cmake gcc-c++ rpm-build rpmdevtools \
+                         qt6-qtbase-devel qt6-qtwebengine-devel \
+                         qt6-qtsvg-devel md4c-devel
+      
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Detect version
+        id: version
+        run: |
+          # Try to get version from latest git tag
+          tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -n "$tag" ]; then
+            # Remove 'v' prefix if present
+            version=${tag#v}
+          else
+            # No tags, generate version from commit count and hash
+            commitCount=$(git rev-list --count HEAD)
+            commitHash=$(git rev-parse --short HEAD)
+            version="0.0.${commitCount}-${commitHash}"
+          fi
+          
+          echo "Detected version: $version"
+          echo "VERSION=$version" >> $GITHUB_ENV
+          echo "version=$version" >> $GITHUB_OUTPUT
+      
+      - name: Configure CMake
+        run: |
+          cmake -B build \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_INSTALL_PREFIX=/usr \
+                -DCMAKE_INSTALL_LIBDIR=lib64
+      
+      - name: Build
+        run: cmake --build build --parallel
+      
+      - name: Setup RPM build environment
+        run: |
+          rpmdev-setuptree
+          
+          # Create spec file
+          cat > ~/rpmbuild/SPECS/treemk.spec << 'EOF'
+          Name:           treemk
+          Version:        ${{ env.VERSION }}
+          Release:        1%{?dist}
+          Summary:        Wiki-style markdown editor with live preview
+          License:        Custom
+          URL:            https://github.com/jailop/treemk
+          Source0:        %{name}-%{version}.tar.gz
+          
+          BuildRequires:  cmake >= 3.16
+          BuildRequires:  gcc-c++
+          BuildRequires:  qt6-qtbase-devel
+          BuildRequires:  qt6-qtwebengine-devel
+          BuildRequires:  qt6-qtsvg-devel
+          BuildRequires:  md4c-devel
+          
+          Requires:       qt6-qtbase
+          Requires:       qt6-qtwebengine
+          Requires:       qt6-qtsvg
+          Requires:       md4c
+          
+          %description
+          TreeMk is a Markdown editor with wiki-link support, featuring a multi-window
+          architecture, file management, and real-time preview capabilities.
+          
+          %prep
+          %setup -q
+          
+          %build
+          cmake -B build \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_INSTALL_PREFIX=/usr \
+                -DCMAKE_INSTALL_LIBDIR=%{_libdir}
+          cmake --build build --parallel
+          
+          %install
+          DESTDIR=%{buildroot} cmake --install build
+          
+          # Install desktop file
+          mkdir -p %{buildroot}%{_datadir}/applications
+          install -Dm644 resources/treemk.desktop \
+              %{buildroot}%{_datadir}/applications/treemk.desktop
+          
+          # Install icon
+          mkdir -p %{buildroot}%{_datadir}/icons/hicolor/256x256/apps
+          install -Dm644 resources/treemk.png \
+              %{buildroot}%{_datadir}/icons/hicolor/256x256/apps/treemk.png
+          
+          %files
+          %{_bindir}/treemk
+          %{_datadir}/applications/treemk.desktop
+          %{_datadir}/icons/hicolor/256x256/apps/treemk.png
+          %license LICENSE
+          
+          %changelog
+          * $(date "+%a %b %d %Y") TreeMk CI <noreply@github.com> - ${{ env.VERSION }}-1
+          - Automated build for version ${{ env.VERSION }}
+          EOF
+      
+      - name: Create source tarball
+        run: |
+          mkdir -p ~/rpmbuild/SOURCES
+          tar --exclude='.git' --exclude='build' --exclude='tmp' \
+              -czf ~/rpmbuild/SOURCES/treemk-${{ env.VERSION }}.tar.gz \
+              -C $(dirname $PWD) $(basename $PWD)
+      
+      - name: Build RPM
+        run: |
+          rpmbuild -ba ~/rpmbuild/SPECS/treemk.spec
+          
+          # Copy RPM to workspace
+          cp ~/rpmbuild/RPMS/x86_64/treemk-*.rpm .
+          
+          # List created files
+          ls -lh treemk-*.rpm
+      
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: TreeMk-RPM-Package
+          path: treemk-*.rpm
+          retention-days: 30
+      
+      - name: Get release info
+        id: release_info
+        run: |
+          # Determine release tag
+          tag=""
+          if [ "${{ github.event_name }}" = "push" ] && [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            # Triggered by tag push
+            tag="${{ github.ref_name }}"
+          elif [ -n "${{ github.event.inputs.release_tag }}" ]; then
+            # Manual trigger with specified tag
+            tag="${{ github.event.inputs.release_tag }}"
+          else
+            # Manual trigger without tag - use latest release
+            tag=$(gh release list --limit 1 --json tagName -q '.[0].tagName' || echo "")
+            if [ -z "$tag" ]; then
+              echo "Error: No releases found. Please specify a release tag or create a release first."
+              exit 1
+            fi
+          fi
+          
+          if [ -z "$tag" ]; then
+            echo "Error: Could not determine release tag"
+            exit 1
+          fi
+          
+          echo "RELEASE_TAG=$tag" >> $GITHUB_ENV
+          echo "Release tag: $tag"
+        env:
+          GH_TOKEN: ${{ github.token }}
+      
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          files: treemk-*.rpm
+          fail_on_unmatched_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Summary
+        run: |
+          echo "### ✅ RPM Build Complete!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ env.VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Release:** ${{ env.RELEASE_TAG }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Created Package:**" >> $GITHUB_STEP_SUMMARY
+          ls -1 treemk-*.rpm | sed 's/^/- /' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The RPM package has been uploaded to the release." >> $GITHUB_STEP_SUMMARY

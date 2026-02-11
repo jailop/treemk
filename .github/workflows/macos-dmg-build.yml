@@ -1,0 +1,142 @@
+name: macOS DMG Build and Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Release tag to upload to (e.g., v0.2.0)'
+        required: false
+        default: ''
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+  
+jobs:
+  build-macos-dmg:
+    runs-on: macos-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Detect version
+        id: version
+        run: |
+          # Try to get version from latest git tag
+          tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -n "$tag" ]; then
+            # Remove 'v' prefix if present
+            version=${tag#v}
+          else
+            # No tags, generate version from commit count and hash
+            commitCount=$(git rev-list --count HEAD)
+            commitHash=$(git rev-parse --short HEAD)
+            version="0.0.${commitCount}-${commitHash}"
+          fi
+          
+          echo "Detected version: $version"
+          echo "VERSION=$version" >> $GITHUB_ENV
+          echo "version=$version" >> $GITHUB_OUTPUT
+      
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '6.5.3'
+          host: 'mac'
+          target: 'desktop'
+          arch: 'clang_64'
+          modules: 'qtwebengine qtwebchannel qtpositioning'
+          cache: true
+      
+      - name: Install dependencies
+        run: |
+          brew install md4c create-dmg
+      
+      - name: Configure CMake
+        run: |
+          cmake -B build \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_PREFIX_PATH="${Qt6_DIR}" \
+                -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
+      
+      - name: Build
+        run: cmake --build build --parallel
+      
+      - name: Deploy Qt dependencies
+        run: |
+          macdeployqt build/treemk.app -verbose=2
+      
+      - name: Create DMG using script
+        env:
+          CI: true
+          VERSION: ${{ env.VERSION }}
+        run: |
+          chmod +x create_dmg.sh
+          ./create_dmg.sh
+          
+          # Rename to include macOS suffix for clarity
+          mv TreeMk-${{ env.VERSION }}.dmg TreeMk-${{ env.VERSION }}-macOS.dmg
+          ls -lh TreeMk-*.dmg
+      
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: TreeMk-macOS-DMG
+          path: TreeMk-*.dmg
+          retention-days: 30
+      
+      - name: Get release info
+        id: release_info
+        run: |
+          # Determine release tag
+          tag=""
+          if [ "${{ github.event_name }}" = "push" ] && [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            # Triggered by tag push
+            tag="${{ github.ref_name }}"
+          elif [ -n "${{ github.event.inputs.release_tag }}" ]; then
+            # Manual trigger with specified tag
+            tag="${{ github.event.inputs.release_tag }}"
+          else
+            # Manual trigger without tag - use latest release
+            tag=$(gh release list --limit 1 --json tagName -q '.[0].tagName' || echo "")
+            if [ -z "$tag" ]; then
+              echo "Error: No releases found. Please specify a release tag or create a release first."
+              exit 1
+            fi
+          fi
+          
+          if [ -z "$tag" ]; then
+            echo "Error: Could not determine release tag"
+            exit 1
+          fi
+          
+          echo "RELEASE_TAG=$tag" >> $GITHUB_ENV
+          echo "Release tag: $tag"
+        env:
+          GH_TOKEN: ${{ github.token }}
+      
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          files: TreeMk-*.dmg
+          fail_on_unmatched_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Summary
+        run: |
+          echo "### ✅ macOS DMG Build Complete!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ env.VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Release:** ${{ env.RELEASE_TAG }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Created Package:**" >> $GITHUB_STEP_SUMMARY
+          ls -1 TreeMk-*.dmg | sed 's/^/- /' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The DMG package has been uploaded to the release." >> $GITHUB_STEP_SUMMARY

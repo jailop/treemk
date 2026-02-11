@@ -1,0 +1,180 @@
+name: DEB Build and Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Release tag to upload to (e.g., v0.2.0)'
+        required: false
+        default: ''
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+  
+jobs:
+  build-deb:
+    runs-on: ubuntu-22.04
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Detect version
+        id: version
+        run: |
+          # Try to get version from latest git tag
+          tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -n "$tag" ]; then
+            # Remove 'v' prefix if present
+            version=${tag#v}
+          else
+            # No tags, generate version from commit count and hash
+            commitCount=$(git rev-list --count HEAD)
+            commitHash=$(git rev-parse --short HEAD)
+            version="0.0.${commitCount}-${commitHash}"
+          fi
+          
+          echo "Detected version: $version"
+          echo "VERSION=$version" >> $GITHUB_ENV
+          echo "version=$version" >> $GITHUB_OUTPUT
+      
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+              cmake \
+              build-essential \
+              qt6-base-dev \
+              qt6-webengine-dev \
+              libqt6svg6-dev \
+              libmd4c-dev \
+              libmd4c-html0-dev \
+              debhelper \
+              dh-make
+      
+      - name: Configure CMake
+        run: |
+          cmake -B build \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_INSTALL_PREFIX=/usr
+      
+      - name: Build
+        run: cmake --build build --parallel
+      
+      - name: Create package structure
+        run: |
+          mkdir -p debian-package/DEBIAN
+          mkdir -p debian-package/usr/bin
+          mkdir -p debian-package/usr/share/applications
+          mkdir -p debian-package/usr/share/icons/hicolor/256x256/apps
+          mkdir -p debian-package/usr/share/doc/treemk
+          
+          # Install binary
+          cp build/treemk debian-package/usr/bin/
+          chmod 755 debian-package/usr/bin/treemk
+          
+          # Install desktop file
+          cp resources/treemk.desktop debian-package/usr/share/applications/
+          
+          # Install icon
+          cp resources/treemk.png debian-package/usr/share/icons/hicolor/256x256/apps/
+          
+          # Install documentation
+          cp LICENSE debian-package/usr/share/doc/treemk/copyright
+          cp README.md debian-package/usr/share/doc/treemk/
+      
+      - name: Create control file
+        run: |
+          # Calculate installed size (in KB)
+          SIZE=$(du -sk debian-package/usr | cut -f1)
+          
+          cat > debian-package/DEBIAN/control << EOF
+          Package: treemk
+          Version: ${{ env.VERSION }}
+          Section: editors
+          Priority: optional
+          Architecture: amd64
+          Depends: libqt6core6 (>= 6.2), libqt6gui6 (>= 6.2), libqt6widgets6 (>= 6.2), libqt6webenginewidgets6 (>= 6.2), libqt6svg6 (>= 6.2), libmd4c-html0 (>= 0.4)
+          Maintainer: TreeMk Developers <noreply@github.com>
+          Installed-Size: ${SIZE}
+          Homepage: https://github.com/jailop/treemk
+          Description: Wiki-style markdown editor with live preview
+           TreeMk is a Markdown editor with wiki-link support, featuring a
+           multi-window architecture, file management, and real-time preview
+           capabilities. It provides an intuitive interface for managing
+           interconnected markdown documents.
+          EOF
+      
+      - name: Build DEB package
+        run: |
+          dpkg-deb --build debian-package treemk_${{ env.VERSION }}_amd64.deb
+          
+          # Verify package
+          dpkg-deb --info treemk_${{ env.VERSION }}_amd64.deb
+          dpkg-deb --contents treemk_${{ env.VERSION }}_amd64.deb
+          
+          # List created file
+          ls -lh treemk_*.deb
+      
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: TreeMk-DEB-Package
+          path: treemk_*.deb
+          retention-days: 30
+      
+      - name: Get release info
+        id: release_info
+        run: |
+          # Determine release tag
+          tag=""
+          if [ "${{ github.event_name }}" = "push" ] && [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            # Triggered by tag push
+            tag="${{ github.ref_name }}"
+          elif [ -n "${{ github.event.inputs.release_tag }}" ]; then
+            # Manual trigger with specified tag
+            tag="${{ github.event.inputs.release_tag }}"
+          else
+            # Manual trigger without tag - use latest release
+            tag=$(gh release list --limit 1 --json tagName -q '.[0].tagName' || echo "")
+            if [ -z "$tag" ]; then
+              echo "Error: No releases found. Please specify a release tag or create a release first."
+              exit 1
+            fi
+          fi
+          
+          if [ -z "$tag" ]; then
+            echo "Error: Could not determine release tag"
+            exit 1
+          fi
+          
+          echo "RELEASE_TAG=$tag" >> $GITHUB_ENV
+          echo "Release tag: $tag"
+        env:
+          GH_TOKEN: ${{ github.token }}
+      
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          files: treemk_*.deb
+          fail_on_unmatched_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Summary
+        run: |
+          echo "### ✅ DEB Build Complete!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ env.VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Release:** ${{ env.RELEASE_TAG }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Created Package:**" >> $GITHUB_STEP_SUMMARY
+          ls -1 treemk_*.deb | sed 's/^/- /' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The DEB package has been uploaded to the release." >> $GITHUB_STEP_SUMMARY
