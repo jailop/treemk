@@ -10,6 +10,7 @@
 #include "tabeditor.h"
 #include "thememanager.h"
 #include "logic/mainfilelocator.h"
+#include "managers/windowmanager.h"
 #include <QDir>
 #include <QFileInfo>
 #include <QLabel>
@@ -174,6 +175,15 @@ void MainWindow::createLayout() {
           &MainWindow::onFileModifiedExternally);
   connect(treeView, &FileSystemTreeView::folderChanged, this,
           &MainWindow::onFolderChanged);
+  connect(treeView, &FileSystemTreeView::openInNewWindowRequested, this,
+          [](const QString &path) {
+    QFileInfo info(path);
+    if (info.isDir()) {
+      WindowManager::instance()->createWindow(path, QString());
+    } else {
+      WindowManager::instance()->createWindow(info.absolutePath(), path);
+    }
+  });
 
   leftTabWidget->addTab(treePanel, tr("Files"));
 

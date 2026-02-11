@@ -104,8 +104,14 @@ void FileSystemTreeView::createContextMenu() {
   connect(goToParentAction, &QAction::triggered, this,
           &FileSystemTreeView::goToParentFolder);
 
+  openInNewWindowAction = new QAction(tr("Open in New Window"), this);
+  connect(openInNewWindowAction, &QAction::triggered, this,
+          &FileSystemTreeView::openInNewWindow);
+
   contextMenu->addAction(newFileAction);
   contextMenu->addAction(newFolderAction);
+  contextMenu->addSeparator();
+  contextMenu->addAction(openInNewWindowAction);
   contextMenu->addSeparator();
   contextMenu->addAction(renameAction);
   contextMenu->addAction(deleteAction);
@@ -545,6 +551,16 @@ void FileSystemTreeView::goToParentFolder() {
     setRootPath(parentPath);
     emit folderChanged(parentPath);
   }
+}
+
+void FileSystemTreeView::openInNewWindow() {
+  QModelIndex index = currentIndex();
+  if (!index.isValid()) {
+    return;
+  }
+  
+  QString path = fileSystemModel->filePath(index);
+  emit openInNewWindowRequested(path);
 }
 
 void FileSystemTreeView::notifyFileSaving(const QString &filePath) {

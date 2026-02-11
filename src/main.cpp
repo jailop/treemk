@@ -1,6 +1,7 @@
 #include "defs.h"
 #include "mainwindow.h"
 #include "thememanager.h"
+#include "managers/windowmanager.h"
 #include <QApplication>
 #include <QDir>
 #include <QFileInfo>
@@ -44,9 +45,8 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  MainWindow window;
-  window.setStartupArguments(startupPath, startupFile);
-  window.initializeSettings();
-  window.show();
+  // Create first window via WindowManager
+  WindowManager::instance()->createWindow(startupPath, startupFile);
+  
   return app.exec();
 }
