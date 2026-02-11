@@ -19,6 +19,15 @@ endif()
 # Include parent directories
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
+# Business logic library (testable, no UI dependencies)
+add_library(treemk_logic STATIC
+    ${CMAKE_SOURCE_DIR}/src/treemk/logic/mainfilelocator.cpp
+)
+
+target_link_libraries(treemk_logic
+    Qt6::Core
+)
+
 # Helper library for tests (shared code)
 add_library(test_helpers STATIC
     test_markdown_helper.cpp
@@ -43,7 +52,20 @@ target_link_libraries(test_markdown_conversion
 
 add_test(NAME MarkdownConversion COMMAND test_markdown_conversion)
 
-# Test 2: Full MarkdownPreview Integration Tests (requires GUI)
+# Test 2: MainFileLocator Tests
+add_executable(test_mainfilelocator
+    unit/test_mainfilelocator.cpp
+)
+
+target_link_libraries(test_mainfilelocator
+    Qt6::Test
+    Qt6::Core
+    treemk_logic
+)
+
+add_test(NAME MainFileLocator COMMAND test_mainfilelocator)
+
+# Test 3: Full MarkdownPreview Integration Tests (requires GUI)
 #
 # Note: This test is disabled as it requires linking against the full
 # application and dealing with Qt WebEngine initialization which is
@@ -68,11 +90,12 @@ add_test(NAME MarkdownConversion COMMAND test_markdown_conversion)
 
 # Output test results
 set_tests_properties(MarkdownConversion PROPERTIES TIMEOUT 30)
+set_tests_properties(MainFileLocator PROPERTIES TIMEOUT 30)
 
 # Add custom target to run all tests
 add_custom_target(check
     COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
-    DEPENDS test_markdown_conversion
+    DEPENDS test_markdown_conversion test_mainfilelocator
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 

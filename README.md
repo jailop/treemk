@@ -10,7 +10,7 @@ managing interconnected notes.
 **Editor**
 
 - Multi-tab editing with session management
-- Line numbers and current line highlighting
+- Line numbers and line highlighting
 - Word prediction based on document content (unigram and bigram models)
 - Auto-indent and auto-close brackets/quotes
 - List continuation and hanging indent formatting
