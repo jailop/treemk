@@ -68,12 +68,17 @@ ignored.
 - Task manager fixed and updated. It is working
 - workflows for windows binaries
 
-0.4.0 - 2026-02-11
+0.4.0 - 2026-02-10
+
+- Release version
+
+0.5.0 - 2026-02-11
 
 Multi-window support and enhanced navigation:
+
 - Multi-window architecture with WindowManager singleton
 - Open folders in new windows via File menu
-- Window cascade positioning (30px offset per window)
+- Window cascade positioning
 - "Open in New Window" context menu for files in file panel
 - "Open Link in New Window" for wiki-links and markdown links in editor
 - "Open Link in New Window" for links in preview panel
@@ -83,6 +88,7 @@ Multi-window support and enhanced navigation:
 - Settings dialog integration for main file configuration
 
 Code architecture improvements:
+
 - View/logic separation with new logic/ directory
 - MainFileLocator for finding main/index files
 - WorkspaceManager for workspace state management
@@ -91,6 +97,7 @@ Code architecture improvements:
 - Integration tests for end-to-end functionality
 
 UI enhancements:
+
 - File panel selection syncs with active tab
 - Full file path displayed in status bar when switching tabs
 - Context menu support for both [[wiki-links]] and [markdown](links)
