@@ -70,7 +70,7 @@ jobs:
           rpmdev-setuptree
           
           # Create spec file
-          cat > ~/rpmbuild/SPECS/treemk.spec << 'EOF'
+          cat > ~/rpmbuild/SPECS/treemk.spec << EOF
           Name:           treemk
           Version:        ${{ env.VERSION }}
           Release:        1%{?dist}
@@ -96,7 +96,7 @@ jobs:
           architecture, file management, and real-time preview capabilities.
           
           %prep
-          %setup -q
+          %setup -q -n treemk
           
           %build
           cmake -B build \
@@ -132,9 +132,15 @@ jobs:
       - name: Create source tarball
         run: |
           mkdir -p ~/rpmbuild/SOURCES
-          tar --exclude='.git' --exclude='build' --exclude='tmp' \
+          # Create tarball with correct directory name for rpmbuild
+          tar --transform='s,^\./,treemk/,' \
+              --exclude='.git' --exclude='build' --exclude='tmp' \
+              --exclude='treemk_autogen' --exclude='CMakeFiles' \
               -czf ~/rpmbuild/SOURCES/treemk-${{ env.VERSION }}.tar.gz \
-              -C $(dirname $PWD) $(basename $PWD)
+              .
+          
+          # Verify tarball contents
+          tar -tzf ~/rpmbuild/SOURCES/treemk-${{ env.VERSION }}.tar.gz | head -20
       
       - name: Build RPM
         run: |
