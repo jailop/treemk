@@ -1,5 +1,6 @@
 #include "defs.h"
 #include "mainwindow.h"
+#include "filesystemtreeview.h"
 #include "markdowneditor.h"
 #include "markdownhighlighter.h"
 #include "markdownpreview.h"
@@ -9,6 +10,7 @@
 #include <QDir>
 #include <QFileInfo>
 #include <QMessageBox>
+#include <QStatusBar>
 
 TabEditor *MainWindow::currentTabEditor() const {
   return qobject_cast<TabEditor *>(tabWidget->currentWidget());
@@ -47,10 +49,14 @@ TabEditor *MainWindow::createNewTab() {
            &MainWindow::onWikiLinkClicked);
    connect(tab->editor(), &MarkdownEditor::markdownLinkClicked, this,
            &MainWindow::onMarkdownLinkClicked);
+   connect(tab->editor(), &MarkdownEditor::openLinkInNewWindowRequested, this,
+           &MainWindow::onOpenLinkInNewWindow);
    connect(tab->preview(), &MarkdownPreview::wikiLinkClicked, this,
            &MainWindow::onWikiLinkClicked);
    connect(tab->preview(), &MarkdownPreview::markdownLinkClicked, this,
            &MainWindow::onMarkdownLinkClicked);
+   connect(tab->preview(), &MarkdownPreview::openLinkInNewWindowRequested, this,
+           &MainWindow::onOpenLinkInNewWindow);
 
   if (outlineView) {
     connect(outlineView, &OutlinePanel::headerClicked, this,
@@ -93,7 +99,7 @@ TabEditor *MainWindow::createNewTab() {
   }
 
   // Apply current view mode to the newly created tab
-  applyViewMode(currentViewMode);
+  applyViewMode(currentViewMode, false);
 
   return tab;
 }
@@ -148,12 +154,19 @@ void MainWindow::onTabChanged(int index) {
 
     if (!tab->filePath().isEmpty()) {
       setWindowTitle(QString("%1 - %2").arg(tab->fileName(), APP_LABEL));
+      
+      // Synchronize file panel selection with active tab
+      treeView->selectFile(tab->filePath());
+      
+      // Show full path in status bar
+      statusBar()->showMessage(tab->filePath());
     } else {
       setWindowTitle(APP_LABEL);
+      statusBar()->clearMessage();
     }
     
     // Apply current view mode to the newly active tab
-    applyViewMode(currentViewMode);
+    applyViewMode(currentViewMode, false);
   }
 }
 

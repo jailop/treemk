@@ -5,6 +5,7 @@
 #include "thememanager.h"
 #include <QApplication>
 #include <QClipboard>
+#include <QContextMenuEvent>
 #include <QDateTime>
 #include <QDesktopServices>
 #include <QDir>
@@ -17,6 +18,7 @@
 #include <QImage>
 #include <QInputDialog>
 #include <QKeyEvent>
+#include <QMenu>
 #include <QMessageBox>
 #include <QMimeData>
 #include <QMouseEvent>
@@ -452,6 +454,31 @@ void MarkdownEditor::paintEvent(QPaintEvent *event) {
 
     painter.drawText(x, y, m_currentPrediction);
   }
+}
+
+void MarkdownEditor::contextMenuEvent(QContextMenuEvent *event) {
+  QMenu *menu = createStandardContextMenu();
+  
+  // Check if cursor is on a wiki-link or markdown link
+  QTextCursor cursor = cursorForPosition(event->pos());
+  int position = cursor.position();
+  QString linkTarget = getLinkAtPosition(position);
+  
+  // If not a wiki-link, check for markdown link
+  if (linkTarget.isEmpty()) {
+    linkTarget = getMarkdownLinkAtPosition(position);
+  }
+  
+  if (!linkTarget.isEmpty()) {
+    menu->addSeparator();
+    QAction *openNewWindowAction = menu->addAction(tr("Open Link in New Window"));
+    connect(openNewWindowAction, &QAction::triggered, this, [this, linkTarget]() {
+      emit openLinkInNewWindowRequested(linkTarget);
+    });
+  }
+  
+  menu->exec(event->globalPos());
+  delete menu;
 }
 
 void MarkdownEditor::keyPressEvent(QKeyEvent *event) {

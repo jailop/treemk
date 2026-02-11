@@ -104,8 +104,14 @@ void FileSystemTreeView::createContextMenu() {
   connect(goToParentAction, &QAction::triggered, this,
           &FileSystemTreeView::goToParentFolder);
 
+  openInNewWindowAction = new QAction(tr("Open in New Window"), this);
+  connect(openInNewWindowAction, &QAction::triggered, this,
+          &FileSystemTreeView::openInNewWindow);
+
   contextMenu->addAction(newFileAction);
   contextMenu->addAction(newFolderAction);
+  contextMenu->addSeparator();
+  contextMenu->addAction(openInNewWindowAction);
   contextMenu->addSeparator();
   contextMenu->addAction(renameAction);
   contextMenu->addAction(deleteAction);
@@ -490,8 +496,20 @@ void FileSystemTreeView::addDirectoriesToWatcher(const QString &path) {
     return;
   }
 
+  // Skip system/private directories to avoid permission errors
+  if (path.contains("/systemd-private-") || 
+      path.startsWith("/proc") || 
+      path.startsWith("/sys") ||
+      path.startsWith("/dev")) {
+    return;
+  }
+
   if (!fileSystemWatcher->directories().contains(path)) {
-    fileSystemWatcher->addPath(path);
+    // Try to add, but don't show error if permission denied
+    if (!fileSystemWatcher->addPath(path)) {
+      // Silently ignore permission errors
+      return;
+    }
   }
 
   foreach (const QFileInfo &fileInfo,
@@ -544,6 +562,28 @@ void FileSystemTreeView::goToParentFolder() {
     QString parentPath = currentDir.absolutePath();
     setRootPath(parentPath);
     emit folderChanged(parentPath);
+  }
+}
+
+void FileSystemTreeView::openInNewWindow() {
+  QModelIndex index = currentIndex();
+  if (!index.isValid()) {
+    return;
+  }
+  
+  QString path = fileSystemModel->filePath(index);
+  emit openInNewWindowRequested(path);
+}
+
+void FileSystemTreeView::selectFile(const QString &filePath) {
+  if (filePath.isEmpty()) {
+    return;
+  }
+  
+  QModelIndex index = fileSystemModel->index(filePath);
+  if (index.isValid()) {
+    setCurrentIndex(index);
+    scrollTo(index);
   }
 }
 

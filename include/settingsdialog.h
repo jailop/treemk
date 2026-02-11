@@ -21,7 +21,8 @@ public:
   int getAutoSaveInterval() const;
   bool getAutoSaveEnabled() const;
   QString getDefaultTheme() const;
-   QString getAppTheme() const;
+  QString getAppTheme() const;
+  QString getMainFileName() const;
 
 signals:
   void settingsChanged();
@@ -69,6 +70,9 @@ private:
   QCheckBox *confirmDeleteCheckBox;
   QCheckBox *openLastFolderCheckBox;
   QCheckBox *restoreSessionCheckBox;
+
+  // Workspace settings
+  QLineEdit *mainFileNameLineEdit;
 
    // Appearance settings
    QComboBox *themeComboBox;

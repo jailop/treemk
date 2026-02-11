@@ -339,17 +339,47 @@ QString MarkdownPreview::resolveAndIncludeFile(const QString &linkTarget,
 }
 
 void MarkdownPreview::showContextMenu(const QPoint &pos) {
-  QMenu contextMenu(this);
-  // Add copy action using the web page's standard action
-  QAction *copyAction = page()->action(QWebEnginePage::Copy);
-  if (copyAction) {
-    contextMenu.addAction(copyAction);
-    contextMenu.addSeparator();
-  }
-  QAction *reloadAction = contextMenu.addAction(tr("Reload"));
-  connect(reloadAction, &QAction::triggered, this,
-          &MarkdownPreview::reloadPreview);
-  contextMenu.exec(mapToGlobal(pos));
+  // Use JavaScript to check if cursor is on a link
+  QString jsCode = QString(
+    "(function() {"
+    "  var elem = document.elementFromPoint(%1, %2);"
+    "  if (elem && elem.tagName === 'A') {"
+    "    return { isLink: true, href: elem.getAttribute('href'), text: elem.textContent };"
+    "  }"
+    "  return { isLink: false };"
+    "})();"
+  ).arg(pos.x()).arg(pos.y());
+  
+  page()->runJavaScript(jsCode, [this, pos](const QVariant &result) {
+    QMenu contextMenu(this);
+    
+    QVariantMap linkInfo = result.toMap();
+    bool isLink = linkInfo.value("isLink").toBool();
+    QString href = linkInfo.value("href").toString();
+    
+    if (isLink && !href.isEmpty()) {
+      // Add "Open Link in New Window" for links
+      QAction *openNewWindowAction = contextMenu.addAction(tr("Open Link in New Window"));
+      connect(openNewWindowAction, &QAction::triggered, this, [this, href]() {
+        // Emit signal with the link target
+        emit openLinkInNewWindowRequested(href);
+      });
+      contextMenu.addSeparator();
+    }
+    
+    // Add copy action using the web page's standard action
+    QAction *copyAction = page()->action(QWebEnginePage::Copy);
+    if (copyAction) {
+      contextMenu.addAction(copyAction);
+      contextMenu.addSeparator();
+    }
+    
+    QAction *reloadAction = contextMenu.addAction(tr("Reload"));
+    connect(reloadAction, &QAction::triggered, this,
+            &MarkdownPreview::reloadPreview);
+    
+    contextMenu.exec(mapToGlobal(pos));
+  });
 }
 
 void MarkdownPreview::reloadPreview() { reload(); }

@@ -66,6 +66,7 @@ private slots:
   void setPreviewThemeSepia();
    void onWikiLinkClicked(const QString &linkTarget);
    void onMarkdownLinkClicked(const QString &linkTarget);
+   void onOpenLinkInNewWindow(const QString &linkTarget);
   void updateBacklinks();
   void searchInFiles();
   void openSettings();
@@ -113,13 +114,14 @@ private:
   bool maybeSave();
   bool saveFile(const QString &filePath);
   bool loadFile(const QString &filePath);
-  void applyViewMode(ViewMode mode);
+  void applyViewMode(ViewMode mode, bool showStatusMessage = true);
   void closeTabsFromOtherFolders();
 
   TabEditor *currentTabEditor() const;
   TabEditor *createNewTab();
   TabEditor *findTabByPath(const QString &filePath) const;
   int findTabIndexByPath(const QString &filePath) const;
+  bool createFileFromLink(const QString &targetFile, const QString &linkTarget);
 
   QMenu *fileMenu;
   QMenu *editMenu;

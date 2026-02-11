@@ -5,6 +5,8 @@
 #include "markdowneditor.h"
 #include "markdownhighlighter.h"
 #include "tabeditor.h"
+#include "logic/mainfilelocator.h"
+#include "managers/windowmanager.h"
 #include <QDir>
 #include <QFileDialog>
 #include <QFileInfo>
@@ -21,25 +23,8 @@ void MainWindow::openFolder() {
       QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
 
   if (!folder.isEmpty()) {
-    // Close tabs from the previous folder
-    closeTabsFromOtherFolders();
-    
-    treeView->setRootPath(folder);
-    currentFolder = folder;
-
-    TabEditor *tab = currentTabEditor();
-    if (tab && tab->editor()->getHighlighter()) {
-      tab->editor()->getHighlighter()->setRootPath(folder);
-    }
-
-    linkParser->buildLinkIndex(folder);
-
-    updateRecentFolders(folder);
-
-    statusBar()->showMessage(tr("Opened folder: %1").arg(folder));
-    
-    // Close tabs again after setting the new folder
-    closeTabsFromOtherFolders();
+    // Create new window with the selected folder
+    WindowManager::instance()->createWindow(folder, QString());
   }
 }
 

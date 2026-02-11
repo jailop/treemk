@@ -67,3 +67,39 @@ ignored.
 - Set current folder or parent folder as default
 - Task manager fixed and updated. It is working
 - workflows for windows binaries
+
+0.4.0 - 2026-02-10
+
+- Release version
+
+0.5.0 - 2026-02-11
+
+Multi-window support and enhanced navigation:
+
+- Multi-window architecture with WindowManager singleton
+- Open folders in new windows via File menu
+- Window cascade positioning
+- "Open in New Window" context menu for files in file panel
+- "Open Link in New Window" for wiki-links and markdown links in editor
+- "Open Link in New Window" for links in preview panel
+- Auto-create non-existent files when opening links in new window
+- Configurable main file name (default: main.md) with fallback to index.md
+- Auto-open main file when opening folder in new window
+- Settings dialog integration for main file configuration
+
+Code architecture improvements:
+
+- View/logic separation with new logic/ directory
+- MainFileLocator for finding main/index files
+- WorkspaceManager for workspace state management
+- WindowManager for multi-window coordination
+- Automated unit tests for all logic components (30 tests, 100% passing)
+- Integration tests for end-to-end functionality
+
+UI enhancements:
+
+- File panel selection syncs with active tab
+- Full file path displayed in status bar when switching tabs
+- Context menu support for both [[wiki-links]] and [markdown](links)
+- Suppressed inotify permission warnings for system directories
+- View mode status messages only shown when explicitly changing mode

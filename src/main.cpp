@@ -1,13 +1,46 @@
 #include "defs.h"
 #include "mainwindow.h"
 #include "thememanager.h"
+#include "managers/windowmanager.h"
 #include <QApplication>
 #include <QDir>
 #include <QFileInfo>
 #include <QIcon>
 #include <QSettings>
 
+void messageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg) {
+  // Filter out inotify permission warnings
+  if (msg.contains("inotify_add_watch") && msg.contains("Permission denied")) {
+    return;
+  }
+  
+  // Pass through other messages to default handler
+  QByteArray localMsg = msg.toLocal8Bit();
+  const char *file = context.file ? context.file : "";
+  const char *function = context.function ? context.function : "";
+  switch (type) {
+  case QtDebugMsg:
+    fprintf(stderr, "Debug: %s (%s:%u, %s)\n", localMsg.constData(), file, context.line, function);
+    break;
+  case QtInfoMsg:
+    fprintf(stderr, "Info: %s (%s:%u, %s)\n", localMsg.constData(), file, context.line, function);
+    break;
+  case QtWarningMsg:
+    fprintf(stderr, "Warning: %s (%s:%u, %s)\n", localMsg.constData(), file, context.line, function);
+    break;
+  case QtCriticalMsg:
+    fprintf(stderr, "Critical: %s (%s:%u, %s)\n", localMsg.constData(), file, context.line, function);
+    break;
+  case QtFatalMsg:
+    fprintf(stderr, "Fatal: %s (%s:%u, %s)\n", localMsg.constData(), file, context.line, function);
+    break;
+  }
+}
+
 int main(int argc, char *argv[]) {
+  // Install message handler to filter inotify warnings
+  qInstallMessageHandler(messageHandler);
+  
   QApplication app(argc, argv);
   app.setApplicationName(APP_LABEL);
   app.setOrganizationName(APP_LABEL);
@@ -44,9 +77,8 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  MainWindow window;
-  window.setStartupArguments(startupPath, startupFile);
-  window.initializeSettings();
-  window.show();
+  // Create first window via WindowManager
+  WindowManager::instance()->createWindow(startupPath, startupFile);
+  
   return app.exec();
 }

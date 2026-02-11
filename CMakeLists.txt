@@ -70,6 +70,9 @@ set(SOURCES
     src/shortcutsdialog.cpp
     src/shortcutmanager.cpp
     src/thememanager.cpp
+    src/logic/mainfilelocator.cpp
+    src/managers/workspacemanager.cpp
+    src/managers/windowmanager.cpp
 )
 
 set(HEADERS
@@ -88,6 +91,9 @@ set(HEADERS
     include/shortcutsdialog.h
     include/shortcutmanager.h
     include/thememanager.h
+    include/logic/mainfilelocator.h
+    include/managers/workspacemanager.h
+    include/managers/windowmanager.h
 )
 
 set(RESOURCES

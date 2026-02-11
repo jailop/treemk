@@ -9,6 +9,8 @@
 #include "shortcutsdialog.h"
 #include "tabeditor.h"
 #include "thememanager.h"
+#include "logic/mainfilelocator.h"
+#include "managers/windowmanager.h"
 #include <QDir>
 #include <QFileInfo>
 #include <QLabel>
@@ -173,6 +175,15 @@ void MainWindow::createLayout() {
           &MainWindow::onFileModifiedExternally);
   connect(treeView, &FileSystemTreeView::folderChanged, this,
           &MainWindow::onFolderChanged);
+  connect(treeView, &FileSystemTreeView::openInNewWindowRequested, this,
+          [](const QString &path) {
+    QFileInfo info(path);
+    if (info.isDir()) {
+      WindowManager::instance()->createWindow(path, QString());
+    } else {
+      WindowManager::instance()->createWindow(info.absolutePath(), path);
+    }
+  });
 
   leftTabWidget->addTab(treePanel, tr("Files"));
 
@@ -332,10 +343,27 @@ void MainWindow::readSettings() {
       if (activeTabIndex >= 0 && activeTabIndex < tabWidget->count()) {
         tabWidget->setCurrentIndex(activeTabIndex);
       }
+    } else if (!folderToOpen.isEmpty()) {
+      // No specific file or session to restore, try to open main file
+      QString mainFileName = settings->value("workspace/mainFileName", "main.md").toString();
+      QString mainFilePath = MainFileLocator::findMainFile(folderToOpen, mainFileName);
+      
+      if (!mainFilePath.isEmpty() && QFileInfo::exists(mainFilePath)) {
+        // Close the default empty tab if it exists
+        if (tabWidget->count() == 1) {
+          TabEditor *firstTab = qobject_cast<TabEditor *>(tabWidget->widget(0));
+          if (firstTab && firstTab->filePath().isEmpty() &&
+              !firstTab->editor()->isModified()) {
+            tabWidget->removeTab(0);
+            delete firstTab;
+          }
+        }
+        loadFile(mainFilePath);
+      }
     }
     
     // Apply view mode to current tab
-    applyViewMode(currentViewMode);
+    applyViewMode(currentViewMode, false);
 }
 
 void MainWindow::writeSettings() {

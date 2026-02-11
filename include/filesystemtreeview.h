@@ -16,12 +16,14 @@ public:
   QString currentFilePath() const;
   QString rootPath() const;
   void notifyFileSaving(const QString &filePath);
+  void selectFile(const QString &filePath);
 
 signals:
   void fileSelected(const QString &filePath);
   void fileDoubleClicked(const QString &filePath);
   void fileModifiedExternally(const QString &filePath);
   void folderChanged(const QString &folderPath);
+  void openInNewWindowRequested(const QString &path);
 
 protected:
   void mouseDoubleClickEvent(QMouseEvent *event) override;
@@ -42,6 +44,7 @@ private slots:
   void refreshDirectory();
   void setAsCurrentFolder();
   void goToParentFolder();
+  void openInNewWindow();
 
 private:
   void setupModel();
@@ -64,6 +67,7 @@ private:
   QAction *refreshAction;
   QAction *setCurrentFolderAction;
   QAction *goToParentAction;
+  QAction *openInNewWindowAction;
 
   QString clipboardPath;
   bool clipboardIsCut;
