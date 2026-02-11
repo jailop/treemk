@@ -71,11 +71,12 @@ jobs:
           
           # Generate changelog date
           CHANGELOG_DATE=$(date "+%a %b %d %Y")
+          VERSION="${{ env.VERSION }}"
           
-          # Create spec file
-          cat > ~/rpmbuild/SPECS/treemk.spec << EOF
+          # Create spec file with all variables expanded
+          cat > ~/rpmbuild/SPECS/treemk.spec << 'SPECEOF'
           Name:           treemk
-          Version:        ${{ env.VERSION }}
+          Version:        VERSION_PLACEHOLDER
           Release:        1%{?dist}
           Summary:        Wiki-style markdown editor with live preview
           License:        Custom
@@ -99,7 +100,7 @@ jobs:
           architecture, file management, and real-time preview capabilities.
           
           %prep
-          %setup -q -n treemk
+          %setup -q
           
           %build
           cmake -B build \
@@ -128,9 +129,17 @@ jobs:
           %license LICENSE
           
           %changelog
-          * ${CHANGELOG_DATE} TreeMk CI <noreply@github.com> - ${{ env.VERSION }}-1
-          - Automated build for version ${{ env.VERSION }}
-          EOF
+          * CHANGELOG_DATE_PLACEHOLDER TreeMk CI <noreply@github.com> - VERSION_PLACEHOLDER-1
+          - Automated build for version VERSION_PLACEHOLDER
+          SPECEOF
+          
+          # Replace placeholders
+          sed -i "s/VERSION_PLACEHOLDER/${VERSION}/g" ~/rpmbuild/SPECS/treemk.spec
+          sed -i "s/CHANGELOG_DATE_PLACEHOLDER/${CHANGELOG_DATE}/g" ~/rpmbuild/SPECS/treemk.spec
+          
+          # Show the spec file for debugging
+          echo "Generated spec file:"
+          cat ~/rpmbuild/SPECS/treemk.spec
       
       - name: Create source tarball
         run: |
@@ -138,14 +147,17 @@ jobs:
           
           # Create a temporary directory with correct name
           TEMP_DIR=$(mktemp -d)
-          cp -R . ${TEMP_DIR}/treemk
+          mkdir -p ${TEMP_DIR}/treemk-${{ env.VERSION }}
+          
+          # Copy all files to temp directory with versioned name
+          cp -R . ${TEMP_DIR}/treemk-${{ env.VERSION }}/
           
           # Create tarball from temp directory
           tar --exclude='.git' --exclude='build' --exclude='tmp' \
               --exclude='treemk_autogen' --exclude='CMakeFiles' \
-              --exclude='CMakeCache.txt' \
+              --exclude='CMakeCache.txt' --exclude='Makefile' \
               -czf ~/rpmbuild/SOURCES/treemk-${{ env.VERSION }}.tar.gz \
-              -C ${TEMP_DIR} treemk
+              -C ${TEMP_DIR} treemk-${{ env.VERSION }}
           
           # Cleanup
           rm -rf ${TEMP_DIR}
