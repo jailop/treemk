@@ -97,6 +97,9 @@ void AIAssistDialog::onSystemPromptChanged(int index) {
   
   if (!prompt.id.isEmpty()) {
     ui->promptEdit->setText(prompt.prompt);
+    
+    // Auto-process when a predefined prompt is selected
+    processWithAI();
   }
 }
 

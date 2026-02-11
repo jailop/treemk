@@ -10,6 +10,9 @@
 #include "tabeditor.h"
 #include "thememanager.h"
 #include "logic/mainfilelocator.h"
+#include "logic/aiprovider.h"
+#include "logic/ollamaprovider.h"
+#include "logic/systemprompts.h"
 #include "managers/windowmanager.h"
 #include <QDir>
 #include <QFileInfo>
@@ -445,6 +448,24 @@ void MainWindow::applySettings() {
       autoSaveTimer->stop();
     }
   }
+  // Apply AI settings
+  AIProvider *aiProvider = AIProviderManager::instance()->activeProvider();
+  if (aiProvider && aiProvider->name() == "Ollama") {
+    OllamaProvider *ollama = dynamic_cast<OllamaProvider*>(aiProvider);
+    if (ollama) {
+      QString endpoint = settings->value("ai/ollama/endpoint", "http://localhost:11434").toString();
+      QString model = settings->value("ai/ollama/model", "llama3.2").toString();
+      int timeout = settings->value("ai/ollama/timeout", 60).toInt();
+      
+      ollama->setEndpoint(endpoint);
+      ollama->setModel(model);
+      ollama->setTimeout(timeout);
+    }
+  }
+  
+  // Reload system prompts
+  SystemPrompts::instance()->loadFromSettings();
+  
   // Apply preview color scheme
   QString previewScheme =
       settings->value("appearance/previewColorScheme", "auto").toString();

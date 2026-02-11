@@ -17,6 +17,11 @@ void messageHandler(QtMsgType type, const QMessageLogContext &context, const QSt
     return;
   }
   
+  // Filter out missing ai.svg icon warnings (theme icon fallback)
+  if (msg.contains("Cannot open file ':/icons/ai.svg'")) {
+    return;
+  }
+  
   // Pass through other messages to default handler
   QByteArray localMsg = msg.toLocal8Bit();
   const char *file = context.file ? context.file : "";

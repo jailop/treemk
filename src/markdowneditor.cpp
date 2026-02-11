@@ -461,8 +461,7 @@ void MarkdownEditor::contextMenuEvent(QContextMenuEvent *event) {
   
   // Add AI Assist action
   menu->addSeparator();
-  QAction *aiAssistAction = menu->addAction(QIcon::fromTheme("edit-ai", 
-                                            QIcon(":/icons/ai.svg")), 
+  QAction *aiAssistAction = menu->addAction(QIcon::fromTheme("edit-ai"), 
                                             tr("AI Assist..."));
   aiAssistAction->setShortcut(QKeySequence(tr("Ctrl+Shift+A")));
   connect(aiAssistAction, &QAction::triggered, this, [this]() {

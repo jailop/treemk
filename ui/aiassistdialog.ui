@@ -38,11 +38,25 @@
     </widget>
    </item>
    <item>
-    <widget class="QLineEdit" name="promptEdit">
-     <property name="placeholderText">
-      <string>Enter your instruction (e.g., "Summarize this", "Fix grammar", "Expand this idea")</string>
-     </property>
-    </widget>
+    <layout class="QHBoxLayout" name="promptLayout">
+     <item>
+      <widget class="QLineEdit" name="promptEdit">
+       <property name="placeholderText">
+        <string>Enter your instruction (e.g., "Summarize this", "Fix grammar", "Expand this idea")</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="processButton">
+       <property name="text">
+        <string>Process</string>
+       </property>
+       <property name="toolTip">
+        <string>Send prompt and content to AI provider (Ctrl+Return)</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
    <item>
     <widget class="QLabel" name="contentLabel">
@@ -107,16 +121,6 @@
    </item>
    <item>
     <layout class="QHBoxLayout" name="buttonLayout">
-     <item>
-      <widget class="QPushButton" name="processButton">
-       <property name="text">
-        <string>Process</string>
-       </property>
-       <property name="toolTip">
-        <string>Send prompt and content to AI provider (Ctrl+Return)</string>
-       </property>
-      </widget>
-     </item>
      <item>
       <spacer name="buttonSpacer">
        <property name="orientation">

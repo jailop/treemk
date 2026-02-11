@@ -37,6 +37,7 @@ void SettingsDialog::setupUI() {
    tabWidget = new QTabWidget(this);
    setupMainTab();
    setupEditorTab();
+   setupAITab();
 
   mainLayout->addWidget(tabWidget);
 
@@ -327,6 +328,9 @@ void SettingsDialog::loadSettings() {
    int themeIndex = themeComboBox->findData(theme);
    if (themeIndex >= 0)
      themeComboBox->setCurrentIndex(themeIndex);
+
+   // AI settings
+   loadAISettings();
 }
 
 void SettingsDialog::saveSettings() {
@@ -381,6 +385,9 @@ void SettingsDialog::saveSettings() {
      settings.setValue("appearance/editorColorScheme", theme);
      settings.setValue("appearance/previewColorScheme", theme);
    }
+
+   // AI settings
+   saveAISettings();
 }
 
 void SettingsDialog::applySettings() {
