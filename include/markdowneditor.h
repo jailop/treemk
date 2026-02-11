@@ -2,13 +2,13 @@
 #define MARKDOWNEDITOR_H
 
 #include <QMap>
-#include <QPlainTextEdit>
+#include <QTextEdit>
 
 class QSyntaxHighlighter;
 class LineNumberArea;
 class MarkdownHighlighter;
 
-class MarkdownEditor : public QPlainTextEdit {
+class MarkdownEditor : public QTextEdit {
   Q_OBJECT
 
 public:
@@ -65,21 +65,27 @@ private:
   void hidePrediction();
   void acceptPrediction();
 
-  void updateParentTask(const QTextBlock &block);
-  QTextBlock findParentBlock(const QTextBlock &block, int currentIndent);
-  void updateTaskState(const QTextBlock &block);
-  QVector<QTextBlock> findChildBlocks(const QTextBlock &block);
-  int getIndentLevel(const QTextBlock &block);
+    void updateParentTask(const QTextBlock &block);
+    QTextBlock findParentBlock(const QTextBlock &block, int currentIndent);
+    void updateTaskState(const QTextBlock &block);
+    QVector<QTextBlock> findChildBlocks(const QTextBlock &block);
+    int getIndentLevel(const QTextBlock &block);
+    void applyListHangingIndent(const QTextBlock &block);
 
-  LineNumberArea *lineNumberArea;
-  MarkdownHighlighter *m_highlighter;
-  QString m_currentFilePath;
+  private slots:
+    void applyDeferredFormatting();
 
-  // Word prediction
-  QMap<QString, int> m_wordFrequency;                   // Unigram model
-  QMap<QPair<QString, QString>, int> m_bigramFrequency; // Bigram model
-  QString m_currentPrediction;
-  bool m_predictionEnabled;
+  private:
+    LineNumberArea *lineNumberArea;
+    MarkdownHighlighter *m_highlighter;
+    QString m_currentFilePath;
+    class QTimer *m_formatTimer;
+
+    // Word prediction
+    QMap<QString, int> m_wordFrequency;                   // Unigram model
+    QMap<QPair<QString, QString>, int> m_bigramFrequency; // Bigram model
+    QString m_currentPrediction;
+    bool m_predictionEnabled;
 };
 
 class LineNumberArea : public QWidget {

@@ -21,12 +21,12 @@ TabEditor *MainWindow::createNewTab() {
   int tabWidth = settings->value("editor/tabWidth", 4).toInt();
   bool wordWrap = settings->value("editor/wordWrap", true).toBool();
 
-  QFont font(fontFamily, fontSize);
-  tab->editor()->setFont(font);
-  tab->editor()->setTabStopDistance(QFontMetrics(font).horizontalAdvance(' ') *
-                                    tabWidth);
-  tab->editor()->setLineWrapMode(wordWrap ? QPlainTextEdit::WidgetWidth
-                                          : QPlainTextEdit::NoWrap);
+   QFont font(fontFamily, fontSize);
+   tab->editor()->setFont(font);
+   tab->editor()->setTabStopDistance(QFontMetrics(font).horizontalAdvance(' ') *
+                                     tabWidth);
+   tab->editor()->setLineWrapMode(wordWrap ? QTextEdit::WidgetWidth
+                                           : QTextEdit::NoWrap);
 
   tab->editor()->setPalette(ThemeManager::instance()->getEditorPalette());
   tab->editor()->setStyleSheet(ThemeManager::instance()->getEditorStyleSheet());
@@ -128,22 +128,22 @@ void MainWindow::onTabChanged(int index) {
       outlineView->updateOutline(markdown);
     }
 
-    MarkdownEditor *editor = tab->editor();
-    if (editor && cutAction && copyAction && undoAction && redoAction) {
-      cutAction->setEnabled(editor->textCursor().hasSelection());
-      copyAction->setEnabled(editor->textCursor().hasSelection());
-      undoAction->setEnabled(editor->document()->isUndoAvailable());
-      redoAction->setEnabled(editor->document()->isRedoAvailable());
+     MarkdownEditor *editor = tab->editor();
+     if (editor && cutAction && copyAction && undoAction && redoAction) {
+       cutAction->setEnabled(editor->textCursor().hasSelection());
+       copyAction->setEnabled(editor->textCursor().hasSelection());
+       undoAction->setEnabled(editor->document()->isUndoAvailable());
+       redoAction->setEnabled(editor->document()->isRedoAvailable());
 
-      connect(editor, &QPlainTextEdit::copyAvailable, cutAction,
-              &QAction::setEnabled, Qt::UniqueConnection);
-      connect(editor, &QPlainTextEdit::copyAvailable, copyAction,
-              &QAction::setEnabled, Qt::UniqueConnection);
-      connect(editor, &QPlainTextEdit::undoAvailable, undoAction,
-              &QAction::setEnabled, Qt::UniqueConnection);
-      connect(editor, &QPlainTextEdit::redoAvailable, redoAction,
-              &QAction::setEnabled, Qt::UniqueConnection);
-    }
+       connect(editor, &QTextEdit::copyAvailable, cutAction,
+               &QAction::setEnabled, Qt::UniqueConnection);
+       connect(editor, &QTextEdit::copyAvailable, copyAction,
+               &QAction::setEnabled, Qt::UniqueConnection);
+       connect(editor, &QTextEdit::undoAvailable, undoAction,
+               &QAction::setEnabled, Qt::UniqueConnection);
+       connect(editor, &QTextEdit::redoAvailable, redoAction,
+               &QAction::setEnabled, Qt::UniqueConnection);
+     }
 
     if (!tab->filePath().isEmpty()) {
       setWindowTitle(QString("%1 - %2").arg(tab->fileName(), APP_LABEL));

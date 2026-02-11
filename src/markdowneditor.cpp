@@ -25,23 +25,30 @@
 #include <QScrollBar>
 #include <QSettings>
 #include <QTextBlock>
+#include <QTextBlockFormat>
 #include <QTextCursor>
+#include <QTimer>
 #include <QUrl>
 
 MarkdownEditor::MarkdownEditor(QWidget *parent)
-    : QPlainTextEdit(parent), m_predictionEnabled(true) {
+    : QTextEdit(parent), m_predictionEnabled(true) {
   lineNumberArea = new LineNumberArea(this);
   m_highlighter = new MarkdownHighlighter(document());
 
+  // Initialize formatting timer for deferred hanging indent application
+  m_formatTimer = new QTimer(this);
+  m_formatTimer->setSingleShot(true);
+  m_formatTimer->setInterval(100); // Wait 100ms after user stops typing
+  connect(m_formatTimer, &QTimer::timeout, this,
+          &MarkdownEditor::applyDeferredFormatting);
+
   setupEditor();
 
-  connect(this, &MarkdownEditor::blockCountChanged, this,
+  connect(document(), &QTextDocument::blockCountChanged, this,
           &MarkdownEditor::updateLineNumberAreaWidth);
-  connect(this, &MarkdownEditor::updateRequest, this,
-          &MarkdownEditor::updateLineNumberArea);
-  connect(this, &MarkdownEditor::cursorPositionChanged, this,
+  connect(this, &QTextEdit::cursorPositionChanged, this,
           &MarkdownEditor::highlightCurrentLine);
-  connect(this, &MarkdownEditor::textChanged, this,
+  connect(this, &QTextEdit::textChanged, this,
           &MarkdownEditor::onTextChanged);
 
   updateLineNumberAreaWidth(0);
@@ -233,7 +240,7 @@ void MarkdownEditor::mousePressEvent(QMouseEvent *event) {
     }
   }
 
-  QPlainTextEdit::mousePressEvent(event);
+  QTextEdit::mousePressEvent(event);
 }
 
 void MarkdownEditor::updateWordFrequency() {
@@ -400,10 +407,14 @@ void MarkdownEditor::onTextChanged() {
   }
 
   showPrediction();
+
+  // Restart the format timer - formatting will happen after user stops typing
+  m_formatTimer->stop();
+  m_formatTimer->start();
 }
 
 void MarkdownEditor::paintEvent(QPaintEvent *event) {
-  QPlainTextEdit::paintEvent(event);
+  QTextEdit::paintEvent(event);
 
   // Draw prediction in gray
   if (!m_currentPrediction.isEmpty()) {
@@ -558,33 +569,36 @@ void MarkdownEditor::keyPressEvent(QKeyEvent *event) {
     QRegularExpression listPattern("^(\\s*)([-*+]|[0-9]+\\.)\\s+");
     QRegularExpressionMatch match = listPattern.match(currentLine);
     
-    if (match.hasMatch()) {
-      QString whitespace = match.captured(1);
-      QString bullet = match.captured(2);
-      
-      // Check if cursor is at the end of the line (after all content)
-      bool isAtEnd = cursorPosInBlock >= currentLine.length();
-      
-      if (isAtEnd) {
-        // Check if the line contains only the bullet (empty list item)
-        QString lineAfterBullet = currentLine.mid(match.capturedLength());
-        bool isEmptyListItem = lineAfterBullet.trimmed().isEmpty();
-        
-        if (isEmptyListItem) {
-          // User pressed Enter on an empty list item - exit list mode
-          cursor.insertText("\n" + whitespace);
-          setTextCursor(cursor);
-          event->accept();
-          return;
-        } else {
-          // Auto-continue list with same bullet
-          cursor.insertText("\n" + whitespace + bullet + " ");
-          setTextCursor(cursor);
-          event->accept();
-          return;
-        }
-      }
-    }
+     if (match.hasMatch()) {
+       QString whitespace = match.captured(1);
+       QString bullet = match.captured(2);
+       
+       // Check if cursor is at the end of the line (after all content)
+       bool isAtEnd = cursorPosInBlock >= currentLine.length();
+       
+       if (isAtEnd) {
+         // Check if the line contains only the bullet (empty list item)
+         QString lineAfterBullet = currentLine.mid(match.capturedLength());
+         bool isEmptyListItem = lineAfterBullet.trimmed().isEmpty();
+         
+         if (isEmptyListItem) {
+           // User pressed Enter on an empty list item - exit list mode
+           // Replace the empty bullet with a blank line
+           cursor.select(QTextCursor::BlockUnderCursor);
+           cursor.removeSelectedText();
+           cursor.insertText("\n");
+           setTextCursor(cursor);
+           event->accept();
+           return;
+          } else {
+            // Auto-continue list with same bullet
+            cursor.insertText("\n" + whitespace + bullet + " ");
+             setTextCursor(cursor);
+             event->accept();
+             return;
+          }
+       }
+     }
 
     int indent = 0;
 
@@ -683,14 +697,14 @@ void MarkdownEditor::keyPressEvent(QKeyEvent *event) {
     hidePrediction();
   }
 
-  QPlainTextEdit::keyPressEvent(event);
+  QTextEdit::keyPressEvent(event);
 }
 
 void MarkdownEditor::dragEnterEvent(QDragEnterEvent *event) {
   if (event->mimeData()->hasUrls()) {
     event->acceptProposedAction();
   } else {
-    QPlainTextEdit::dragEnterEvent(event);
+    QTextEdit::dragEnterEvent(event);
   }
 }
 
@@ -698,7 +712,7 @@ void MarkdownEditor::dragMoveEvent(QDragMoveEvent *event) {
   if (event->mimeData()->hasUrls()) {
     event->acceptProposedAction();
   } else {
-    QPlainTextEdit::dragMoveEvent(event);
+    QTextEdit::dragMoveEvent(event);
   }
 }
 
@@ -737,7 +751,7 @@ void MarkdownEditor::dropEvent(QDropEvent *event) {
 
     event->acceptProposedAction();
   } else {
-    QPlainTextEdit::dropEvent(event);
+    QTextEdit::dropEvent(event);
   }
 }
 
@@ -751,7 +765,7 @@ void MarkdownEditor::setupEditor() {
   QFontMetrics metrics(font);
   setTabStopDistance(4 * metrics.horizontalAdvance(' '));
 
-  setLineWrapMode(QPlainTextEdit::WidgetWidth);
+  setLineWrapMode(QTextEdit::WidgetWidth);
   setWordWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);
 
   // Theme is applied via onThemeChanged() - no hardcoded colors here
@@ -759,7 +773,7 @@ void MarkdownEditor::setupEditor() {
 
 int MarkdownEditor::lineNumberAreaWidth() {
   int digits = 1;
-  int max = qMax(1, blockCount());
+  int max = qMax(1, document()->blockCount());
   while (max >= 10) {
     max /= 10;
     ++digits;
@@ -784,7 +798,7 @@ void MarkdownEditor::updateLineNumberArea(const QRect &rect, int dy) {
 }
 
 void MarkdownEditor::resizeEvent(QResizeEvent *e) {
-  QPlainTextEdit::resizeEvent(e);
+  QTextEdit::resizeEvent(e);
 
   QRect cr = contentsRect();
   lineNumberArea->setGeometry(
@@ -817,46 +831,42 @@ void MarkdownEditor::highlightCurrentLine() {
 
 void MarkdownEditor::lineNumberAreaPaintEvent(QPaintEvent *event) {
   QPainter painter(lineNumberArea);
-  
-  // Use theme-aware colors for line number area
-  QColor backgroundColor;
-  QColor textColor;
-  
-  // Detect if we're in a dark theme by checking the editor's background
-  QColor editorBg = palette().color(QPalette::Base);
-  bool isDark = (editorBg.lightness() < 128);
-  
-  if (isDark) {
-    // Dark theme: darker gray background, lighter text
-    backgroundColor = QColor(45, 45, 45);
-    textColor = QColor(160, 160, 160);
-  } else {
+
+  QColor backgroundColor, textColor;
+  // Detect theme
+  if (palette().color(QPalette::Base).lightness() > 128) {
     // Light theme: light gray background, darker text
     backgroundColor = QColor(240, 240, 240);
     textColor = QColor(120, 120, 120);
+  } else {
+    // Dark theme: dark background, light text
+    backgroundColor = QColor(45, 45, 45);
+    textColor = QColor(160, 160, 160);
   }
   
   painter.fillRect(event->rect(), backgroundColor);
 
-  QTextBlock block = firstVisibleBlock();
-  int blockNumber = block.blockNumber();
-  int top =
-      qRound(blockBoundingGeometry(block).translated(contentOffset()).top());
-  int bottom = top + qRound(blockBoundingRect(block).height());
+  QTextBlock block = document()->firstBlock();
+  int blockNumber = 0;
+  
+   while (block.isValid()) {
+     blockNumber = block.blockNumber();
+     QTextCursor blockCursor(block);
+     int blockTop = static_cast<int>(cursorRect(blockCursor).top());
+     
+     if (blockTop > event->rect().bottom()) {
+       break;
+     }
+     
+     if (block.isVisible() && blockTop + fontMetrics().height() > event->rect().top()) {
+       QString number = QString::number(blockNumber + 1);
+       painter.setPen(textColor);
+       painter.drawText(0, blockTop, lineNumberArea->width() - 5,
+                        fontMetrics().height(), Qt::AlignRight, number);
+     }
 
-  while (block.isValid() && top <= event->rect().bottom()) {
-    if (block.isVisible() && bottom >= event->rect().top()) {
-      QString number = QString::number(blockNumber + 1);
-      painter.setPen(textColor);
-      painter.drawText(0, top, lineNumberArea->width() - 5,
-                       fontMetrics().height(), Qt::AlignRight, number);
-    }
-
-    block = block.next();
-    top = bottom;
-    bottom = top + qRound(blockBoundingRect(block).height());
-    ++blockNumber;
-  }
+     block = block.next();
+   }
 }
 
 void MarkdownEditor::setCurrentFilePath(const QString &filePath) {
@@ -879,7 +889,7 @@ void MarkdownEditor::insertFromMimeData(const QMimeData *source) {
   }
 
   // Default behavior for other content
-  QPlainTextEdit::insertFromMimeData(source);
+  QTextEdit::insertFromMimeData(source);
 }
 
 QString MarkdownEditor::saveImageFromClipboard(const QImage &image) {
@@ -1130,4 +1140,35 @@ int MarkdownEditor::getIndentLevel(const QTextBlock &block) {
     }
   }
   return indent;
+}
+
+void MarkdownEditor::applyListHangingIndent(const QTextBlock &block) {
+  QString text = block.text();
+  QRegularExpression listPattern("^(\\s*)([-*+]|[0-9]+\\.)\\s+");
+  QRegularExpressionMatch match = listPattern.match(text);
+  if (!match.hasMatch()) {
+    return; // Not a list item
+  }
+  QFont font = this->font();
+  QFontMetrics fm(font);
+  QString indent = match.captured(1); // Leading whitespace
+  QString bullet = match.captured(2); // Bullet marker (-, *, +, or number.)
+  int bulletWidth = fm.horizontalAdvance(indent + bullet + " ");
+  QTextCursor cursor(document());
+  cursor.setPosition(block.position());
+  QTextBlockFormat blockFormat = cursor.blockFormat();
+  blockFormat.setLeftMargin(bulletWidth);     // Total left margin
+  blockFormat.setTextIndent(-bulletWidth);    // Negative indent for hanging effect
+  cursor.setBlockFormat(blockFormat);
+}
+
+void MarkdownEditor::applyDeferredFormatting() {
+  // This method is called after user stops typing (via QTimer)
+  // It safely applies hanging indent formatting to all list items
+  
+  QTextBlock block = document()->firstBlock();
+  while (block.isValid()) {
+    applyListHangingIndent(block);
+    block = block.next();
+  }
 }

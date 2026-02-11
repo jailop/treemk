@@ -54,3 +54,9 @@ ignored.
 0.2.2
 
 - it just a jump in versions
+
+0.3.0
+
+- Migration from plan text editor to regular text editor
+- Adjustments in css for the preview panel
+- hanging margins for bullet lists in the markdown editor

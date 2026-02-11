@@ -70,12 +70,17 @@ blockquote {
 }
 
 ul, ol {
-    padding-left: 2em;
+    margin-left: 2em;
     margin-top: 0;
     margin-bottom: 16px;
+    padding-left: 0;
 }
 
-li { margin-bottom: 4px; }
+li {
+    margin-bottom: 4px;
+    margin-left: 1.5em;
+    text-indent: -1.5em;
+}
 
 hr {
     height: 0.25em;

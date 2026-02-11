@@ -138,11 +138,11 @@ void MainWindow::quickOpen() {
 void MainWindow::jumpToLine(int lineNumber) {
   TabEditor *tab = currentTabEditor();
   if (!tab)
-    return;
+     return;
 
-  QTextBlock block =
-      tab->editor()->document()->findBlockByLineNumber(lineNumber - 1);
-  QTextCursor cursor(block);
-  tab->editor()->setTextCursor(cursor);
-  tab->editor()->centerCursor();
+   QTextBlock block =
+       tab->editor()->document()->findBlockByLineNumber(lineNumber - 1);
+   QTextCursor cursor(block);
+   tab->editor()->setTextCursor(cursor);
+   tab->editor()->ensureCursorVisible();
 }
