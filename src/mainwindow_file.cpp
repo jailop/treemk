@@ -21,6 +21,9 @@ void MainWindow::openFolder() {
       QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
 
   if (!folder.isEmpty()) {
+    // Close tabs from the previous folder
+    closeTabsFromOtherFolders();
+    
     treeView->setRootPath(folder);
     currentFolder = folder;
 
@@ -34,6 +37,9 @@ void MainWindow::openFolder() {
     updateRecentFolders(folder);
 
     statusBar()->showMessage(tr("Opened folder: %1").arg(folder));
+    
+    // Close tabs again after setting the new folder
+    closeTabsFromOtherFolders();
   }
 }
 
@@ -52,6 +58,9 @@ void MainWindow::openRecentFolder() {
     return;
   }
 
+  // Close tabs from the previous folder
+  closeTabsFromOtherFolders();
+  
   treeView->setRootPath(folder);
   currentFolder = folder;
 
@@ -62,11 +71,17 @@ void MainWindow::openRecentFolder() {
 
   linkParser->buildLinkIndex(folder);
 
+  updateRecentFolders(folder);
+
   statusBar()->showMessage(tr("Opened folder: %1").arg(folder));
+  
+  // Close tabs again after setting the new folder
+  closeTabsFromOtherFolders();
 }
 
 void MainWindow::clearRecentFolders() {
   recentFolders.clear();
+  settings->setValue("recentFolders", recentFolders);
   populateRecentFoldersMenu();
 }
 
@@ -175,6 +190,12 @@ bool MainWindow::maybeSave() {
   for (int i = 0; i < tabWidget->count(); ++i) {
     TabEditor *tab = qobject_cast<TabEditor *>(tabWidget->widget(i));
     if (tab && tab->isModified()) {
+      // Skip empty documents - they can be discarded without prompting
+      bool isDocumentEmpty = tab->editor()->toPlainText().trimmed().isEmpty();
+      if (isDocumentEmpty) {
+        continue;
+      }
+      
       tabWidget->setCurrentIndex(i);
       QMessageBox::StandardButton ret = QMessageBox::warning(
           this, tr("Unsaved Changes"),

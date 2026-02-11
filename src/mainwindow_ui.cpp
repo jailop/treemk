@@ -262,6 +262,9 @@ void MainWindow::readSettings() {
 
   // Load recent folders
   recentFolders = settings->value("recentFolders").toStringList();
+  
+  // Update the recent folders menu with loaded data
+  populateRecentFoldersMenu();
 
    // Determine which folder to open
    QString folderToOpen;
