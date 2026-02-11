@@ -55,6 +55,7 @@ private slots:
   void onFileSelected(const QString &filePath);
   void onFileDoubleClicked(const QString &filePath);
   void onFileModifiedExternally(const QString &filePath);
+  void onFolderChanged(const QString &folderPath);
   void onDocumentModified();
   void autoSave();
   void find();

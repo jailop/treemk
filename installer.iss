@@ -48,6 +48,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked; OnlyBelowVersion: 6.1; Check: not IsAdminInstallMode
 Name: "associatefiles"; Description: "Associate .md files with {#MyAppName}"; GroupDescription: "File associations:"; Flags: unchecked
+Name: "addtopath"; Description: "Add {#MyAppName} to PATH (allows running from terminal)"; GroupDescription: "System integration:"
 
 [Files]
 ; Main executable and all dependencies from windeployqt
@@ -70,11 +71,69 @@ Root: HKA; Subkey: "Software\Classes\{#MyAppAssocKey}\DefaultIcon"; ValueType: s
 Root: HKA; Subkey: "Software\Classes\{#MyAppAssocKey}\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" ""%1"""; Tasks: associatefiles
 Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: ".md"; ValueData: ""; Tasks: associatefiles
 
+; Add to PATH environment variable
+Root: HKCU; Subkey: "Environment"; ValueType: expandsz; ValueName: "Path"; ValueData: "{olddata};{app}"; Check: NeedsAddPath(ExpandConstant('{app}')); Tasks: addtopath
+
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
 
 [Code]
+function NeedsAddPath(Param: string): boolean;
+var
+  OrigPath: string;
+begin
+  if not RegQueryStringValue(HKEY_CURRENT_USER, 'Environment', 'Path', OrigPath)
+  then begin
+    Result := True;
+    exit;
+  end;
+  // Check if the path already contains the app directory
+  Result := Pos(';' + Param + ';', ';' + OrigPath + ';') = 0;
+end;
+
+procedure RemovePath(Path: string);
+var
+  OrigPath: string;
+  StartPos: Integer;
+  EndPos: Integer;
+  NewPath: string;
+begin
+  if not RegQueryStringValue(HKEY_CURRENT_USER, 'Environment', 'Path', OrigPath) then
+    exit;
+  
+  // Remove the path from PATH variable
+  StartPos := Pos(';' + Path + ';', ';' + OrigPath + ';');
+  if StartPos = 0 then
+  begin
+    // Maybe it's at the beginning
+    if Copy(OrigPath, 1, Length(Path) + 1) = Path + ';' then
+      NewPath := Copy(OrigPath, Length(Path) + 2, Length(OrigPath))
+    else
+    // Maybe it's at the end
+    if Copy(OrigPath, Length(OrigPath) - Length(Path), Length(Path) + 1) = ';' + Path then
+      NewPath := Copy(OrigPath, 1, Length(OrigPath) - Length(Path) - 1)
+    else
+      exit;
+  end
+  else
+  begin
+    // It's in the middle
+    NewPath := Copy(OrigPath, 1, StartPos - 1) + Copy(OrigPath, StartPos + Length(Path) + 1, Length(OrigPath));
+  end;
+  
+  // Write back the new PATH
+  RegWriteExpandStringValue(HKEY_CURRENT_USER, 'Environment', 'Path', NewPath);
+end;
+
 function InitializeSetup(): Boolean;
 begin
   Result := True;
+end;
+
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+begin
+  if CurUninstallStep = usPostUninstall then
+  begin
+    RemovePath(ExpandConstant('{app}'));
+  end;
 end;

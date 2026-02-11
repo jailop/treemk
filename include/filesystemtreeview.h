@@ -21,6 +21,7 @@ signals:
   void fileSelected(const QString &filePath);
   void fileDoubleClicked(const QString &filePath);
   void fileModifiedExternally(const QString &filePath);
+  void folderChanged(const QString &folderPath);
 
 protected:
   void mouseDoubleClickEvent(QMouseEvent *event) override;
@@ -39,6 +40,8 @@ private slots:
   void copyItem();
   void pasteItem();
   void refreshDirectory();
+  void setAsCurrentFolder();
+  void goToParentFolder();
 
 private:
   void setupModel();
@@ -59,6 +62,8 @@ private:
   QAction *copyAction;
   QAction *pasteAction;
   QAction *refreshAction;
+  QAction *setCurrentFolderAction;
+  QAction *goToParentAction;
 
   QString clipboardPath;
   bool clipboardIsCut;

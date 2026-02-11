@@ -186,6 +186,33 @@ void MainWindow::onFileModifiedExternally(const QString &filePath) {
   }
 }
 
+void MainWindow::onFolderChanged(const QString &folderPath) {
+  // Update recent folders
+  updateRecentFolders(folderPath);
+  
+  // Close all tabs that are not in the new folder
+  QDir newFolder(folderPath);
+  QString canonicalFolderPath = newFolder.canonicalPath();
+  
+  for (int i = tabWidget->count() - 1; i >= 0; --i) {
+    TabEditor *tab = qobject_cast<TabEditor *>(tabWidget->widget(i));
+    if (tab) {
+      QString tabFilePath = tab->filePath();
+      if (!tabFilePath.isEmpty()) {
+        QFileInfo fileInfo(tabFilePath);
+        QString fileFolder = fileInfo.canonicalPath();
+        
+        // Check if file is in the new folder or its subfolders
+        if (!fileFolder.startsWith(canonicalFolderPath)) {
+          tabWidget->removeTab(i);
+        }
+      }
+    }
+  }
+  
+  statusBar()->showMessage(tr("Current folder changed to: %1").arg(folderPath), 3000);
+}
+
 bool MainWindow::maybeSave() {
   for (int i = 0; i < tabWidget->count(); ++i) {
     TabEditor *tab = qobject_cast<TabEditor *>(tabWidget->widget(i));

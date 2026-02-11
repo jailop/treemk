@@ -21,6 +21,37 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for version detection
+      
+      - name: Detect version
+        id: version
+        shell: powershell
+        run: |
+          # Try to get version from latest git tag
+          $tag = git describe --tags --abbrev=0 2>$null
+          if ($tag) {
+            # Remove 'v' prefix if present
+            $version = $tag -replace '^v', ''
+          } else {
+            # No tags, generate version from commit count and hash
+            $commitCount = git rev-list --count HEAD
+            $commitHash = git rev-parse --short HEAD
+            $version = "0.0.$commitCount-$commitHash"
+          }
+          
+          Write-Output "Detected version: $version"
+          echo "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Append
+          echo "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+      
+      - name: Update installer version
+        shell: powershell
+        run: |
+          $version = "${{ env.VERSION }}"
+          $content = Get-Content installer.iss
+          $content = $content -replace '#define MyAppVersion ".*"', "#define MyAppVersion `"$version`""
+          Set-Content -Path installer.iss -Value $content
+          Write-Output "Updated installer.iss to version $version"
       
       - name: Install Qt
         uses: jurplel/install-qt-action@v3
@@ -109,7 +140,7 @@ jobs:
         shell: powershell
         run: |
           cd build\Release
-          $version = "0.2.0"
+          $version = "${{ env.VERSION }}"
           $zipName = "TreeMk-$version-Windows-x64-Portable.zip"
           Compress-Archive -Path * -DestinationPath "..\..\$zipName"
           echo "Created $zipName"
@@ -175,12 +206,14 @@ jobs:
       - name: Summary
         shell: powershell
         run: |
+          $version = "${{ env.VERSION }}"
           echo "### ✅ Windows Installer Build Complete!" >> $env:GITHUB_STEP_SUMMARY
           echo "" >> $env:GITHUB_STEP_SUMMARY
+          echo "**Version:** $version" >> $env:GITHUB_STEP_SUMMARY
           echo "**Release:** ${{ env.RELEASE_TAG }}" >> $env:GITHUB_STEP_SUMMARY
           echo "" >> $env:GITHUB_STEP_SUMMARY
           echo "**Created Files:**" >> $env:GITHUB_STEP_SUMMARY
-          echo "- TreeMk-0.2.0-Setup.exe (Inno Setup Installer)" >> $env:GITHUB_STEP_SUMMARY
-          echo "- TreeMk-0.2.0-Windows-x64-Portable.zip (Portable version)" >> $env:GITHUB_STEP_SUMMARY
+          echo "- TreeMk-$version-Setup.exe (Inno Setup Installer)" >> $env:GITHUB_STEP_SUMMARY
+          echo "- TreeMk-$version-Windows-x64-Portable.zip (Portable version)" >> $env:GITHUB_STEP_SUMMARY
           echo "" >> $env:GITHUB_STEP_SUMMARY
           echo "Both files have been uploaded to the release." >> $env:GITHUB_STEP_SUMMARY

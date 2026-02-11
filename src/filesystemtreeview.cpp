@@ -96,6 +96,14 @@ void FileSystemTreeView::createContextMenu() {
   connect(refreshAction, &QAction::triggered, this,
           &FileSystemTreeView::refreshDirectory);
 
+  setCurrentFolderAction = new QAction(tr("Set as Current Folder"), this);
+  connect(setCurrentFolderAction, &QAction::triggered, this,
+          &FileSystemTreeView::setAsCurrentFolder);
+
+  goToParentAction = new QAction(tr("Go to Parent Folder"), this);
+  connect(goToParentAction, &QAction::triggered, this,
+          &FileSystemTreeView::goToParentFolder);
+
   contextMenu->addAction(newFileAction);
   contextMenu->addAction(newFolderAction);
   contextMenu->addSeparator();
@@ -105,6 +113,9 @@ void FileSystemTreeView::createContextMenu() {
   contextMenu->addAction(cutAction);
   contextMenu->addAction(copyAction);
   contextMenu->addAction(pasteAction);
+  contextMenu->addSeparator();
+  contextMenu->addAction(setCurrentFolderAction);
+  contextMenu->addAction(goToParentAction);
   contextMenu->addSeparator();
   contextMenu->addAction(refreshAction);
 
@@ -233,18 +244,28 @@ void FileSystemTreeView::mouseDoubleClickEvent(QMouseEvent *event) {
 void FileSystemTreeView::contextMenuEvent(QContextMenuEvent *event) {
   QModelIndex index = indexAt(event->pos());
   bool hasSelection = index.isValid();
-  // bool isFile = false;
+  bool isDirectory = false;
 
   if (hasSelection) {
     QString filePath = fileSystemModel->filePath(index);
-    // isFile = QFileInfo(filePath).isFile();
+    QFileInfo fileInfo(filePath);
+    isDirectory = fileInfo.isDir();
   }
 
+  // Enable/disable actions based on selection
   pasteAction->setEnabled(!clipboardPath.isEmpty());
   renameAction->setEnabled(hasSelection);
   deleteAction->setEnabled(hasSelection);
   cutAction->setEnabled(hasSelection);
   copyAction->setEnabled(hasSelection);
+  
+  // Folder navigation actions - only for directories
+  setCurrentFolderAction->setEnabled(hasSelection && isDirectory);
+  
+  // Parent folder action - check if we're not already at root
+  QDir currentDir(currentRootPath);
+  bool hasParent = currentDir.cdUp();
+  goToParentAction->setEnabled(hasParent);
 
   contextMenu->exec(event->globalPos());
 }
@@ -495,6 +516,34 @@ void FileSystemTreeView::refreshDirectory() {
       setCurrentIndex(idx);
       scrollTo(idx);
     }
+  }
+}
+
+void FileSystemTreeView::setAsCurrentFolder() {
+  QModelIndex index = currentIndex();
+  if (!index.isValid()) {
+    return;
+  }
+
+  QString selectedPath = fileSystemModel->filePath(index);
+  QFileInfo fileInfo(selectedPath);
+  
+  if (fileInfo.isDir()) {
+    setRootPath(selectedPath);
+    emit folderChanged(selectedPath);
+  }
+}
+
+void FileSystemTreeView::goToParentFolder() {
+  if (currentRootPath.isEmpty()) {
+    return;
+  }
+
+  QDir currentDir(currentRootPath);
+  if (currentDir.cdUp()) {
+    QString parentPath = currentDir.absolutePath();
+    setRootPath(parentPath);
+    emit folderChanged(parentPath);
   }
 }
 

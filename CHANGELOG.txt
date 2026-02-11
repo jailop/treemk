@@ -64,3 +64,6 @@ ignored.
 0.3.1
 
 - Bugs fixed
+- Set current folder or parent folder as default
+- Task manager fixed and updated. It is working
+- workflows for windows binaries

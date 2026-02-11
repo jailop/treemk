@@ -171,6 +171,8 @@ void MainWindow::createLayout() {
           &MainWindow::onFileDoubleClicked);
   connect(treeView, &FileSystemTreeView::fileModifiedExternally, this,
           &MainWindow::onFileModifiedExternally);
+  connect(treeView, &FileSystemTreeView::folderChanged, this,
+          &MainWindow::onFolderChanged);
 
   leftTabWidget->addTab(treePanel, tr("Files"));
 
