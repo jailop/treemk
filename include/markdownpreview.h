@@ -20,6 +20,7 @@ public:
  signals:
    void wikiLinkClicked(const QString &linkTarget);
    void markdownLinkClicked(const QString &linkTarget);
+   void openLinkInNewWindowRequested(const QString &linkTarget);
 
 private slots:
   void showContextMenu(const QPoint &pos);

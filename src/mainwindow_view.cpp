@@ -3,6 +3,7 @@
 #include "markdowneditor.h"
 #include "markdownpreview.h"
 #include "tabeditor.h"
+#include "managers/windowmanager.h"
 #include <QDesktopServices>
 #include <QDir>
 #include <QFile>
@@ -208,6 +209,21 @@ void MainWindow::onMarkdownLinkClicked(const QString &linkTarget) {
       // For non-.md files that don't exist, show an error
       statusBar()->showMessage(tr("File not found: %1").arg(finalPath), 3000);
     }
+  }
+}
+
+void MainWindow::onOpenLinkInNewWindow(const QString &linkTarget) {
+  if (currentFolder.isEmpty()) {
+    statusBar()->showMessage(tr("No folder opened. Cannot resolve link."), 3000);
+    return;
+  }
+  
+  QString targetFile = linkParser->resolveLinkTarget(linkTarget, currentFilePath);
+  if (!targetFile.isEmpty() && QFileInfo(targetFile).exists()) {
+    QFileInfo info(targetFile);
+    WindowManager::instance()->createWindow(info.absolutePath(), targetFile);
+  } else {
+    statusBar()->showMessage(tr("Link target not found: %1").arg(linkTarget), 3000);
   }
 }
 

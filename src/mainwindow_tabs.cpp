@@ -47,10 +47,14 @@ TabEditor *MainWindow::createNewTab() {
            &MainWindow::onWikiLinkClicked);
    connect(tab->editor(), &MarkdownEditor::markdownLinkClicked, this,
            &MainWindow::onMarkdownLinkClicked);
+   connect(tab->editor(), &MarkdownEditor::openLinkInNewWindowRequested, this,
+           &MainWindow::onOpenLinkInNewWindow);
    connect(tab->preview(), &MarkdownPreview::wikiLinkClicked, this,
            &MainWindow::onWikiLinkClicked);
    connect(tab->preview(), &MarkdownPreview::markdownLinkClicked, this,
            &MainWindow::onMarkdownLinkClicked);
+   connect(tab->preview(), &MarkdownPreview::openLinkInNewWindowRequested, this,
+           &MainWindow::onOpenLinkInNewWindow);
 
   if (outlineView) {
     connect(outlineView, &OutlinePanel::headerClicked, this,

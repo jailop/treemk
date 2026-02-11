@@ -66,6 +66,7 @@ private slots:
   void setPreviewThemeSepia();
    void onWikiLinkClicked(const QString &linkTarget);
    void onMarkdownLinkClicked(const QString &linkTarget);
+   void onOpenLinkInNewWindow(const QString &linkTarget);
   void updateBacklinks();
   void searchInFiles();
   void openSettings();

@@ -36,6 +36,7 @@ public:
  signals:
    void wikiLinkClicked(const QString &linkTarget);
    void markdownLinkClicked(const QString &linkTarget);
+   void openLinkInNewWindowRequested(const QString &linkTarget);
 
 protected:
   void resizeEvent(QResizeEvent *event) override;
@@ -47,6 +48,7 @@ protected:
   void dropEvent(QDropEvent *event) override;
   void insertFromMimeData(const QMimeData *source) override;
   void paintEvent(QPaintEvent *event) override;
+  void contextMenuEvent(QContextMenuEvent *event) override;
 
  private slots:
   void updateLineNumberAreaWidth(int newBlockCount);
