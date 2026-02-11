@@ -51,6 +51,8 @@ jobs:
               build-essential \
               qt6-base-dev \
               qt6-webengine-dev \
+              qt6-webengine-dev-tools \
+              libqt6webenginecore6 \
               libqt6svg6-dev \
               libmd4c-dev \
               libmd4c-html0-dev \
