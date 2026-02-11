@@ -44,6 +44,10 @@ MarkdownEditor::MarkdownEditor(QWidget *parent)
 
   setupEditor();
 
+  // Enable mouse tracking for cursor changes over checkboxes
+  setMouseTracking(true);
+  viewport()->setMouseTracking(true);
+
   connect(document(), &QTextDocument::blockCountChanged, this,
           &MarkdownEditor::updateLineNumberAreaWidth);
   connect(this, &QTextEdit::cursorPositionChanged, this,
@@ -202,45 +206,60 @@ QString MarkdownEditor::getMarkdownLinkAtPosition(int position) const {
 }
 
 void MarkdownEditor::mousePressEvent(QMouseEvent *event) {
-  if (event->button() == Qt::LeftButton &&
-      (event->modifiers() & Qt::ControlModifier)) {
+  if (event->button() == Qt::LeftButton) {
     QTextCursor cursor = cursorForPosition(event->pos());
     int position = cursor.position();
 
-    // Try task toggle first
-    QString taskMarker = getTaskMarkerAtPosition(position);
-    if (!taskMarker.isEmpty()) {
+    // Check if clicking on a task checkbox (with or without Ctrl)
+    if (isClickOnCheckbox(position)) {
       toggleTaskAtPosition(position);
       event->accept();
       return;
     }
 
-    // Try wiki link
-    QString linkTarget = getLinkAtPosition(position);
-    if (!linkTarget.isEmpty()) {
-      emit wikiLinkClicked(linkTarget);
-      event->accept();
-      return;
-    }
+    // Ctrl+Click for links
+    if (event->modifiers() & Qt::ControlModifier) {
+      // Try wiki link
+      QString linkTarget = getLinkAtPosition(position);
+      if (!linkTarget.isEmpty()) {
+        emit wikiLinkClicked(linkTarget);
+        event->accept();
+        return;
+      }
 
-    // Try markdown link
-    QString markdownLink = getMarkdownLinkAtPosition(position);
-    if (!markdownLink.isEmpty()) {
-      emit markdownLinkClicked(markdownLink);
-      event->accept();
-      return;
-    }
+      // Try markdown link
+      QString markdownLink = getMarkdownLinkAtPosition(position);
+      if (!markdownLink.isEmpty()) {
+        emit markdownLinkClicked(markdownLink);
+        event->accept();
+        return;
+      }
 
-    // Try external link
-    QString externalUrl = getExternalLinkAtPosition(position);
-    if (!externalUrl.isEmpty()) {
-      QDesktopServices::openUrl(QUrl(externalUrl));
-      event->accept();
-      return;
+      // Try external link
+      QString externalUrl = getExternalLinkAtPosition(position);
+      if (!externalUrl.isEmpty()) {
+        QDesktopServices::openUrl(QUrl(externalUrl));
+        event->accept();
+        return;
+      }
     }
   }
 
   QTextEdit::mousePressEvent(event);
+}
+
+void MarkdownEditor::mouseMoveEvent(QMouseEvent *event) {
+  // Change cursor to pointer when hovering over checkboxes
+  QTextCursor cursor = cursorForPosition(event->pos());
+  int position = cursor.position();
+  
+  if (isClickOnCheckbox(position)) {
+    viewport()->setCursor(Qt::PointingHandCursor);
+  } else {
+    viewport()->setCursor(Qt::IBeamCursor);
+  }
+  
+  QTextEdit::mouseMoveEvent(event);
 }
 
 void MarkdownEditor::updateWordFrequency() {
@@ -565,7 +584,41 @@ void MarkdownEditor::keyPressEvent(QKeyEvent *event) {
     QString currentLine = cursor.block().text();
     int cursorPosInBlock = cursor.positionInBlock();
 
-    // Check if current line is a list item
+    // Check if current line is a task list item
+    QRegularExpression taskPattern("^(\\s*)([-*+])\\s+\\[([ xX.]?)\\]\\s*");
+    QRegularExpressionMatch taskMatch = taskPattern.match(currentLine);
+    
+    if (taskMatch.hasMatch()) {
+      QString whitespace = taskMatch.captured(1);
+      QString bullet = taskMatch.captured(2);
+      
+      // Check if cursor is at the end of the line
+      bool isAtEnd = cursorPosInBlock >= currentLine.length();
+      
+      if (isAtEnd) {
+        // Check if the task line contains only the checkbox (empty task item)
+        QString lineAfterCheckbox = currentLine.mid(taskMatch.capturedLength());
+        bool isEmptyTaskItem = lineAfterCheckbox.trimmed().isEmpty();
+        
+        if (isEmptyTaskItem) {
+          // User pressed Enter on an empty task item - exit task mode
+          cursor.select(QTextCursor::BlockUnderCursor);
+          cursor.removeSelectedText();
+          cursor.insertText("\n");
+          setTextCursor(cursor);
+          event->accept();
+          return;
+        } else {
+          // Auto-continue task list with new unchecked item
+          cursor.insertText("\n" + whitespace + bullet + " [ ] ");
+          setTextCursor(cursor);
+          event->accept();
+          return;
+        }
+      }
+    }
+
+    // Check if current line is a regular list item (not task)
     QRegularExpression listPattern("^(\\s*)([-*+]|[0-9]+\\.)\\s+");
     QRegularExpressionMatch match = listPattern.match(currentLine);
     
@@ -628,13 +681,31 @@ void MarkdownEditor::keyPressEvent(QKeyEvent *event) {
   if (autoCloseBrackets) {
     QString closingChar;
     bool shouldClose = false;
+    bool addSpace = false;
 
     if (event->text() == "(") {
       closingChar = ")";
       shouldClose = true;
     } else if (event->text() == "[") {
-      closingChar = "]";
-      shouldClose = true;
+      // Check if this might be a task list
+      QTextCursor cursor = textCursor();
+      QString currentLine = cursor.block().text();
+      int posInBlock = cursor.positionInBlock();
+      
+      // Check if we're after a list marker (-, *, +)
+      QRegularExpression listMarkerPattern("^\\s*[-*+]\\s*$");
+      QString textBeforeCursor = currentLine.left(posInBlock);
+      
+      if (listMarkerPattern.match(textBeforeCursor).hasMatch()) {
+        // This is likely a task list - add space inside brackets and after
+        closingChar = " ] ";
+        shouldClose = true;
+        addSpace = true;
+      } else {
+        // Regular bracket
+        closingChar = "]";
+        shouldClose = true;
+      }
     } else if (event->text() == "{") {
       closingChar = "}";
       shouldClose = true;
@@ -652,7 +723,13 @@ void MarkdownEditor::keyPressEvent(QKeyEvent *event) {
     if (shouldClose) {
       QTextCursor cursor = textCursor();
       cursor.insertText(event->text() + closingChar);
-      cursor.movePosition(QTextCursor::Left, QTextCursor::MoveAnchor);
+      if (addSpace) {
+        // For task lists, move cursor after the closing bracket and add space
+        // Result: - [ ]| (cursor after closing bracket)
+        cursor.movePosition(QTextCursor::Right, QTextCursor::MoveAnchor);
+      } else {
+        cursor.movePosition(QTextCursor::Left, QTextCursor::MoveAnchor);
+      }
       setTextCursor(cursor);
       event->accept();
       return;
@@ -674,18 +751,57 @@ void MarkdownEditor::keyPressEvent(QKeyEvent *event) {
     }
   }
 
-  // Ctrl+Space to toggle task on current line
-  if (event->key() == Qt::Key_Space && (event->modifiers() & Qt::ControlModifier)) {
+  // Handle Tab and Shift+Tab for indenting/dedenting lists and tasks
+  if (event->key() == Qt::Key_Tab || event->key() == Qt::Key_Backtab) {
     QTextCursor cursor = textCursor();
     QString line = cursor.block().text();
-    QRegularExpression taskPattern("[-*+] \\[([ xX.]?)\\]");
-    QRegularExpressionMatch match = taskPattern.match(line);
+    
+    // Check if current line is a list or task item
+    QRegularExpression listPattern("^(\\s*)([-*+]|[0-9]+\\.)\\s");
+    QRegularExpressionMatch match = listPattern.match(line);
+    
     if (match.hasMatch()) {
-      int markerPos = match.capturedStart(1);
-      toggleTaskAtPosition(cursor.block().position() + markerPos);
+      cursor.beginEditBlock();
+      
+      if (event->key() == Qt::Key_Tab && !(event->modifiers() & Qt::ShiftModifier)) {
+        // Tab - indent (add 2 spaces)
+        cursor.movePosition(QTextCursor::StartOfBlock);
+        cursor.insertText("  ");
+      } else if (event->key() == Qt::Key_Backtab || (event->modifiers() & Qt::ShiftModifier)) {
+        // Shift+Tab - dedent (remove up to 2 spaces)
+        QString whitespace = match.captured(1);
+        if (!whitespace.isEmpty()) {
+          cursor.movePosition(QTextCursor::StartOfBlock);
+          int charsToRemove = qMin(2, whitespace.length());
+          for (int i = 0; i < charsToRemove; i++) {
+            cursor.deleteChar();
+          }
+        }
+      }
+      
+      cursor.endEditBlock();
       event->accept();
       return;
     }
+  }
+
+  // Ctrl+Space to toggle task on current line
+  // IMPORTANT: Handle this before any other space processing
+  if (event->key() == Qt::Key_Space && 
+      (event->modifiers() == Qt::ControlModifier || 
+       event->modifiers() == (Qt::ControlModifier | Qt::KeypadModifier))) {
+    QTextCursor cursor = textCursor();
+    QString line = cursor.block().text();
+    QRegularExpression taskPattern("([-*+])\\s+\\[([ xX.]?)\\]");
+    QRegularExpressionMatch match = taskPattern.match(line);
+    if (match.hasMatch()) {
+      // Calculate the position of the marker character inside the brackets
+      int checkboxStart = match.capturedStart(2); // Position of the marker (space, X, x, or .)
+      toggleTaskAtPosition(cursor.block().position() + checkboxStart);
+    }
+    // Always accept and return - don't insert space
+    event->accept();
+    return;
   }
 
   // Hide prediction on certain keys
@@ -1008,19 +1124,48 @@ QString MarkdownEditor::getTaskMarkerAtPosition(int position) const {
   return QString();
 }
 
-void MarkdownEditor::toggleTaskAtPosition(int position) {
+bool MarkdownEditor::isClickOnCheckbox(int position) const {
   QTextCursor cursor(document());
   cursor.setPosition(position);
   QString line = cursor.block().text();
+  int posInBlock = cursor.positionInBlock();
 
-  QRegularExpression taskPattern("- \\[([ xX.]?)\\]");
+  // Pattern to match task list: - [ ], * [ ], + [ ]
+  QRegularExpression taskPattern("([-*+])\\s+\\[([ xX.]?)\\]");
+  QRegularExpressionMatch match = taskPattern.match(line);
+
+  if (match.hasMatch()) {
+    // Check if click is on the checkbox part: [ ] or [X] or [.]
+    int checkboxStart = match.capturedStart();
+    
+    // Allow clicking anywhere on "[ ]" part (including the brackets)
+    int bracketStart = line.indexOf('[', checkboxStart);
+    int bracketEnd = line.indexOf(']', bracketStart);
+    
+    if (bracketStart >= 0 && bracketEnd >= 0) {
+      return (posInBlock >= bracketStart && posInBlock <= bracketEnd + 1);
+    }
+  }
+  return false;
+}
+
+void MarkdownEditor::toggleTaskAtPosition(int position) {
+  QTextCursor cursor(document());
+  cursor.setPosition(position);
+  QTextBlock block = cursor.block();
+  QString line = block.text();
+
+  // Match any list marker (-, *, +) followed by [ ]
+  QRegularExpression taskPattern("([-*+])\\s+\\[([ xX.]?)\\]");
   QRegularExpressionMatch match = taskPattern.match(line);
   if (match.hasMatch()) {
-    QString marker = match.captured(1);
+    QString marker = match.captured(2); // The character inside brackets
     QString newMarker;
+    
+    // Toggle: space -> X, X/x -> space, . -> X
     if (marker == " ") {
       newMarker = "X";
-    } else if (marker == "X") {
+    } else if (marker.toUpper() == "X") {
       newMarker = " ";
     } else if (marker == ".") {
       newMarker = "X";
@@ -1028,12 +1173,55 @@ void MarkdownEditor::toggleTaskAtPosition(int position) {
       newMarker = "X";
     }
 
-    cursor.select(QTextCursor::BlockUnderCursor);
-    QString newLine = line;
-    newLine.replace(match.capturedStart(1), match.capturedLength(1), newMarker);
-    cursor.insertText(newLine);
+    // Save current cursor position in the editor
+    QTextCursor editorCursor = textCursor();
+    int cursorPos = editorCursor.position();
+    int blockPos = block.position();
+    int relativePos = cursorPos - blockPos;
 
-    updateParentTask(cursor.block());
+    // Replace the marker character
+    cursor.beginEditBlock();
+    cursor.setPosition(block.position() + match.capturedStart(2));
+    cursor.deleteChar();
+    cursor.insertText(newMarker);
+    cursor.endEditBlock();
+
+    // Restore cursor position
+    editorCursor.setPosition(blockPos + relativePos);
+    setTextCursor(editorCursor);
+
+    // Update parent task states
+    updateParentTask(block);
+    
+    // Update child task states if this task was marked as done/pending
+    if (newMarker == " ") {
+      // Parent was unchecked - uncheck all children
+      uncheckChildTasks(block);
+    }
+  }
+}
+
+void MarkdownEditor::uncheckChildTasks(const QTextBlock &block) {
+  QVector<QTextBlock> children = findChildBlocks(block);
+  for (const QTextBlock &child : children) {
+    QString line = child.text();
+    QRegularExpression taskPattern("([-*+])\\s+\\[([xX.]?)\\]");
+    QRegularExpressionMatch match = taskPattern.match(line);
+    if (match.hasMatch()) {
+      QString marker = match.captured(2);
+      if (marker != " ") {
+        // Change to unchecked
+        QTextCursor cursor(document());
+        cursor.setPosition(child.position());
+        cursor.beginEditBlock();
+        cursor.select(QTextCursor::BlockUnderCursor);
+        QString newLine = line;
+        int markerPos = match.capturedStart(2);
+        newLine.replace(markerPos, match.capturedLength(2), " ");
+        cursor.insertText(newLine);
+        cursor.endEditBlock();
+      }
+    }
   }
 }
 

@@ -28,6 +28,7 @@ public:
    QString getExternalLinkAtPosition(int position) const;
    QString getMarkdownLinkAtPosition(int position) const;
   QString getTaskMarkerAtPosition(int position) const;
+  bool isClickOnCheckbox(int position) const;
   void toggleTaskAtPosition(int position);
 
   void setCurrentFilePath(const QString &filePath);
@@ -39,6 +40,7 @@ public:
 protected:
   void resizeEvent(QResizeEvent *event) override;
   void mousePressEvent(QMouseEvent *event) override;
+  void mouseMoveEvent(QMouseEvent *event) override;
   void keyPressEvent(QKeyEvent *event) override;
   void dragEnterEvent(QDragEnterEvent *event) override;
   void dragMoveEvent(QDragMoveEvent *event) override;
@@ -68,6 +70,7 @@ private:
     void updateParentTask(const QTextBlock &block);
     QTextBlock findParentBlock(const QTextBlock &block, int currentIndent);
     void updateTaskState(const QTextBlock &block);
+    void uncheckChildTasks(const QTextBlock &block);
     QVector<QTextBlock> findChildBlocks(const QTextBlock &block);
     int getIndentLevel(const QTextBlock &block);
     void applyListHangingIndent(const QTextBlock &block);

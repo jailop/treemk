@@ -1,0 +1,3 @@
+/usr/local/bin/treemk
+/usr/local/share/applications/treemk.desktop
+/usr/local/share/icons/hicolor/256x256/apps/treemk.png

@@ -1,0 +1,186 @@
+name: Windows Installer Build (Inno Setup)
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Release tag to upload to (e.g., v0.2.0)'
+        required: false
+        default: ''
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+  
+jobs:
+  build-windows-installer:
+    runs-on: windows-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '6.5.3'
+          host: 'windows'
+          target: 'desktop'
+          arch: 'win64_msvc2019_64'
+          modules: 'qtwebengine qtwebchannel qtpositioning'
+          cache: true
+      
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+      
+      - name: Install vcpkg and md4c
+        shell: powershell
+        run: |
+          git clone https://github.com/Microsoft/vcpkg.git
+          cd vcpkg
+          .\bootstrap-vcpkg.bat
+          .\vcpkg.exe install md4c:x64-windows
+          echo "VCPKG_ROOT=$PWD" | Out-File -FilePath $env:GITHUB_ENV -Append
+      
+      - name: Configure CMake
+        shell: cmd
+        run: |
+          mkdir build
+          cd build
+          cmake -G "Visual Studio 17 2022" -A x64 ^
+                -DCMAKE_BUILD_TYPE=Release ^
+                -DCMAKE_PREFIX_PATH="%Qt6_DIR%" ^
+                -DCMAKE_TOOLCHAIN_FILE="%VCPKG_ROOT%\scripts\buildsystems\vcpkg.cmake" ^
+                ..
+      
+      - name: Build
+        shell: cmd
+        run: |
+          cd build
+          cmake --build . --config Release --parallel
+      
+      - name: Deploy Qt dependencies
+        shell: cmd
+        run: |
+          cd build\Release
+          windeployqt.exe --release --no-translations --no-system-d3d-compiler ^
+                          --no-opengl-sw treemk.exe
+      
+      - name: Copy additional dependencies
+        shell: powershell
+        run: |
+          # Copy md4c DLL
+          Copy-Item "$env:VCPKG_ROOT\installed\x64-windows\bin\md4c.dll" `
+                    -Destination "build\Release\" -ErrorAction SilentlyContinue
+          
+          # Copy Visual C++ Runtime (if needed)
+          $vcRedist = "C:\Windows\System32\vcruntime140.dll"
+          if (Test-Path $vcRedist) {
+            Copy-Item $vcRedist -Destination "build\Release\"
+          }
+      
+      - name: Install Inno Setup
+        shell: powershell
+        run: |
+          # Download and install Inno Setup
+          $innoUrl = "https://jrsoftware.org/download.php/is.exe"
+          $innoInstaller = "$env:TEMP\innosetup.exe"
+          Invoke-WebRequest -Uri $innoUrl -OutFile $innoInstaller
+          Start-Process -FilePath $innoInstaller -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-" -Wait
+          echo "C:\Program Files (x86)\Inno Setup 6" | Out-File -FilePath $env:GITHUB_PATH -Append
+      
+      - name: Create Installer with Inno Setup
+        shell: powershell
+        run: |
+          # Compile the installer script
+          $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          if (Test-Path $iscc) {
+            & $iscc installer.iss
+          } else {
+            Write-Error "Inno Setup compiler not found"
+            exit 1
+          }
+      
+      - name: Create portable ZIP (backup)
+        shell: powershell
+        run: |
+          cd build\Release
+          $version = "0.2.0"
+          $zipName = "TreeMk-$version-Windows-x64-Portable.zip"
+          Compress-Archive -Path * -DestinationPath "..\..\$zipName"
+          echo "Created $zipName"
+      
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: TreeMk-Windows-Binaries
+          path: |
+            TreeMk-*-Setup.exe
+            TreeMk-*-Windows-x64-Portable.zip
+          retention-days: 30
+      
+      - name: Get release info
+        id: release_info
+        shell: powershell
+        run: |
+          # Determine release tag
+          $tag = ""
+          if ("${{ github.event_name }}" -eq "push" -and "${{ github.ref }}" -like "refs/tags/*") {
+            # Triggered by tag push
+            $tag = "${{ github.ref_name }}"
+          } elseif ("${{ github.event.inputs.release_tag }}" -ne "") {
+            # Manual trigger with specified tag
+            $tag = "${{ github.event.inputs.release_tag }}"
+          } else {
+            # Manual trigger without tag - use latest release
+            try {
+              $releases = gh release list --limit 1 --json tagName | ConvertFrom-Json
+              if ($releases.Count -gt 0) {
+                $tag = $releases[0].tagName
+              } else {
+                Write-Error "No releases found. Please specify a release tag or create a release first."
+                exit 1
+              }
+            } catch {
+              Write-Error "Failed to get latest release: $_"
+              exit 1
+            }
+          }
+          
+          if ($tag -eq "") {
+            Write-Error "Could not determine release tag"
+            exit 1
+          }
+          
+          echo "RELEASE_TAG=$tag" | Out-File -FilePath $env:GITHUB_ENV -Append
+          echo "Release tag: $tag"
+        env:
+          GH_TOKEN: ${{ github.token }}
+      
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          files: |
+            TreeMk-*-Setup.exe
+            TreeMk-*-Windows-x64-Portable.zip
+          fail_on_unmatched_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Summary
+        shell: powershell
+        run: |
+          echo "### ✅ Windows Installer Build Complete!" >> $env:GITHUB_STEP_SUMMARY
+          echo "" >> $env:GITHUB_STEP_SUMMARY
+          echo "**Release:** ${{ env.RELEASE_TAG }}" >> $env:GITHUB_STEP_SUMMARY
+          echo "" >> $env:GITHUB_STEP_SUMMARY
+          echo "**Created Files:**" >> $env:GITHUB_STEP_SUMMARY
+          echo "- TreeMk-0.2.0-Setup.exe (Inno Setup Installer)" >> $env:GITHUB_STEP_SUMMARY
+          echo "- TreeMk-0.2.0-Windows-x64-Portable.zip (Portable version)" >> $env:GITHUB_STEP_SUMMARY
+          echo "" >> $env:GITHUB_STEP_SUMMARY
+          echo "Both files have been uploaded to the release." >> $env:GITHUB_STEP_SUMMARY
