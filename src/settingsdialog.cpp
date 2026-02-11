@@ -225,6 +225,22 @@ void SettingsDialog::setupMainTab() {
 
   layout->addWidget(generalGroup);
 
+  // Workspace settings group
+  QGroupBox *workspaceGroup = new QGroupBox(tr("Workspace"));
+  QFormLayout *workspaceLayout = new QFormLayout(workspaceGroup);
+
+  mainFileNameLineEdit = new QLineEdit();
+  mainFileNameLineEdit->setPlaceholderText(tr("main.md"));
+  workspaceLayout->addRow(tr("Main file name:"), mainFileNameLineEdit);
+
+  QLabel *mainFileNote = new QLabel(tr("File to automatically open when opening a folder. "
+                                       "Common alternatives: index.md, README.md"));
+  mainFileNote->setWordWrap(true);
+  mainFileNote->setStyleSheet("color: gray; font-size: 9pt;");
+  workspaceLayout->addRow(mainFileNote);
+
+  layout->addWidget(workspaceGroup);
+
   // Shortcuts group
   QGroupBox *shortcutsGroup = new QGroupBox(tr("Keyboard Shortcuts"));
   QVBoxLayout *shortcutsLayout = new QVBoxLayout(shortcutsGroup);
@@ -299,6 +315,10 @@ void SettingsDialog::loadSettings() {
   restoreSessionCheckBox->setChecked(
       settings.value("general/restoreSession", true).toBool());
 
+  // Workspace settings
+  mainFileNameLineEdit->setText(
+      settings.value("workspace/mainFileName", "main.md").toString());
+
    // Appearance settings
    QString theme = settings.value("appearance/appTheme", "system").toString();
    int themeIndex = themeComboBox->findData(theme);
@@ -344,6 +364,9 @@ void SettingsDialog::saveSettings() {
                     openLastFolderCheckBox->isChecked());
   settings.setValue("general/restoreSession",
                     restoreSessionCheckBox->isChecked());
+
+  // Workspace settings
+  settings.setValue("workspace/mainFileName", mainFileNameLineEdit->text());
 
    // Appearance settings
    QString theme = themeComboBox->currentData().toString();
@@ -398,6 +421,10 @@ QString SettingsDialog::getAppTheme() const {
   return themeComboBox->currentData().toString();
 }
 
+QString SettingsDialog::getMainFileName() const {
+  QString fileName = mainFileNameLineEdit->text().trimmed();
+  return fileName.isEmpty() ? "main.md" : fileName;
+}
 
 
 
