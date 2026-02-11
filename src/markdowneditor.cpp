@@ -459,6 +459,16 @@ void MarkdownEditor::paintEvent(QPaintEvent *event) {
 void MarkdownEditor::contextMenuEvent(QContextMenuEvent *event) {
   QMenu *menu = createStandardContextMenu();
   
+  // Add AI Assist action
+  menu->addSeparator();
+  QAction *aiAssistAction = menu->addAction(QIcon::fromTheme("edit-ai", 
+                                            QIcon(":/icons/ai.svg")), 
+                                            tr("AI Assist..."));
+  aiAssistAction->setShortcut(QKeySequence(tr("Ctrl+Shift+A")));
+  connect(aiAssistAction, &QAction::triggered, this, [this]() {
+    emit aiAssistRequested();
+  });
+  
   // Check if cursor is on a wiki-link or markdown link
   QTextCursor cursor = cursorForPosition(event->pos());
   int position = cursor.position();

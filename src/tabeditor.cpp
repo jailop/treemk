@@ -30,6 +30,17 @@ void TabEditor::setupUI() {
           &TabEditor::syncPreviewScroll);
   connect(m_editor, &MarkdownEditor::cursorPositionChanged, this,
           &TabEditor::syncPreviewScroll);
+  
+  // Forward editor signals
+  connect(m_editor, &MarkdownEditor::wikiLinkClicked, this,
+          &TabEditor::wikiLinkClicked);
+  connect(m_editor, &MarkdownEditor::markdownLinkClicked, this,
+          &TabEditor::markdownLinkClicked);
+  connect(m_editor, &MarkdownEditor::openLinkInNewWindowRequested, this,
+          &TabEditor::openLinkInNewWindowRequested);
+  connect(m_editor, &MarkdownEditor::aiAssistRequested, this,
+          &TabEditor::aiAssistRequested);
+  
   m_preview = new MarkdownPreview(this);
   m_preview->setMinimumWidth(300);
 

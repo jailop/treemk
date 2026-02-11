@@ -9,6 +9,7 @@ class QComboBox;
 class QPushButton;
 class QTabWidget;
 class QLineEdit;
+class QLabel;
 class QFontComboBox;
 
 class SettingsDialog : public QDialog {
@@ -33,12 +34,21 @@ private slots:
   void onBrowseDefaultFolder();
   void onBrowseCustomCSS();
   void onConfigureShortcuts();
+  void onManageSystemPrompts();
+  void onRefreshOllamaModels();
+  void onTestOllamaConnection();
+  void onAIEnabledChanged(int state);
 
 private:
   void setupUI();
   void setupEditorTab();
    void setupMainTab();
   void loadSettings();
+  void setupAITab();
+  void loadAISettings();
+  void saveAISettings();
+  void detectAIProviders();
+  void updatePromptsInfo();
 
   QTabWidget *tabWidget;
 
@@ -72,14 +82,26 @@ private:
   QCheckBox *restoreSessionCheckBox;
 
   // Workspace settings
-  QLineEdit *mainFileNameLineEdit;
 
    // Appearance settings
+  QLineEdit *mainFileNameLineEdit;
    QComboBox *themeComboBox;
+  // AI settings
+  QCheckBox *aiEnabledCheckBox;
+  QComboBox *aiProviderComboBox;
+  QLineEdit *ollamaEndpointLineEdit;
+  QComboBox *ollamaModelComboBox;
+  QSpinBox *ollamaTimeoutSpinBox;
+  QPushButton *refreshModelsButton;
+  QPushButton *testConnectionButton;
+  QLabel *connectionStatusLabel;
+  QLabel *promptsInfoLabel;
+  QPushButton *managePromptsButton;
 
-   QPushButton *saveButton;
-   QPushButton *cancelButton;
-   QPushButton *configureShortcutsButton;
+  // Appearance settings
+  QPushButton *saveButton;
+  QPushButton *cancelButton;
+  QPushButton *configureShortcutsButton;
 };
 
 #endif // SETTINGSDIALOG_H

@@ -2,6 +2,7 @@
 #include "markdowneditor.h"
 #include "quickopendialog.h"
 #include "searchdialog.h"
+#include "aiassistdialog.h"
 #include "tabeditor.h"
 #include <QInputDialog>
 #include <QLineEdit>
@@ -145,4 +146,41 @@ void MainWindow::jumpToLine(int lineNumber) {
    QTextCursor cursor(block);
    tab->editor()->setTextCursor(cursor);
    tab->editor()->ensureCursorVisible();
+}
+
+void MainWindow::openAIAssist() {
+  TabEditor *tab = currentTabEditor();
+  if (!tab)
+    return;
+
+  MarkdownEditor *editor = tab->editor();
+  QTextCursor cursor = editor->textCursor();
+  
+  QString selectedText = cursor.selectedText();
+  selectedText.replace(QChar(0x2029), '\n');
+  
+  int cursorPos = cursor.position();
+  int selStart = cursor.selectionStart();
+  int selEnd = cursor.selectionEnd();
+  
+  AIAssistDialog dialog(this, selectedText, cursorPos, selStart, selEnd);
+  
+  connect(&dialog, &AIAssistDialog::insertText,
+          [editor](int position, const QString &text) {
+            QTextCursor cursor = editor->textCursor();
+            cursor.setPosition(position);
+            cursor.insertText(text);
+            editor->setTextCursor(cursor);
+          });
+  
+  connect(&dialog, &AIAssistDialog::replaceText,
+          [editor](int start, int end, const QString &text) {
+            QTextCursor cursor = editor->textCursor();
+            cursor.setPosition(start);
+            cursor.setPosition(end, QTextCursor::KeepAnchor);
+            cursor.insertText(text);
+            editor->setTextCursor(cursor);
+          });
+  
+  dialog.exec();
 }

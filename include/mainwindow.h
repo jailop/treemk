@@ -28,6 +28,7 @@ class SearchDialog;
 class SettingsDialog;
 class QuickOpenDialog;
 class OutlinePanel;
+class AIAssistDialog;
 
 class MainWindow : public QMainWindow {
   Q_OBJECT
@@ -101,6 +102,7 @@ private slots:
    void showKeyboardShortcuts();
    void breakLines();
    void joinLines();
+   void openAIAssist();
 
 private:
   void createActions();
@@ -178,6 +180,7 @@ private:
   QAction *aboutAction;
   QAction *aboutQtAction;
   QAction *keyboardShortcutsAction;
+  QAction *aiAssistAction;
 
   QToolBar *mainToolbar;
   QProgressBar *progressBar;

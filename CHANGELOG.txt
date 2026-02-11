@@ -103,3 +103,58 @@ UI enhancements:
 - Context menu support for both [[wiki-links]] and [markdown](links)
 - Suppressed inotify permission warnings for system directories
 - View mode status messages only shown when explicitly changing mode
+
+0.5.1 - 2026-02-11
+
+AI Assistance infrastructure (Phase 1): ✅ COMPLETED
+
+- AIAssistDialog: Interactive dialog for AI-powered text manipulation
+- AIProviderManager: Extensible provider architecture for AI backends
+- Dialog features: prompt input, content editing, history navigation
+- Support for insert/replace modes based on text selection
+- Copy to clipboard functionality
+- Keyboard shortcut: Ctrl+Shift+A
+- Menu integration: Edit → AI Assist...
+- Complete unit test coverage for dialog and provider framework
+- Foundation ready for AI provider implementations (Ollama, OpenAI, Apple AI)
+
+AI Assistance Phase 2: ✅ COMPLETED (2026-02-11)
+
+- OllamaProvider: Full Ollama API integration with Qt Network
+- Structured JSON request/response format for reliable text extraction
+- System prompt injection for JSON output formatting  
+- JSON parsing with fallback to plain text for compatibility
+- HTTP request/response handling with timeout support
+- Model list retrieval from Ollama API
+- Connection testing functionality
+- SystemPrompts: Predefined prompt management system
+- 10 built-in prompts: Rephrase, Fix Grammar, Make Shorter, Make Longer,
+  Simplify, Professional Tone, Casual Tone, Summarize, Translate, Add Examples
+- System prompt dropdown in AI Assist dialog  
+- Prompt persistence in QSettings
+- Environment variable auto-detection (OLLAMA_HOST)
+- Provider initialization on app startup
+- Settings Dialog: Complete AI Providers tab
+  * Enable/disable AI assistance checkbox
+  * Provider selection (Ollama)
+  * Ollama settings: endpoint, model, timeout
+  * "Refresh Models" button with live model loading
+  * "Test Connection" button with status indicator
+  * System prompts info with prompt count
+  * "Manage System Prompts..." button
+- SystemPromptsDialog: Full prompt management UI
+  * List view with enable/disable checkboxes
+  * Add/Edit/Delete custom prompts
+  * Move Up/Down for reordering
+  * Reset to defaults functionality
+  * Preview pane showing prompt details
+  * Built-in vs Custom prompt distinction
+- Complete settings persistence for all AI features
+- All AI settings saved/loaded from QSettings
+- Keyboard shortcut (Ctrl+Shift+A) in AI dialog
+- Context menu integration: Right-click in editor → "AI Assist..."
+- Editor signals properly forwarded through TabEditor to MainWindow
+- Direct keyboard shortcut and menu action available in Edit menu
+
+Status: Phase 2 100% complete, fully functional AI assistance with Ollama
+

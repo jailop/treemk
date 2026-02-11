@@ -2,6 +2,9 @@
 #include "mainwindow.h"
 #include "thememanager.h"
 #include "managers/windowmanager.h"
+#include "logic/aiprovider.h"
+#include "logic/ollamaprovider.h"
+#include "logic/systemprompts.h"
 #include <QApplication>
 #include <QDir>
 #include <QFileInfo>
@@ -51,6 +54,28 @@ int main(int argc, char *argv[]) {
   QSettings settings(APP_LABEL, APP_LABEL);
   QString appTheme = settings.value("appearance/appTheme", "system").toString();
   ThemeManager::instance()->setAppTheme(appTheme);
+
+  // Initialize AI providers
+  QString ollamaHost = qEnvironmentVariable("OLLAMA_HOST");
+  if (ollamaHost.isEmpty()) {
+    ollamaHost = settings.value("ai/ollama/endpoint", "http://localhost:11434").toString();
+  }
+  
+  OllamaProvider *ollamaProvider = new OllamaProvider();
+  ollamaProvider->setEndpoint(ollamaHost);
+  
+  QString ollamaModel = settings.value("ai/ollama/model", "llama3.2").toString();
+  ollamaProvider->setModel(ollamaModel);
+  
+  int timeout = settings.value("ai/ollama/timeout", 60).toInt();
+  ollamaProvider->setTimeout(timeout);
+  
+  AIProviderManager::instance()->registerProvider("ollama", ollamaProvider);
+  
+  QString activeProvider = settings.value("ai/provider", "ollama").toString();
+  AIProviderManager::instance()->setActiveProvider(activeProvider);
+  
+  SystemPrompts::instance()->loadFromSettings();
 
   // Parse command-line arguments
   QString startupPath;

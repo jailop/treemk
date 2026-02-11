@@ -33,10 +33,11 @@ public:
 
   void setCurrentFilePath(const QString &filePath);
 
- signals:
-   void wikiLinkClicked(const QString &linkTarget);
-   void markdownLinkClicked(const QString &linkTarget);
-   void openLinkInNewWindowRequested(const QString &linkTarget);
+signals:
+  void wikiLinkClicked(const QString &linkTarget);
+  void markdownLinkClicked(const QString &linkTarget);
+  void openLinkInNewWindowRequested(const QString &linkTarget);
+  void aiAssistRequested();
 
 protected:
   void resizeEvent(QResizeEvent *event) override;

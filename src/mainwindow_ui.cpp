@@ -60,6 +60,8 @@ void MainWindow::createMenus() {
    editMenu->addAction(findReplaceAction);
    editMenu->addAction(searchInFilesAction);
    editMenu->addSeparator();
+   editMenu->addAction(aiAssistAction);
+   editMenu->addSeparator();
    editMenu->addAction(breakLinesAction);
    editMenu->addAction(joinLinesAction);
    editMenu->addSeparator();

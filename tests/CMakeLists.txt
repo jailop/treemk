@@ -22,7 +22,9 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 # Business logic library (testable, no UI dependencies)
 add_library(treemk_logic STATIC
     ${CMAKE_SOURCE_DIR}/include/managers/workspacemanager.h
+    ${CMAKE_SOURCE_DIR}/include/logic/systemprompts.h
     ${CMAKE_SOURCE_DIR}/src/logic/mainfilelocator.cpp
+    ${CMAKE_SOURCE_DIR}/src/logic/systemprompts.cpp
     ${CMAKE_SOURCE_DIR}/src/managers/workspacemanager.cpp
 )
 
@@ -96,6 +98,30 @@ target_link_libraries(test_workspacemanager
 
 add_test(NAME WorkspaceManager COMMAND test_workspacemanager)
 
+# Test 4: AIAssist Dialog Tests
+add_executable(test_aiassist_dialog
+    unit/test_aiassist_dialog.cpp
+    ${CMAKE_SOURCE_DIR}/include/aiassistdialog.h
+    ${CMAKE_SOURCE_DIR}/include/logic/aiprovider.h
+    ${CMAKE_SOURCE_DIR}/include/logic/ollamaprovider.h
+    ${CMAKE_SOURCE_DIR}/include/logic/systemprompts.h
+    ${CMAKE_SOURCE_DIR}/src/aiassistdialog.cpp
+    ${CMAKE_SOURCE_DIR}/src/logic/aiprovider.cpp
+    ${CMAKE_SOURCE_DIR}/src/logic/ollamaprovider.cpp
+    ${CMAKE_SOURCE_DIR}/src/logic/systemprompts.cpp
+)
+
+set_target_properties(test_aiassist_dialog PROPERTIES AUTOMOC ON AUTOUIC ON)
+
+target_link_libraries(test_aiassist_dialog
+    Qt6::Test
+    Qt6::Core
+    Qt6::Widgets
+    Qt6::Network
+)
+
+add_test(NAME AIAssistDialog COMMAND test_aiassist_dialog)
+
 # Note: WindowManager unit tests require MainWindow, will be tested via integration
 
 # Integration Tests
@@ -116,6 +142,11 @@ add_executable(test_integration
     ${CMAKE_SOURCE_DIR}/include/shortcutsdialog.h
     ${CMAKE_SOURCE_DIR}/include/shortcutmanager.h
     ${CMAKE_SOURCE_DIR}/include/thememanager.h
+    ${CMAKE_SOURCE_DIR}/include/aiassistdialog.h
+    ${CMAKE_SOURCE_DIR}/include/systempromptsdialog.h
+    ${CMAKE_SOURCE_DIR}/include/logic/aiprovider.h
+    ${CMAKE_SOURCE_DIR}/include/logic/ollamaprovider.h
+    ${CMAKE_SOURCE_DIR}/include/logic/systemprompts.h
     ${CMAKE_SOURCE_DIR}/src/mainwindow.cpp
     ${CMAKE_SOURCE_DIR}/src/mainwindow_about.cpp
     ${CMAKE_SOURCE_DIR}/src/mainwindow_actions.cpp
@@ -140,6 +171,11 @@ add_executable(test_integration
     ${CMAKE_SOURCE_DIR}/src/shortcutsdialog.cpp
     ${CMAKE_SOURCE_DIR}/src/shortcutmanager.cpp
     ${CMAKE_SOURCE_DIR}/src/thememanager.cpp
+    ${CMAKE_SOURCE_DIR}/src/aiassistdialog.cpp
+    ${CMAKE_SOURCE_DIR}/src/systempromptsdialog.cpp
+    ${CMAKE_SOURCE_DIR}/src/logic/aiprovider.cpp
+    ${CMAKE_SOURCE_DIR}/src/logic/ollamaprovider.cpp
+    ${CMAKE_SOURCE_DIR}/src/logic/systemprompts.cpp
 )
 
 set_target_properties(test_integration PROPERTIES AUTOMOC ON AUTOUIC ON)
@@ -150,6 +186,7 @@ target_link_libraries(test_integration
     Qt6::Widgets
     Qt6::WebEngineWidgets
     Qt6::Svg
+    Qt6::Network
     treemk_windowmanager
     treemk_logic
     ${MD4C_LIBRARIES}
@@ -184,12 +221,13 @@ add_test(NAME Integration COMMAND test_integration)
 set_tests_properties(MarkdownConversion PROPERTIES TIMEOUT 30)
 set_tests_properties(MainFileLocator PROPERTIES TIMEOUT 30)
 set_tests_properties(WorkspaceManager PROPERTIES TIMEOUT 30)
+set_tests_properties(AIAssistDialog PROPERTIES TIMEOUT 30)
 set_tests_properties(Integration PROPERTIES TIMEOUT 30)
 
 # Add custom target to run all tests
 add_custom_target(check
     COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
-    DEPENDS test_markdown_conversion test_mainfilelocator test_workspacemanager test_integration
+    DEPENDS test_markdown_conversion test_mainfilelocator test_workspacemanager test_aiassist_dialog test_integration
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 

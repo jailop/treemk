@@ -29,9 +29,16 @@ public:
   void setContent(const QString &content);
   bool ownSaved() { return m_ownSaved; }
   void clearOwnSaved() { m_ownSaved = false; }
+  
 signals:
   void modificationChanged(bool modified);
   void filePathChanged(const QString &filePath);
+  void fileModified(bool modified);
+  void wikiLinkClicked(const QString &linkTarget);
+  void markdownLinkClicked(const QString &linkTarget);
+  void openLinkInNewWindowRequested(const QString &linkTarget);
+  void aiAssistRequested();
+  
 public slots:
   void updatePreview();
 private slots:
