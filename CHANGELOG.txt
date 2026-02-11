@@ -60,3 +60,7 @@ ignored.
 - Migration from plan text editor to regular text editor
 - Adjustments in css for the preview panel
 - hanging margins for bullet lists in the markdown editor
+
+0.3.1
+
+- Bugs fixed

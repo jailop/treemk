@@ -1,0 +1,142 @@
+name: Windows Build and Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Release tag to upload to (e.g., v0.2.0)'
+        required: false
+        default: ''
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '6.5.3'
+          host: 'windows'
+          target: 'desktop'
+          arch: 'win64_msvc2019_64'
+          modules: 'qtwebengine qtsvg'
+          cache: true
+      
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+      
+      - name: Install vcpkg and md4c
+        shell: powershell
+        run: |
+          git clone https://github.com/Microsoft/vcpkg.git
+          cd vcpkg
+          .\bootstrap-vcpkg.bat
+          .\vcpkg.exe install md4c:x64-windows
+          echo "VCPKG_ROOT=$PWD" | Out-File -FilePath $env:GITHUB_ENV -Append
+      
+      - name: Configure CMake
+        shell: cmd
+        run: |
+          mkdir build
+          cd build
+          cmake -G "Visual Studio 17 2022" -A x64 ^
+                -DCMAKE_BUILD_TYPE=Release ^
+                -DCMAKE_PREFIX_PATH="%Qt6_DIR%" ^
+                -DCMAKE_TOOLCHAIN_FILE="%VCPKG_ROOT%\scripts\buildsystems\vcpkg.cmake" ^
+                ..
+      
+      - name: Build
+        shell: cmd
+        run: |
+          cd build
+          cmake --build . --config Release --parallel
+      
+      - name: Deploy Qt dependencies
+        shell: cmd
+        run: |
+          cd build\Release
+          windeployqt.exe --release --no-translations --no-system-d3d-compiler ^
+                          --no-opengl-sw treemk.exe
+      
+      - name: Copy additional dependencies
+        shell: powershell
+        run: |
+          # Copy md4c DLL
+          Copy-Item "$env:VCPKG_ROOT\installed\x64-windows\bin\md4c.dll" `
+                    -Destination "build\Release\" -ErrorAction SilentlyContinue
+          
+          # Copy Visual C++ Runtime (if needed)
+          # Usually included by windeployqt, but just in case
+          $vcRedist = "C:\Windows\System32\vcruntime140.dll"
+          if (Test-Path $vcRedist) {
+            Copy-Item $vcRedist -Destination "build\Release\"
+          }
+      
+      - name: Create portable ZIP
+        shell: powershell
+        run: |
+          cd build\Release
+          $version = "0.2.0"
+          $zipName = "TreeMk-$version-Windows-x64-Portable.zip"
+          Compress-Archive -Path * -DestinationPath "..\..\$zipName"
+          echo "Created $zipName"
+          echo "ZIP_NAME=$zipName" | Out-File -FilePath $env:GITHUB_ENV -Append
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TreeMk-Windows-Portable
+          path: TreeMk-*-Windows-x64-Portable.zip
+          retention-days: 30
+      
+      - name: Get release info
+        id: release_info
+        shell: powershell
+        run: |
+          # Determine release tag
+          if ("${{ github.event_name }}" -eq "push") {
+            $tag = "${{ github.ref_name }}"
+          } elseif ("${{ github.event.inputs.release_tag }}" -ne "") {
+            $tag = "${{ github.event.inputs.release_tag }}"
+          } else {
+            # Get latest release tag
+            $releases = gh release list --limit 1 --json tagName | ConvertFrom-Json
+            if ($releases.Count -gt 0) {
+              $tag = $releases[0].tagName
+            } else {
+              Write-Error "No release tag found"
+              exit 1
+            }
+          }
+          echo "RELEASE_TAG=$tag" | Out-File -FilePath $env:GITHUB_ENV -Append
+          echo "Release tag: $tag"
+        env:
+          GH_TOKEN: ${{ github.token }}
+      
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          files: TreeMk-*-Windows-x64-Portable.zip
+          fail_on_unmatched_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Summary
+        shell: powershell
+        run: |
+          echo "### ✅ Windows Build Complete!" >> $env:GITHUB_STEP_SUMMARY
+          echo "" >> $env:GITHUB_STEP_SUMMARY
+          echo "**Release:** ${{ env.RELEASE_TAG }}" >> $env:GITHUB_STEP_SUMMARY
+          echo "**Artifact:** ${{ env.ZIP_NAME }}" >> $env:GITHUB_STEP_SUMMARY
+          echo "" >> $env:GITHUB_STEP_SUMMARY
+          echo "The Windows portable ZIP has been uploaded to the release." >> $env:GITHUB_STEP_SUMMARY

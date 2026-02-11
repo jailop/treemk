@@ -6,7 +6,7 @@
 
 MarkdownHighlighter::MarkdownHighlighter(QTextDocument *parent)
     : QSyntaxHighlighter(parent), currentColorScheme("light"),
-      codeSyntaxEnabled(false) {
+      codeSyntaxEnabled(false), currentCursorLine(-1) {
   setupFormats();
 }
 
@@ -299,6 +299,42 @@ void MarkdownHighlighter::setCodeSyntaxEnabled(bool enabled) {
   rehighlight();
 }
 
+void MarkdownHighlighter::setCurrentCursorLine(int lineNumber) {
+  if (currentCursorLine != lineNumber) {
+    int oldLine = currentCursorLine;
+    currentCursorLine = lineNumber;
+    
+    // Only rehighlight the affected lines, not the entire document
+    QTextDocument *doc = document();
+    if (doc) {
+      // Rehighlight the old cursor line
+      if (oldLine >= 0 && oldLine < doc->blockCount()) {
+        QTextBlock oldBlock = doc->findBlockByNumber(oldLine);
+        if (oldBlock.isValid()) {
+          rehighlightBlock(oldBlock);
+        }
+      }
+      
+      // Rehighlight the new cursor line
+      if (lineNumber >= 0 && lineNumber < doc->blockCount()) {
+        QTextBlock newBlock = doc->findBlockByNumber(lineNumber);
+        if (newBlock.isValid()) {
+          rehighlightBlock(newBlock);
+        }
+      }
+    }
+  }
+}
+
+QColor MarkdownHighlighter::getSubtleColor() const {
+  // Return a subtle gray color based on the theme
+  if (currentColorScheme == "dark" || currentColorScheme == "solarized-dark") {
+    return QColor(100, 100, 100); // Medium gray for dark themes
+  } else {
+    return QColor(180, 180, 180); // Light gray for light themes
+  }
+}
+
 void MarkdownHighlighter::updateColorScheme() {
   setupFormats();
   rehighlight();
@@ -313,6 +349,10 @@ void MarkdownHighlighter::highlightBlock(const QString &text) {
   // Check if we're starting or ending a code block
   int previousState = previousBlockState();
   bool inCodeBlock = (previousState == InCodeBlock);
+
+  // Check if this is the current cursor line
+  bool isCurrentLine = (currentBlock().blockNumber() == currentCursorLine);
+  QColor subtleColor = getSubtleColor();
 
   // Check if this line contains a code fence
   QRegularExpression codeFencePattern("^```(\\w+)?");
@@ -331,6 +371,12 @@ void MarkdownHighlighter::highlightBlock(const QString &text) {
     setCurrentBlockState(inCodeBlock ? InCodeBlock : Normal);
     // Apply code format to the fence line
     setFormat(0, text.length(), codeFormat);
+    // Make backticks subtle if not on current line
+    if (!isCurrentLine) {
+      QTextCharFormat subtleFormat;
+      subtleFormat.setForeground(subtleColor);
+      setFormat(0, 3, subtleFormat); // The ``` part
+    }
     return;
   }
 
@@ -354,6 +400,100 @@ void MarkdownHighlighter::highlightBlock(const QString &text) {
     while (matchIterator.hasNext()) {
       QRegularExpressionMatch match = matchIterator.next();
       setFormat(match.capturedStart(), match.capturedLength(), rule.format);
+    }
+  }
+
+  // Make markdown control characters subtle when not on current line
+  if (!isCurrentLine) {
+    QTextCharFormat subtleFormat;
+    subtleFormat.setForeground(subtleColor);
+    
+    // Headers: # ## ### etc.
+    QRegularExpression headerPattern("^(#{1,6})\\s");
+    QRegularExpressionMatch headerMatch = headerPattern.match(text);
+    if (headerMatch.hasMatch()) {
+      setFormat(0, headerMatch.capturedLength(1), subtleFormat);
+    }
+    
+    // Bold: **text** or __text__
+    QRegularExpression boldPattern("(\\*\\*|__)(?=\\S)(.+?)(?<=\\S)\\1");
+    QRegularExpressionMatchIterator boldIt = boldPattern.globalMatch(text);
+    while (boldIt.hasNext()) {
+      QRegularExpressionMatch match = boldIt.next();
+      // Make the ** or __ subtle
+      setFormat(match.capturedStart(), 2, subtleFormat);
+      setFormat(match.capturedEnd() - 2, 2, subtleFormat);
+    }
+    
+    // Italic: *text* or _text_
+    QRegularExpression italicPattern("(?<!\\*)\\*(?=\\S)(.+?)(?<=\\S)\\*(?!\\*)|(?<!_)_(?=\\S)(.+?)(?<=\\S)_(?!_)");
+    QRegularExpressionMatchIterator italicIt = italicPattern.globalMatch(text);
+    while (italicIt.hasNext()) {
+      QRegularExpressionMatch match = italicIt.next();
+      setFormat(match.capturedStart(), 1, subtleFormat);
+      setFormat(match.capturedEnd() - 1, 1, subtleFormat);
+    }
+    
+    // Strikethrough: ~~text~~
+    QRegularExpression strikePattern("~~");
+    QRegularExpressionMatchIterator strikeIt = strikePattern.globalMatch(text);
+    while (strikeIt.hasNext()) {
+      QRegularExpressionMatch match = strikeIt.next();
+      setFormat(match.capturedStart(), 2, subtleFormat);
+    }
+    
+    // List markers: -, *, +
+    QRegularExpression listPattern("^(\\s*)([-*+])\\s");
+    QRegularExpressionMatch listMatch = listPattern.match(text);
+    if (listMatch.hasMatch()) {
+      int markerPos = listMatch.capturedStart(2);
+      setFormat(markerPos, 1, subtleFormat);
+    }
+    
+    // Numbered list: 1. 2. etc.
+    QRegularExpression numListPattern("^(\\s*)(\\d+\\.)\\s");
+    QRegularExpressionMatch numListMatch = numListPattern.match(text);
+    if (numListMatch.hasMatch()) {
+      int markerPos = numListMatch.capturedStart(2);
+      setFormat(markerPos, numListMatch.capturedLength(2), subtleFormat);
+    }
+    
+    // Blockquote: >
+    QRegularExpression quotePattern("^(\\s*>+)\\s");
+    QRegularExpressionMatch quoteMatch = quotePattern.match(text);
+    if (quoteMatch.hasMatch()) {
+      setFormat(quoteMatch.capturedStart(1), quoteMatch.capturedLength(1), subtleFormat);
+    }
+    
+    // Inline code: `code`
+    QRegularExpression inlineCodePattern("`[^`]+`");
+    QRegularExpressionMatchIterator inlineCodeIt = inlineCodePattern.globalMatch(text);
+    while (inlineCodeIt.hasNext()) {
+      QRegularExpressionMatch match = inlineCodeIt.next();
+      setFormat(match.capturedStart(), 1, subtleFormat); // Opening `
+      setFormat(match.capturedEnd() - 1, 1, subtleFormat); // Closing `
+    }
+    
+    // Links: [text](url)
+    QRegularExpression linkPattern("\\[([^\\]]+)\\]\\(([^\\)]+)\\)");
+    QRegularExpressionMatchIterator linkIt = linkPattern.globalMatch(text);
+    while (linkIt.hasNext()) {
+      QRegularExpressionMatch match = linkIt.next();
+      setFormat(match.capturedStart(), 1, subtleFormat); // [
+      setFormat(match.capturedStart(1) + match.capturedLength(1), 2, subtleFormat); // ](
+      setFormat(match.capturedEnd() - 1, 1, subtleFormat); // )
+    }
+    
+    // Wiki links: [[link]]
+    QRegularExpression wikiPattern("\\[\\[(!)?([^\\]|]+)(\\|([^\\]]+))?\\]\\]");
+    QRegularExpressionMatchIterator wikiIt = wikiPattern.globalMatch(text);
+    while (wikiIt.hasNext()) {
+      QRegularExpressionMatch match = wikiIt.next();
+      setFormat(match.capturedStart(), 2, subtleFormat); // [[
+      if (match.capturedLength(3) > 0) {
+        setFormat(match.capturedStart(3), 1, subtleFormat); // |
+      }
+      setFormat(match.capturedEnd() - 2, 2, subtleFormat); // ]]
     }
   }
 

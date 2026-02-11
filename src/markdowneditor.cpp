@@ -827,6 +827,11 @@ void MarkdownEditor::highlightCurrentLine() {
   }
 
   setExtraSelections(extraSelections);
+  
+  // Update the highlighter with current cursor line
+  if (m_highlighter) {
+    m_highlighter->setCurrentCursorLine(textCursor().blockNumber());
+  }
 }
 
 void MarkdownEditor::lineNumberAreaPaintEvent(QPaintEvent *event) {
