@@ -316,29 +316,21 @@ void MainWindow::readSettings() {
        }
      }
 
-<<<<<<< HEAD
-     // Open each file from the session
-     for (const QString &filePath : openFiles) {
-       if (QFileInfo::exists(filePath)) {
-         loadFile(filePath);
-       }
-     }
+      // Open each file from the session
+      for (const QString &filePath : openFiles) {
+        if (QFileInfo::exists(filePath)) {
+          loadFile(filePath);
+        }
+      }
 
-     // Restore the active tab
-     if (activeTabIndex >= 0 && activeTabIndex < tabWidget->count()) {
-       tabWidget->setCurrentIndex(activeTabIndex);
-     }
-   }
-=======
-    // Restore the active tab
-    if (activeTabIndex >= 0 && activeTabIndex < tabWidget->count()) {
-      tabWidget->setCurrentIndex(activeTabIndex);
+      // Restore the active tab
+      if (activeTabIndex >= 0 && activeTabIndex < tabWidget->count()) {
+        tabWidget->setCurrentIndex(activeTabIndex);
+      }
     }
-  }
-  
-  // Apply view mode to current tab
-  applyViewMode(currentViewMode);
->>>>>>> 57b55571a0ed78e7e2aad58f90164cef988acd6a
+    
+    // Apply view mode to current tab
+    applyViewMode(currentViewMode);
 }
 
 void MainWindow::writeSettings() {
@@ -451,15 +443,15 @@ void MainWindow::applySettings() {
   bool wordWrap = settings->value("editor/wordWrap", true).toBool();
   QFont font(fontFamily, fontSize);
   for (int i = 0; i < tabWidget->count(); ++i) {
-    TabEditor *tab = qobject_cast<TabEditor *>(tabWidget->widget(i));
-    if (tab && tab->editor()) {
-      tab->editor()->setFont(font);
-      tab->editor()->setTabStopDistance(
-          QFontMetrics(font).horizontalAdvance(' ') * tabWidth);
-      tab->editor()->setLineWrapMode(wordWrap ? QPlainTextEdit::WidgetWidth
-                                              : QPlainTextEdit::NoWrap);
-    }
-  }
+     TabEditor *tab = qobject_cast<TabEditor *>(tabWidget->widget(i));
+     if (tab && tab->editor()) {
+       tab->editor()->setFont(font);
+       tab->editor()->setTabStopDistance(
+           QFontMetrics(font).horizontalAdvance(' ') * tabWidth);
+       tab->editor()->setLineWrapMode(wordWrap ? QTextEdit::WidgetWidth
+                                               : QTextEdit::NoWrap);
+     }
+   }
   // Apply preview refresh rate
   int refreshRate = settings->value("preview/refreshRate", 500).toInt();
   if (previewUpdateTimer) {
