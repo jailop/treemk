@@ -11,6 +11,9 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  contents: write
+  
 jobs:
   build-windows:
     runs-on: windows-latest
@@ -103,20 +106,34 @@ jobs:
         shell: powershell
         run: |
           # Determine release tag
-          if ("${{ github.event_name }}" -eq "push") {
+          $tag = ""
+          if ("${{ github.event_name }}" -eq "push" -and "${{ github.ref }}" -like "refs/tags/*") {
+            # Triggered by tag push
             $tag = "${{ github.ref_name }}"
           } elseif ("${{ github.event.inputs.release_tag }}" -ne "") {
+            # Manual trigger with specified tag
             $tag = "${{ github.event.inputs.release_tag }}"
           } else {
-            # Get latest release tag
-            $releases = gh release list --limit 1 --json tagName | ConvertFrom-Json
-            if ($releases.Count -gt 0) {
-              $tag = $releases[0].tagName
-            } else {
-              Write-Error "No release tag found"
+            # Manual trigger without tag - use latest release
+            try {
+              $releases = gh release list --limit 1 --json tagName | ConvertFrom-Json
+              if ($releases.Count -gt 0) {
+                $tag = $releases[0].tagName
+              } else {
+                Write-Error "No releases found. Please specify a release tag or create a release first."
+                exit 1
+              }
+            } catch {
+              Write-Error "Failed to get latest release: $_"
               exit 1
             }
           }
+          
+          if ($tag -eq "") {
+            Write-Error "Could not determine release tag"
+            exit 1
+          }
+          
           echo "RELEASE_TAG=$tag" | Out-File -FilePath $env:GITHUB_ENV -Append
           echo "Release tag: $tag"
         env:
