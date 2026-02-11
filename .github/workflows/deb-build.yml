@@ -53,11 +53,17 @@ jobs:
               qt6-webengine-dev \
               qt6-webengine-dev-tools \
               libqt6webenginecore6 \
+              libqt6webenginecore6-bin \
               libqt6svg6-dev \
               libmd4c-dev \
               libmd4c-html0-dev \
               libgl1-mesa-dev \
               libglu1-mesa-dev \
+              libnss3 \
+              libxcomposite1 \
+              libxdamage1 \
+              libxrandr2 \
+              libasound2 \
               debhelper \
               dh-make
       
