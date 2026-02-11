@@ -32,6 +32,10 @@ jobs:
         with:
           fetch-depth: 0
       
+      - name: Fix git ownership (container issue)
+        run: |
+          git config --global --add safe.directory /__w/treemk/treemk
+      
       - name: Detect version
         id: version
         run: |

@@ -54,6 +54,8 @@ jobs:
               libqt6svg6-dev \
               libmd4c-dev \
               libmd4c-html0-dev \
+              libgl1-mesa-dev \
+              libglu1-mesa-dev \
               debhelper \
               dh-make
       
