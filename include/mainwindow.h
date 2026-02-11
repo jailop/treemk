@@ -113,6 +113,7 @@ private:
   bool saveFile(const QString &filePath);
   bool loadFile(const QString &filePath);
   void applyViewMode(ViewMode mode);
+  void closeTabsFromOtherFolders();
 
   TabEditor *currentTabEditor() const;
   TabEditor *createNewTab();

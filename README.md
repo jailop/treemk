@@ -7,18 +7,50 @@ managing interconnected notes.
 
 ## Features
 
+**Editor**
+
+- Multi-tab editing with session management
+- Line numbers and current line highlighting
+- Word prediction based on document content (unigram and bigram models)
+- Auto-indent and auto-close brackets/quotes
+- List continuation and hanging indent formatting
+- Customizable keyboard shortcuts
+- Paste images directly from clipboard (auto-saves to document folder)
+- Smart text navigation (word, line, paragraph)
+- Line breaking and joining utilities
+
+**Navigation and Organization**
+
 - File system tree view for note organization
 - Wiki-style linking between notes with `[[note]]` syntax
-- File inclusion with `[[!note]]` syntax - embeds content of linked file
-  in preview
-- Word prediction, based on the content of the current note
-- Search and navigation tools
-- Multi-tab editing
-- Markdown preview with syntax highlighting
+- File inclusion with `[[!note]]` syntax - embeds content in preview
+- Markdown links `[text](url)` with Ctrl+Click to follow
+- Backlinks panel - shows all notes linking to current document
+- Document outline panel with heading navigation
+- Quick open dialog (Ctrl+P) with fuzzy search
+- Full-text search across all files
+- Recent folders menu
+
+**Preview and Rendering**
+
+- Live Markdown preview with syntax highlighting
 - LaTeX formula rendering (inline `$...$` and block `$$...$$`)
-- Mermaid diagram rendering in preview
-- Image embedding support
-- Export to HTML, PDF, and DOCX (with Pandoc)
+- Mermaid diagram rendering
+- Code syntax highlighting in preview
+- Custom CSS support for preview styling
+- Configurable preview refresh rate
+
+**Theme and Appearance**
+
+- System, light, and dark theme support
+- Customizable fonts and sizes (editor and preview)
+- Theme-aware UI elements
+
+**Export**
+
+- Export to HTML, PDF, and DOCX (via Pandoc)
+- Export to plain text
+- Mermaid diagrams in exports (requires mermaid-filter)
 
 ## Requirements
 

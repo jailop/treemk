@@ -827,6 +827,11 @@ void MarkdownEditor::highlightCurrentLine() {
   }
 
   setExtraSelections(extraSelections);
+  
+  // Update the highlighter with current cursor line
+  if (m_highlighter) {
+    m_highlighter->setCurrentCursorLine(textCursor().blockNumber());
+  }
 }
 
 void MarkdownEditor::lineNumberAreaPaintEvent(QPaintEvent *event) {
@@ -1166,9 +1171,21 @@ void MarkdownEditor::applyDeferredFormatting() {
   // This method is called after user stops typing (via QTimer)
   // It safely applies hanging indent formatting to all list items
   
+  // Store the current modified state
+  bool wasModified = document()->isModified();
+  
+  // Block signals to prevent triggering textChanged and modificationChanged
+  document()->blockSignals(true);
+  
   QTextBlock block = document()->firstBlock();
   while (block.isValid()) {
     applyListHangingIndent(block);
     block = block.next();
   }
+  
+  // Restore signals
+  document()->blockSignals(false);
+  
+  // Restore the modified state (formatting shouldn't count as modification)
+  document()->setModified(wasModified);
 }

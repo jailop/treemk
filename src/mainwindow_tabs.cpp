@@ -6,6 +6,7 @@
 #include "outlinepanel.h"
 #include "tabeditor.h"
 #include "thememanager.h"
+#include <QDir>
 #include <QFileInfo>
 #include <QMessageBox>
 
@@ -162,8 +163,10 @@ void MainWindow::onTabCloseRequested(int index) {
     return;
   }
 
-  bool shouldSave =
-      !tab->editor()->toPlainText().isEmpty() && tab->isModified();
+  // Only prompt if document is modified AND not empty
+  bool isDocumentEmpty = tab->editor()->toPlainText().trimmed().isEmpty();
+  bool shouldSave = !isDocumentEmpty && tab->isModified();
+  
   if (shouldSave) {
     tabWidget->setCurrentIndex(index);
     QMessageBox::StandardButton reply = QMessageBox::question(
@@ -207,5 +210,37 @@ void MainWindow::closeAllTabs() {
         qobject_cast<TabEditor *>(tabWidget->widget(0))->isModified()) {
       break;
     }
+  }
+}
+
+void MainWindow::closeTabsFromOtherFolders() {
+  if (currentFolder.isEmpty()) {
+    return;
+  }
+
+  QDir currentDir(currentFolder);
+  QString canonicalCurrentFolder = currentDir.canonicalPath();
+
+  // Close tabs in reverse order to avoid index issues
+  for (int i = tabWidget->count() - 1; i >= 0; --i) {
+    TabEditor *tab = qobject_cast<TabEditor *>(tabWidget->widget(i));
+    if (!tab || tab->filePath().isEmpty()) {
+      continue;
+    }
+
+    QFileInfo fileInfo(tab->filePath());
+    QString canonicalFilePath = fileInfo.canonicalPath();
+
+    // Check if file is not in current folder or its subfolders
+    if (!canonicalFilePath.startsWith(canonicalCurrentFolder)) {
+      // Close tab without prompting (it's from a different folder)
+      tabWidget->removeTab(i);
+      delete tab;
+    }
+  }
+
+  // Ensure at least one tab exists
+  if (tabWidget->count() == 0) {
+    createNewTab();
   }
 }

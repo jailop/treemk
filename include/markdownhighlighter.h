@@ -15,6 +15,7 @@ public:
   void setColorScheme(const QString &scheme);
   void setCodeSyntaxEnabled(bool enabled);
   QString getColorScheme() const { return currentColorScheme; }
+  void setCurrentCursorLine(int lineNumber);
 
 public slots:
   void updateColorScheme();
@@ -62,8 +63,10 @@ private:
   QString currentColorScheme;
   QString currentCodeLanguage;
   bool codeSyntaxEnabled;
+  int currentCursorLine;
   bool checkWikiLinkExists(const QString &linkText) const;
   void highlightCodeLine(const QString &text, const QString &language);
+  QColor getSubtleColor() const;
 
   enum BlockState { Normal = -1, InCodeBlock = 1 };
 
