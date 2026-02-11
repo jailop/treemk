@@ -10,6 +10,7 @@
 #include <QDir>
 #include <QFileInfo>
 #include <QMessageBox>
+#include <QStatusBar>
 
 TabEditor *MainWindow::currentTabEditor() const {
   return qobject_cast<TabEditor *>(tabWidget->currentWidget());
@@ -98,7 +99,7 @@ TabEditor *MainWindow::createNewTab() {
   }
 
   // Apply current view mode to the newly created tab
-  applyViewMode(currentViewMode);
+  applyViewMode(currentViewMode, false);
 
   return tab;
 }
@@ -156,12 +157,16 @@ void MainWindow::onTabChanged(int index) {
       
       // Synchronize file panel selection with active tab
       treeView->selectFile(tab->filePath());
+      
+      // Show full path in status bar
+      statusBar()->showMessage(tab->filePath());
     } else {
       setWindowTitle(APP_LABEL);
+      statusBar()->clearMessage();
     }
     
     // Apply current view mode to the newly active tab
-    applyViewMode(currentViewMode);
+    applyViewMode(currentViewMode, false);
   }
 }
 

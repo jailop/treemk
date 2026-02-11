@@ -363,7 +363,7 @@ void MainWindow::readSettings() {
     }
     
     // Apply view mode to current tab
-    applyViewMode(currentViewMode);
+    applyViewMode(currentViewMode, false);
 }
 
 void MainWindow::writeSettings() {

@@ -114,7 +114,7 @@ private:
   bool maybeSave();
   bool saveFile(const QString &filePath);
   bool loadFile(const QString &filePath);
-  void applyViewMode(ViewMode mode);
+  void applyViewMode(ViewMode mode, bool showStatusMessage = true);
   void closeTabsFromOtherFolders();
 
   TabEditor *currentTabEditor() const;

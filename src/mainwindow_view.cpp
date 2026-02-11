@@ -25,7 +25,7 @@ void MainWindow::togglePreview() {
   }
 }
 
-void MainWindow::applyViewMode(ViewMode mode) {
+void MainWindow::applyViewMode(ViewMode mode, bool showStatusMessage) {
   TabEditor *tab = currentTabEditor();
   if (!tab) return;
   
@@ -33,17 +33,23 @@ void MainWindow::applyViewMode(ViewMode mode) {
     case ViewMode_Both:
       tab->editor()->setVisible(true);
       tab->preview()->setVisible(true);
-      statusBar()->showMessage(tr("View Mode: Editor + Preview"), 2000);
+      if (showStatusMessage) {
+        statusBar()->showMessage(tr("View Mode: Editor + Preview"), 2000);
+      }
       break;
     case ViewMode_EditorOnly:
       tab->editor()->setVisible(true);
       tab->preview()->setVisible(false);
-      statusBar()->showMessage(tr("View Mode: Editor Only"), 2000);
+      if (showStatusMessage) {
+        statusBar()->showMessage(tr("View Mode: Editor Only"), 2000);
+      }
       break;
     case ViewMode_PreviewOnly:
       tab->editor()->setVisible(false);
       tab->preview()->setVisible(true);
-      statusBar()->showMessage(tr("View Mode: Preview Only"), 2000);
+      if (showStatusMessage) {
+        statusBar()->showMessage(tr("View Mode: Preview Only"), 2000);
+      }
       break;
   }
   
