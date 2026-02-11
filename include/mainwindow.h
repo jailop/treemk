@@ -103,6 +103,7 @@ private slots:
    void breakLines();
    void joinLines();
    void openAIAssist();
+   void processAIWithPrompt(const QString &promptText);
 
 private:
   void createActions();

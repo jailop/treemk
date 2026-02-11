@@ -38,6 +38,7 @@ signals:
   void markdownLinkClicked(const QString &linkTarget);
   void openLinkInNewWindowRequested(const QString &linkTarget);
   void aiAssistRequested();
+  void aiAssistWithPromptRequested(const QString &promptText);
 
 protected:
   void resizeEvent(QResizeEvent *event) override;

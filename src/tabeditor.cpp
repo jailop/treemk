@@ -88,6 +88,8 @@ bool TabEditor::loadFile(const QString &filePath) {
   file.close();
 
   m_editor->setPlainText(content);
+  m_editor->document()->setModified(false);
+  
   m_filePath = filePath;
   m_editor->setCurrentFilePath(filePath);
   m_isModified = false;
@@ -133,6 +135,7 @@ QString TabEditor::content() const { return m_editor->toPlainText(); }
 
 void TabEditor::setContent(const QString &content) {
   m_editor->setPlainText(content);
+  m_editor->document()->setModified(false);
   m_isModified = false;
   updatePreview();
 }
