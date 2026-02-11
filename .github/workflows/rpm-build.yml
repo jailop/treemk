@@ -69,6 +69,9 @@ jobs:
         run: |
           rpmdev-setuptree
           
+          # Generate changelog date
+          CHANGELOG_DATE=$(date "+%a %b %d %Y")
+          
           # Create spec file
           cat > ~/rpmbuild/SPECS/treemk.spec << EOF
           Name:           treemk
@@ -125,21 +128,30 @@ jobs:
           %license LICENSE
           
           %changelog
-          * $(date "+%a %b %d %Y") TreeMk CI <noreply@github.com> - ${{ env.VERSION }}-1
+          * ${CHANGELOG_DATE} TreeMk CI <noreply@github.com> - ${{ env.VERSION }}-1
           - Automated build for version ${{ env.VERSION }}
           EOF
       
       - name: Create source tarball
         run: |
           mkdir -p ~/rpmbuild/SOURCES
-          # Create tarball with correct directory name for rpmbuild
-          tar --transform='s,^\./,treemk/,' \
-              --exclude='.git' --exclude='build' --exclude='tmp' \
+          
+          # Create a temporary directory with correct name
+          TEMP_DIR=$(mktemp -d)
+          cp -R . ${TEMP_DIR}/treemk
+          
+          # Create tarball from temp directory
+          tar --exclude='.git' --exclude='build' --exclude='tmp' \
               --exclude='treemk_autogen' --exclude='CMakeFiles' \
+              --exclude='CMakeCache.txt' \
               -czf ~/rpmbuild/SOURCES/treemk-${{ env.VERSION }}.tar.gz \
-              .
+              -C ${TEMP_DIR} treemk
+          
+          # Cleanup
+          rm -rf ${TEMP_DIR}
           
           # Verify tarball contents
+          echo "Tarball contents (first 20 files):"
           tar -tzf ~/rpmbuild/SOURCES/treemk-${{ env.VERSION }}.tar.gz | head -20
       
       - name: Build RPM

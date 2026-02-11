@@ -16,13 +16,24 @@ permissions:
   
 jobs:
   build-deb:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
+    container:
+      image: debian:bookworm
     
     steps:
+      - name: Install git and basic tools
+        run: |
+          apt-get update
+          apt-get install -y git ca-certificates
+      
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      
+      - name: Fix git ownership (container issue)
+        run: |
+          git config --global --add safe.directory /__w/treemk/treemk
       
       - name: Detect version
         id: version
@@ -45,27 +56,19 @@ jobs:
       
       - name: Install dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
+          apt-get update
+          apt-get install -y \
               cmake \
               build-essential \
               qt6-base-dev \
               qt6-webengine-dev \
-              qt6-webengine-dev-tools \
-              libqt6webenginecore6 \
-              libqt6webenginecore6-bin \
+              qt6-tools-dev \
               libqt6svg6-dev \
               libmd4c-dev \
               libmd4c-html0-dev \
-              libgl1-mesa-dev \
-              libglu1-mesa-dev \
-              libnss3 \
-              libxcomposite1 \
-              libxdamage1 \
-              libxrandr2 \
-              libasound2 \
+              pkg-config \
               debhelper \
-              dh-make
+              file
       
       - name: Configure CMake
         run: |
