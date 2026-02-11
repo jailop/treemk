@@ -16,6 +16,7 @@ public:
   QString currentFilePath() const;
   QString rootPath() const;
   void notifyFileSaving(const QString &filePath);
+  void selectFile(const QString &filePath);
 
 signals:
   void fileSelected(const QString &filePath);

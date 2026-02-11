@@ -348,7 +348,7 @@ void MainWindow::readSettings() {
       QString mainFileName = settings->value("workspace/mainFileName", "main.md").toString();
       QString mainFilePath = MainFileLocator::findMainFile(folderToOpen, mainFileName);
       
-      if (!mainFilePath.isEmpty()) {
+      if (!mainFilePath.isEmpty() && QFileInfo::exists(mainFilePath)) {
         // Close the default empty tab if it exists
         if (tabWidget->count() == 1) {
           TabEditor *firstTab = qobject_cast<TabEditor *>(tabWidget->widget(0));

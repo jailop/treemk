@@ -1,5 +1,6 @@
 #include "defs.h"
 #include "mainwindow.h"
+#include "filesystemtreeview.h"
 #include "markdowneditor.h"
 #include "markdownhighlighter.h"
 #include "markdownpreview.h"
@@ -152,6 +153,9 @@ void MainWindow::onTabChanged(int index) {
 
     if (!tab->filePath().isEmpty()) {
       setWindowTitle(QString("%1 - %2").arg(tab->fileName(), APP_LABEL));
+      
+      // Synchronize file panel selection with active tab
+      treeView->selectFile(tab->filePath());
     } else {
       setWindowTitle(APP_LABEL);
     }

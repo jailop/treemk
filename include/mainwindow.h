@@ -121,6 +121,7 @@ private:
   TabEditor *createNewTab();
   TabEditor *findTabByPath(const QString &filePath) const;
   int findTabIndexByPath(const QString &filePath) const;
+  bool createFileFromLink(const QString &targetFile, const QString &linkTarget);
 
   QMenu *fileMenu;
   QMenu *editMenu;

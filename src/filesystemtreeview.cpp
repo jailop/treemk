@@ -496,8 +496,20 @@ void FileSystemTreeView::addDirectoriesToWatcher(const QString &path) {
     return;
   }
 
+  // Skip system/private directories to avoid permission errors
+  if (path.contains("/systemd-private-") || 
+      path.startsWith("/proc") || 
+      path.startsWith("/sys") ||
+      path.startsWith("/dev")) {
+    return;
+  }
+
   if (!fileSystemWatcher->directories().contains(path)) {
-    fileSystemWatcher->addPath(path);
+    // Try to add, but don't show error if permission denied
+    if (!fileSystemWatcher->addPath(path)) {
+      // Silently ignore permission errors
+      return;
+    }
   }
 
   foreach (const QFileInfo &fileInfo,
@@ -561,6 +573,18 @@ void FileSystemTreeView::openInNewWindow() {
   
   QString path = fileSystemModel->filePath(index);
   emit openInNewWindowRequested(path);
+}
+
+void FileSystemTreeView::selectFile(const QString &filePath) {
+  if (filePath.isEmpty()) {
+    return;
+  }
+  
+  QModelIndex index = fileSystemModel->index(filePath);
+  if (index.isValid()) {
+    setCurrentIndex(index);
+    scrollTo(index);
+  }
 }
 
 void FileSystemTreeView::notifyFileSaving(const QString &filePath) {

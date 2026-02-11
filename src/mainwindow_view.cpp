@@ -113,24 +113,13 @@ void MainWindow::onWikiLinkClicked(const QString &linkTarget) {
         QMessageBox::Yes | QMessageBox::No);
 
     if (reply == QMessageBox::Yes) {
-      // Create new file
-      QString newFilePath = targetFile;
-      if (QFileInfo(newFilePath).suffix().isEmpty()) {
-        newFilePath += ".md";
-      }
-      // Create the file with a basic template
-      QFile file(newFilePath);
-      if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        QTextStream out(&file);
-        out.setEncoding(QStringConverter::Utf8);
-        out << "# " << QFileInfo(newFilePath).baseName() << "\n\n";
-        out << "Created from link: " << linkTarget << "\n";
-        file.close();
-        // Load the newly created file
+      if (createFileFromLink(targetFile, linkTarget)) {
+        // Adjust path with .md extension if it was added
+        QString newFilePath = targetFile;
+        if (QFileInfo(newFilePath).suffix().isEmpty()) {
+          newFilePath += ".md";
+        }
         loadFile(newFilePath);
-      } else {
-        statusBar()->showMessage(tr("Failed to create file: %1").arg(newFilePath),
-                                 3000);
       }
     }
   }
@@ -218,12 +207,59 @@ void MainWindow::onOpenLinkInNewWindow(const QString &linkTarget) {
     return;
   }
   
-  QString targetFile = linkParser->resolveLinkTarget(linkTarget, currentFilePath);
-  if (!targetFile.isEmpty() && QFileInfo(targetFile).exists()) {
-    QFileInfo info(targetFile);
-    WindowManager::instance()->createWindow(info.absolutePath(), targetFile);
+  // Strip wiki: or markdown: scheme prefix if present
+  QString actualTarget = linkTarget;
+  if (actualTarget.startsWith("wiki:")) {
+    actualTarget = actualTarget.mid(5); // Remove "wiki:" prefix
+  } else if (actualTarget.startsWith("markdown:")) {
+    actualTarget = actualTarget.mid(9); // Remove "markdown:" prefix
+  }
+  
+  QString targetFile = linkParser->resolveLinkTarget(actualTarget, currentFilePath);
+  
+  if (targetFile.isEmpty()) {
+    statusBar()->showMessage(tr("Cannot resolve link: %1").arg(actualTarget), 3000);
+    return;
+  }
+  
+  QFileInfo info(targetFile);
+  
+  // If file doesn't exist, create it
+  if (!info.exists()) {
+    if (!createFileFromLink(targetFile, actualTarget)) {
+      return;
+    }
+  }
+  
+  // Open in new window
+  WindowManager::instance()->createWindow(info.absolutePath(), targetFile);
+}
+
+bool MainWindow::createFileFromLink(const QString &targetFile, const QString &linkTarget) {
+  QString newFilePath = targetFile;
+  if (QFileInfo(newFilePath).suffix().isEmpty()) {
+    newFilePath += ".md";
+  }
+  
+  // Ensure directory exists
+  QFileInfo info(newFilePath);
+  QDir dir = info.dir();
+  if (!dir.exists()) {
+    dir.mkpath(".");
+  }
+  
+  // Create the file with basic content
+  QFile file(newFilePath);
+  if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+    QTextStream out(&file);
+    out.setEncoding(QStringConverter::Utf8);
+    out << "# " << info.baseName() << "\n\n";
+    out << "Created from link: " << linkTarget << "\n";
+    file.close();
+    return true;
   } else {
-    statusBar()->showMessage(tr("Link target not found: %1").arg(linkTarget), 3000);
+    statusBar()->showMessage(tr("Failed to create file: %1").arg(newFilePath), 3000);
+    return false;
   }
 }
 

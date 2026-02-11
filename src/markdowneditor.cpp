@@ -459,10 +459,15 @@ void MarkdownEditor::paintEvent(QPaintEvent *event) {
 void MarkdownEditor::contextMenuEvent(QContextMenuEvent *event) {
   QMenu *menu = createStandardContextMenu();
   
-  // Check if cursor is on a wiki-link
+  // Check if cursor is on a wiki-link or markdown link
   QTextCursor cursor = cursorForPosition(event->pos());
   int position = cursor.position();
   QString linkTarget = getLinkAtPosition(position);
+  
+  // If not a wiki-link, check for markdown link
+  if (linkTarget.isEmpty()) {
+    linkTarget = getMarkdownLinkAtPosition(position);
+  }
   
   if (!linkTarget.isEmpty()) {
     menu->addSeparator();

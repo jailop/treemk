@@ -32,6 +32,7 @@ private:
     WindowManager();
     static WindowManager* s_instance;
     QList<MainWindow*> m_windows;
+    int m_windowOffset;
     
     void onWindowDestroyed(QObject *obj);
 };
