@@ -104,10 +104,12 @@ add_executable(test_aiassist_dialog
     ${CMAKE_SOURCE_DIR}/include/aiassistdialog.h
     ${CMAKE_SOURCE_DIR}/include/logic/aiprovider.h
     ${CMAKE_SOURCE_DIR}/include/logic/ollamaprovider.h
+    ${CMAKE_SOURCE_DIR}/include/logic/openaiprovider.h
     ${CMAKE_SOURCE_DIR}/include/logic/systemprompts.h
     ${CMAKE_SOURCE_DIR}/src/aiassistdialog.cpp
     ${CMAKE_SOURCE_DIR}/src/logic/aiprovider.cpp
     ${CMAKE_SOURCE_DIR}/src/logic/ollamaprovider.cpp
+    ${CMAKE_SOURCE_DIR}/src/logic/openaiprovider.cpp
     ${CMAKE_SOURCE_DIR}/src/logic/systemprompts.cpp
 )
 
@@ -146,6 +148,7 @@ add_executable(test_integration
     ${CMAKE_SOURCE_DIR}/include/systempromptsdialog.h
     ${CMAKE_SOURCE_DIR}/include/logic/aiprovider.h
     ${CMAKE_SOURCE_DIR}/include/logic/ollamaprovider.h
+    ${CMAKE_SOURCE_DIR}/include/logic/openaiprovider.h
     ${CMAKE_SOURCE_DIR}/include/logic/systemprompts.h
     ${CMAKE_SOURCE_DIR}/src/mainwindow.cpp
     ${CMAKE_SOURCE_DIR}/src/mainwindow_about.cpp
@@ -175,6 +178,7 @@ add_executable(test_integration
     ${CMAKE_SOURCE_DIR}/src/systempromptsdialog.cpp
     ${CMAKE_SOURCE_DIR}/src/logic/aiprovider.cpp
     ${CMAKE_SOURCE_DIR}/src/logic/ollamaprovider.cpp
+    ${CMAKE_SOURCE_DIR}/src/logic/openaiprovider.cpp
     ${CMAKE_SOURCE_DIR}/src/logic/systemprompts.cpp
 )
 

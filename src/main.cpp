@@ -4,6 +4,7 @@
 #include "managers/windowmanager.h"
 #include "logic/aiprovider.h"
 #include "logic/ollamaprovider.h"
+#include "logic/openaiprovider.h"
 #include "logic/systemprompts.h"
 #include <QApplication>
 #include <QDir>
@@ -72,10 +73,33 @@ int main(int argc, char *argv[]) {
   QString ollamaModel = settings.value("ai/ollama/model", "llama3.2").toString();
   ollamaProvider->setModel(ollamaModel);
   
-  int timeout = settings.value("ai/ollama/timeout", 60).toInt();
-  ollamaProvider->setTimeout(timeout);
+  int ollamaTimeout = settings.value("ai/ollama/timeout", 60).toInt();
+  ollamaProvider->setTimeout(ollamaTimeout);
   
   AIProviderManager::instance()->registerProvider("ollama", ollamaProvider);
+  
+  // Initialize OpenAI provider
+  QString openaiBase = qEnvironmentVariable("OPENAI_API_BASE");
+  if (openaiBase.isEmpty()) {
+    openaiBase = settings.value("ai/openai/endpoint", "https://api.openai.com/v1").toString();
+  }
+  
+  QString openaiKey = qEnvironmentVariable("OPENAI_API_KEY");
+  if (openaiKey.isEmpty()) {
+    openaiKey = settings.value("ai/openai/apikey", "").toString();
+  }
+  
+  OpenAIProvider *openaiProvider = new OpenAIProvider();
+  openaiProvider->setEndpoint(openaiBase);
+  openaiProvider->setApiKey(openaiKey);
+  
+  QString openaiModel = settings.value("ai/openai/model", "gpt-4o-mini").toString();
+  openaiProvider->setModel(openaiModel);
+  
+  int openaiTimeout = settings.value("ai/openai/timeout", 60).toInt();
+  openaiProvider->setTimeout(openaiTimeout);
+  
+  AIProviderManager::instance()->registerProvider("openai", openaiProvider);
   
   QString activeProvider = settings.value("ai/provider", "ollama").toString();
   AIProviderManager::instance()->setActiveProvider(activeProvider);

@@ -4,6 +4,7 @@
 #include "systempromptsdialog.h"
 #include "logic/systemprompts.h"
 #include "logic/ollamaprovider.h"
+#include "logic/openaiprovider.h"
 #include <QCheckBox>
 #include <QComboBox>
 #include <QDialogButtonBox>
@@ -468,14 +469,16 @@ void SettingsDialog::setupAITab() {
   
   aiProviderComboBox = new QComboBox();
   aiProviderComboBox->addItem("Ollama", "ollama");
-  aiProviderComboBox->setEnabled(false); // For now, only Ollama
+  aiProviderComboBox->addItem("OpenAI", "openai");
+  connect(aiProviderComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
+          this, &SettingsDialog::onProviderChanged);
   providerLayout->addRow(tr("Active Provider:"), aiProviderComboBox);
   
   providerGroup->setLayout(providerLayout);
   mainLayout->addWidget(providerGroup);
 
   // Ollama Settings
-  QGroupBox *ollamaGroup = new QGroupBox(tr("Ollama Settings"));
+  ollamaGroup = new QGroupBox(tr("Ollama Settings"));
   QFormLayout *ollamaLayout = new QFormLayout();
   
   ollamaEndpointLineEdit = new QLineEdit();
@@ -508,16 +511,81 @@ void SettingsDialog::setupAITab() {
   ollamaTimeoutSpinBox->setSuffix(" seconds");
   ollamaLayout->addRow(tr("Timeout:"), ollamaTimeoutSpinBox);
   
-  connectionStatusLabel = new QLabel(tr("Status: Not tested"));
-  ollamaLayout->addRow(tr("Connection:"), connectionStatusLabel);
-  
-  testConnectionButton = new QPushButton(tr("Test Connection"));
-  connect(testConnectionButton, &QPushButton::clicked,
-          this, &SettingsDialog::onTestOllamaConnection);
-  ollamaLayout->addRow("", testConnectionButton);
-  
   ollamaGroup->setLayout(ollamaLayout);
   mainLayout->addWidget(ollamaGroup);
+
+  // OpenAI Settings
+  openaiGroup = new QGroupBox(tr("OpenAI Settings"));
+  QFormLayout *openaiLayout = new QFormLayout();
+  
+  openaiEndpointLineEdit = new QLineEdit();
+  openaiEndpointLineEdit->setPlaceholderText("https://api.openai.com/v1");
+  openaiLayout->addRow(tr("Endpoint:"), openaiEndpointLineEdit);
+  
+  QLabel *openaiEndpointHint = new QLabel(tr("(auto-detected from OPENAI_API_BASE or use default)"));
+  QFont openaiHintFont = openaiEndpointHint->font();
+  openaiHintFont.setItalic(true);
+  openaiEndpointHint->setFont(openaiHintFont);
+  openaiEndpointHint->setStyleSheet("color: gray;");
+  openaiLayout->addRow("", openaiEndpointHint);
+  
+  openaiApiKeyLineEdit = new QLineEdit();
+  openaiApiKeyLineEdit->setEchoMode(QLineEdit::Password);
+  openaiApiKeyLineEdit->setPlaceholderText("sk-...");
+  openaiLayout->addRow(tr("API Key:"), openaiApiKeyLineEdit);
+  
+  QLabel *apiKeyHint = new QLabel(tr("(auto-detected from OPENAI_API_KEY environment variable)"));
+  QFont apiKeyHintFont = apiKeyHint->font();
+  apiKeyHintFont.setItalic(true);
+  apiKeyHint->setFont(apiKeyHintFont);
+  apiKeyHint->setStyleSheet("color: gray;");
+  openaiLayout->addRow("", apiKeyHint);
+  
+  QHBoxLayout *openaiModelLayout = new QHBoxLayout();
+  openaiModelComboBox = new QComboBox();
+  openaiModelComboBox->setEditable(true);
+  openaiModelComboBox->addItem("gpt-4o-mini");
+  openaiModelComboBox->addItem("gpt-4o");
+  openaiModelComboBox->addItem("gpt-4-turbo");
+  openaiModelComboBox->addItem("gpt-3.5-turbo");
+  openaiModelLayout->addWidget(openaiModelComboBox, 1);
+  
+  refreshOpenAIModelsButton = new QPushButton(tr("Refresh Models"));
+  connect(refreshOpenAIModelsButton, &QPushButton::clicked,
+          this, &SettingsDialog::onRefreshOpenAIModels);
+  openaiModelLayout->addWidget(refreshOpenAIModelsButton);
+  
+  openaiLayout->addRow(tr("Model:"), openaiModelLayout);
+  
+  openaiTimeoutSpinBox = new QSpinBox();
+  openaiTimeoutSpinBox->setRange(10, 300);
+  openaiTimeoutSpinBox->setValue(60);
+  openaiTimeoutSpinBox->setSuffix(" seconds");
+  openaiLayout->addRow(tr("Timeout:"), openaiTimeoutSpinBox);
+  
+  openaiGroup->setLayout(openaiLayout);
+  mainLayout->addWidget(openaiGroup);
+  
+  // Connection Testing (shared for all providers)
+  QGroupBox *testGroup = new QGroupBox(tr("Connection Test"));
+  QFormLayout *testLayout = new QFormLayout();
+  
+  connectionStatusLabel = new QLabel(tr("Status: Not tested"));
+  testLayout->addRow(tr("Status:"), connectionStatusLabel);
+  
+  testConnectionButton = new QPushButton(tr("Test Connection"));
+  connect(testConnectionButton, &QPushButton::clicked, this, [this]() {
+    QString provider = aiProviderComboBox->currentData().toString();
+    if (provider == "ollama") {
+      onTestOllamaConnection();
+    } else if (provider == "openai") {
+      onTestOpenAIConnection();
+    }
+  });
+  testLayout->addRow("", testConnectionButton);
+  
+  testGroup->setLayout(testLayout);
+  mainLayout->addWidget(testGroup);
 
   // System Prompts
   QGroupBox *promptsGroup = new QGroupBox(tr("System Prompts"));
@@ -552,6 +620,7 @@ void SettingsDialog::setupAITab() {
 }
 
 void SettingsDialog::detectAIProviders() {
+  // Detect Ollama
   QString ollamaHost = qEnvironmentVariable("OLLAMA_HOST");
   if (!ollamaHost.isEmpty()) {
     ollamaEndpointLineEdit->setText(ollamaHost);
@@ -559,6 +628,21 @@ void SettingsDialog::detectAIProviders() {
     QSettings settings;
     QString endpoint = settings.value("ai/ollama/endpoint", "http://localhost:11434").toString();
     ollamaEndpointLineEdit->setText(endpoint);
+  }
+  
+  // Detect OpenAI
+  QString openaiBase = qEnvironmentVariable("OPENAI_API_BASE");
+  if (!openaiBase.isEmpty()) {
+    openaiEndpointLineEdit->setText(openaiBase);
+  } else {
+    QSettings settings;
+    QString endpoint = settings.value("ai/openai/endpoint", "https://api.openai.com/v1").toString();
+    openaiEndpointLineEdit->setText(endpoint);
+  }
+  
+  QString openaiKey = qEnvironmentVariable("OPENAI_API_KEY");
+  if (!openaiKey.isEmpty()) {
+    openaiApiKeyLineEdit->setPlaceholderText("Using OPENAI_API_KEY from environment");
   }
 }
 
@@ -636,13 +720,121 @@ void SettingsDialog::onTestOllamaConnection() {
 
 void SettingsDialog::onAIEnabledChanged(int state) {
   bool enabled = (state == Qt::Checked);
-  aiProviderComboBox->setEnabled(enabled && false); // Keep disabled for now
-  ollamaEndpointLineEdit->setEnabled(enabled);
-  ollamaModelComboBox->setEnabled(enabled);
-  ollamaTimeoutSpinBox->setEnabled(enabled);
-  refreshModelsButton->setEnabled(enabled);
+  aiProviderComboBox->setEnabled(enabled);
+  ollamaGroup->setEnabled(enabled);
+  openaiGroup->setEnabled(enabled);
   testConnectionButton->setEnabled(enabled);
   managePromptsButton->setEnabled(enabled);
+  
+  // Show/hide provider-specific groups
+  onProviderChanged(aiProviderComboBox->currentIndex());
+}
+
+void SettingsDialog::onProviderChanged(int index) {
+  QString provider = aiProviderComboBox->itemData(index).toString();
+  bool enabled = aiEnabledCheckBox->isChecked();
+  
+  if (provider == "ollama") {
+    ollamaGroup->setVisible(true);
+    openaiGroup->setVisible(false);
+    refreshModelsButton->setEnabled(enabled);
+    refreshOpenAIModelsButton->setEnabled(false);
+  } else if (provider == "openai") {
+    ollamaGroup->setVisible(false);
+    openaiGroup->setVisible(true);
+    refreshModelsButton->setEnabled(false);
+    refreshOpenAIModelsButton->setEnabled(enabled);
+  }
+}
+
+void SettingsDialog::onRefreshOpenAIModels() {
+  refreshOpenAIModelsButton->setEnabled(false);
+  refreshOpenAIModelsButton->setText(tr("Loading..."));
+  connectionStatusLabel->setText(tr("Fetching models..."));
+  connectionStatusLabel->setStyleSheet("color: blue;");
+  
+  OpenAIProvider provider;
+  provider.setEndpoint(openaiEndpointLineEdit->text());
+  
+  // Get API key from field or environment
+  QString apiKey = openaiApiKeyLineEdit->text();
+  if (apiKey.isEmpty()) {
+    apiKey = qEnvironmentVariable("OPENAI_API_KEY");
+  }
+  provider.setApiKey(apiKey);
+  
+  QString error;
+  QStringList models = provider.listModels(error);
+  
+  // Ensure we always have at least default models
+  if (models.isEmpty()) {
+    models << "gpt-4o" << "gpt-4o-mini" << "gpt-4-turbo" << "gpt-3.5-turbo";
+    if (error.isEmpty()) {
+      error = "No models returned from API";
+    }
+  }
+  
+  if (!error.isEmpty()) {
+    connectionStatusLabel->setText(tr("Warning: %1 (showing defaults)").arg(error));
+    connectionStatusLabel->setStyleSheet("color: orange;");
+  } else {
+    connectionStatusLabel->setText(tr("✓ %1 models loaded").arg(models.size()));
+    connectionStatusLabel->setStyleSheet("color: green;");
+  }
+  
+  // Save current selection
+  QString currentModel = openaiModelComboBox->currentText();
+  
+  // Update combo box
+  openaiModelComboBox->clear();
+  for (const QString &model : models) {
+    openaiModelComboBox->addItem(model);
+  }
+  
+  // Restore previous selection if it exists in new list
+  if (!currentModel.isEmpty()) {
+    int index = openaiModelComboBox->findText(currentModel);
+    if (index >= 0) {
+      openaiModelComboBox->setCurrentIndex(index);
+    } else {
+      // If previous model not in list, set it as editable text
+      openaiModelComboBox->setEditText(currentModel);
+    }
+  }
+  
+  refreshOpenAIModelsButton->setEnabled(true);
+  refreshOpenAIModelsButton->setText(tr("Refresh Models"));
+}
+
+void SettingsDialog::onTestOpenAIConnection() {
+  testConnectionButton->setEnabled(false);
+  testConnectionButton->setText(tr("Testing..."));
+  connectionStatusLabel->setText(tr("Connecting..."));
+  connectionStatusLabel->setStyleSheet("color: blue;");
+  
+  OpenAIProvider provider;
+  provider.setEndpoint(openaiEndpointLineEdit->text());
+  
+  // Get API key from field or environment
+  QString apiKey = openaiApiKeyLineEdit->text();
+  if (apiKey.isEmpty()) {
+    apiKey = qEnvironmentVariable("OPENAI_API_KEY");
+  }
+  provider.setApiKey(apiKey);
+  
+  QString error;
+  bool success = provider.testConnection(error);
+  
+  if (success) {
+    connectionStatusLabel->setText(tr("✓ Connected"));
+    connectionStatusLabel->setStyleSheet("color: green;");
+  } else {
+    connectionStatusLabel->setText(tr("✗ %1").arg(error));
+    connectionStatusLabel->setStyleSheet("color: red;");
+  }
+  
+  testConnectionButton->setEnabled(true);
+  testConnectionButton->setText(tr("Test Connection"));
 }
 
 
@@ -657,6 +849,7 @@ void SettingsDialog::loadAISettings() {
     aiProviderComboBox->setCurrentIndex(providerIndex);
   }
   
+  // Ollama settings
   QString endpoint = settings.value("ai/ollama/endpoint", "http://localhost:11434").toString();
   ollamaEndpointLineEdit->setText(endpoint);
   
@@ -669,7 +862,26 @@ void SettingsDialog::loadAISettings() {
   }
   
   ollamaTimeoutSpinBox->setValue(settings.value("ai/ollama/timeout", 60).toInt());
+  
+  // OpenAI settings
+  QString openaiEndpoint = settings.value("ai/openai/endpoint", "https://api.openai.com/v1").toString();
+  openaiEndpointLineEdit->setText(openaiEndpoint);
+  
+  QString openaiApiKey = settings.value("ai/openai/apikey", "").toString();
+  openaiApiKeyLineEdit->setText(openaiApiKey);
+  
+  QString openaiModel = settings.value("ai/openai/model", "gpt-4o-mini").toString();
+  int openaiModelIndex = openaiModelComboBox->findText(openaiModel);
+  if (openaiModelIndex >= 0) {
+    openaiModelComboBox->setCurrentIndex(openaiModelIndex);
+  } else {
+    openaiModelComboBox->setEditText(openaiModel);
+  }
+  
+  openaiTimeoutSpinBox->setValue(settings.value("ai/openai/timeout", 60).toInt());
+  
   onAIEnabledChanged(aiEnabledCheckBox->isChecked() ? Qt::Checked : Qt::Unchecked);
+  detectAIProviders();
 }
 
 // AI settings in saveSettings()
@@ -677,7 +889,15 @@ void SettingsDialog::saveAISettings() {
   QSettings settings;
   settings.setValue("ai/enabled", aiEnabledCheckBox->isChecked());
   settings.setValue("ai/provider", aiProviderComboBox->currentData().toString());
+  
+  // Ollama settings
   settings.setValue("ai/ollama/endpoint", ollamaEndpointLineEdit->text());
   settings.setValue("ai/ollama/model", ollamaModelComboBox->currentText());
   settings.setValue("ai/ollama/timeout", ollamaTimeoutSpinBox->value());
+  
+  // OpenAI settings
+  settings.setValue("ai/openai/endpoint", openaiEndpointLineEdit->text());
+  settings.setValue("ai/openai/apikey", openaiApiKeyLineEdit->text());
+  settings.setValue("ai/openai/model", openaiModelComboBox->currentText());
+  settings.setValue("ai/openai/timeout", openaiTimeoutSpinBox->value());
 }

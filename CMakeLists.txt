@@ -76,6 +76,7 @@ set(SOURCES
     src/logic/mainfilelocator.cpp
     src/logic/aiprovider.cpp
     src/logic/ollamaprovider.cpp
+    src/logic/openaiprovider.cpp
     src/logic/systemprompts.cpp
     src/managers/workspacemanager.cpp
     src/managers/windowmanager.cpp
@@ -102,6 +103,7 @@ set(HEADERS
     include/logic/mainfilelocator.h
     include/logic/aiprovider.h
     include/logic/ollamaprovider.h
+    include/logic/openaiprovider.h
     include/logic/systemprompts.h
     include/managers/workspacemanager.h
     include/managers/windowmanager.h

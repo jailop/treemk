@@ -11,6 +11,7 @@ class QTabWidget;
 class QLineEdit;
 class QLabel;
 class QFontComboBox;
+class QGroupBox;
 
 class SettingsDialog : public QDialog {
   Q_OBJECT
@@ -37,7 +38,10 @@ private slots:
   void onManageSystemPrompts();
   void onRefreshOllamaModels();
   void onTestOllamaConnection();
+  void onRefreshOpenAIModels();
+  void onTestOpenAIConnection();
   void onAIEnabledChanged(int state);
+  void onProviderChanged(int index);
 
 private:
   void setupUI();
@@ -89,10 +93,20 @@ private:
   // AI settings
   QCheckBox *aiEnabledCheckBox;
   QComboBox *aiProviderComboBox;
+  // Ollama settings
+  QGroupBox *ollamaGroup;
   QLineEdit *ollamaEndpointLineEdit;
   QComboBox *ollamaModelComboBox;
   QSpinBox *ollamaTimeoutSpinBox;
   QPushButton *refreshModelsButton;
+  // OpenAI settings
+  QGroupBox *openaiGroup;
+  QLineEdit *openaiEndpointLineEdit;
+  QLineEdit *openaiApiKeyLineEdit;
+  QComboBox *openaiModelComboBox;
+  QSpinBox *openaiTimeoutSpinBox;
+  QPushButton *refreshOpenAIModelsButton;
+  // Common AI widgets
   QPushButton *testConnectionButton;
   QLabel *connectionStatusLabel;
   QLabel *promptsInfoLabel;
