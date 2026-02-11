@@ -29,6 +29,7 @@ find_package(Qt6 REQUIRED COMPONENTS
     Widgets
     WebEngineWidgets
     Svg
+    Network
 )
 
 if(WIN32)
@@ -70,7 +71,13 @@ set(SOURCES
     src/shortcutsdialog.cpp
     src/shortcutmanager.cpp
     src/thememanager.cpp
+    src/aiassistdialog.cpp
+    src/systempromptsdialog.cpp
     src/logic/mainfilelocator.cpp
+    src/logic/aiprovider.cpp
+    src/logic/ollamaprovider.cpp
+    src/logic/openaiprovider.cpp
+    src/logic/systemprompts.cpp
     src/managers/workspacemanager.cpp
     src/managers/windowmanager.cpp
 )
@@ -91,7 +98,13 @@ set(HEADERS
     include/shortcutsdialog.h
     include/shortcutmanager.h
     include/thememanager.h
+    include/aiassistdialog.h
+    include/systempromptsdialog.h
     include/logic/mainfilelocator.h
+    include/logic/aiprovider.h
+    include/logic/ollamaprovider.h
+    include/logic/openaiprovider.h
+    include/logic/systemprompts.h
     include/managers/workspacemanager.h
     include/managers/windowmanager.h
 )
@@ -105,6 +118,7 @@ set(UI_FILES
     ui/searchdialog.ui
     ui/quickopendialog.ui
     ui/shortcutsdialog.ui
+    ui/aiassistdialog.ui
 )
 
 if(WIN32)
@@ -140,6 +154,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt6::Widgets
     Qt6::WebEngineWidgets
     Qt6::Svg
+    Qt6::Network
     ${MD4C_LIBRARIES}
 )
 

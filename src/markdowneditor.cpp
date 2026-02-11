@@ -3,6 +3,7 @@
 #include "markdownhighlighter.h"
 #include "shortcutmanager.h"
 #include "thememanager.h"
+#include "logic/systemprompts.h"
 #include <QApplication>
 #include <QClipboard>
 #include <QContextMenuEvent>
@@ -459,6 +460,29 @@ void MarkdownEditor::paintEvent(QPaintEvent *event) {
 void MarkdownEditor::contextMenuEvent(QContextMenuEvent *event) {
   QMenu *menu = createStandardContextMenu();
   
+  // Add AI Assist submenu
+  menu->addSeparator();
+  QMenu *aiMenu = menu->addMenu(QIcon::fromTheme("edit-ai"), tr("AI Assist"));
+  
+  // Add predefined prompts
+  QList<SystemPrompt> prompts = SystemPrompts::instance()->getEnabledPrompts();
+  for (const SystemPrompt &prompt : prompts) {
+    QAction *promptAction = aiMenu->addAction(prompt.name);
+    connect(promptAction, &QAction::triggered, this, [this, prompt]() {
+      emit aiAssistWithPromptRequested(prompt.prompt);
+    });
+  }
+  
+  // Add Custom option
+  if (!prompts.isEmpty()) {
+    aiMenu->addSeparator();
+  }
+  QAction *customAction = aiMenu->addAction(tr("Custom..."));
+  customAction->setShortcut(QKeySequence(tr("Ctrl+Shift+A")));
+  connect(customAction, &QAction::triggered, this, [this]() {
+    emit aiAssistRequested();
+  });
+  
   // Check if cursor is on a wiki-link or markdown link
   QTextCursor cursor = cursorForPosition(event->pos());
   int position = cursor.position();
@@ -546,23 +570,31 @@ void MarkdownEditor::keyPressEvent(QKeyEvent *event) {
 
   // Editing actions
   if (pressed == sm->getShortcut(ShortcutManager::DeleteWordLeft)) {
+    cursor.beginEditBlock();
     cursor.movePosition(QTextCursor::PreviousWord, QTextCursor::KeepAnchor);
     cursor.removeSelectedText();
+    cursor.endEditBlock();
     event->accept();
     return;
   } else if (pressed == sm->getShortcut(ShortcutManager::DeleteWordRight)) {
+    cursor.beginEditBlock();
     cursor.movePosition(QTextCursor::NextWord, QTextCursor::KeepAnchor);
     cursor.removeSelectedText();
+    cursor.endEditBlock();
     event->accept();
     return;
   } else if (pressed == sm->getShortcut(ShortcutManager::DeleteToStartOfLine)) {
+    cursor.beginEditBlock();
     cursor.movePosition(QTextCursor::StartOfLine, QTextCursor::KeepAnchor);
     cursor.removeSelectedText();
+    cursor.endEditBlock();
     event->accept();
     return;
   } else if (pressed == sm->getShortcut(ShortcutManager::DeleteToEndOfLine)) {
+    cursor.beginEditBlock();
     cursor.movePosition(QTextCursor::EndOfLine, QTextCursor::KeepAnchor);
     cursor.removeSelectedText();
+    cursor.endEditBlock();
     event->accept();
     return;
   }
@@ -910,6 +942,9 @@ void MarkdownEditor::setupEditor() {
 
   setLineWrapMode(QTextEdit::WidgetWidth);
   setWordWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);
+  
+  // Explicitly enable undo/redo
+  setUndoRedoEnabled(true);
 
   // Theme is applied via onThemeChanged() - no hardcoded colors here
 }

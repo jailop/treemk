@@ -374,6 +374,15 @@ void MainWindow::createActions() {
   connect(searchInFilesAction, &QAction::triggered, this,
           &MainWindow::searchInFiles);
 
+  aiAssistAction = new QAction(
+      iconWithFallback("tools-wizard", QStyle::SP_MessageBoxInformation),
+      tr("AI &Assist..."), this);
+  aiAssistAction->setShortcut(QKeySequence(tr("Ctrl+Shift+A")));
+  aiAssistAction->setStatusTip(tr("AI-powered writing assistance"));
+  aiAssistAction->setToolTip(tr("AI Assist"));
+  connect(aiAssistAction, &QAction::triggered, this,
+          &MainWindow::openAIAssist);
+
   quickOpenAction = new QAction(
       iconWithFallback("document-open-recent", QStyle::SP_DialogOpenButton),
       tr("&Quick Open..."), this);

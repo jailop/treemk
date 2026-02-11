@@ -10,6 +10,10 @@
 #include "tabeditor.h"
 #include "thememanager.h"
 #include "logic/mainfilelocator.h"
+#include "logic/aiprovider.h"
+#include "logic/ollamaprovider.h"
+#include "logic/openaiprovider.h"
+#include "logic/systemprompts.h"
 #include "managers/windowmanager.h"
 #include <QDir>
 #include <QFileInfo>
@@ -59,6 +63,8 @@ void MainWindow::createMenus() {
    editMenu->addAction(findAction);
    editMenu->addAction(findReplaceAction);
    editMenu->addAction(searchInFilesAction);
+   editMenu->addSeparator();
+   editMenu->addAction(aiAssistAction);
    editMenu->addSeparator();
    editMenu->addAction(breakLinesAction);
    editMenu->addAction(joinLinesAction);
@@ -443,6 +449,45 @@ void MainWindow::applySettings() {
       autoSaveTimer->stop();
     }
   }
+  // Apply AI settings
+  QString activeProviderName = settings->value("ai/provider", "ollama").toString();
+  AIProviderManager::instance()->setActiveProvider(activeProviderName);
+  
+  AIProvider *aiProvider = AIProviderManager::instance()->activeProvider();
+  if (aiProvider) {
+    if (aiProvider->name() == "Ollama") {
+      OllamaProvider *ollama = dynamic_cast<OllamaProvider*>(aiProvider);
+      if (ollama) {
+        QString endpoint = settings->value("ai/ollama/endpoint", "http://localhost:11434").toString();
+        QString model = settings->value("ai/ollama/model", "llama3.2").toString();
+        int timeout = settings->value("ai/ollama/timeout", 60).toInt();
+        
+        ollama->setEndpoint(endpoint);
+        ollama->setModel(model);
+        ollama->setTimeout(timeout);
+      }
+    } else if (aiProvider->name() == "OpenAI") {
+      OpenAIProvider *openai = dynamic_cast<OpenAIProvider*>(aiProvider);
+      if (openai) {
+        QString endpoint = settings->value("ai/openai/endpoint", "https://api.openai.com/v1").toString();
+        QString apiKey = settings->value("ai/openai/apikey", "").toString();
+        if (apiKey.isEmpty()) {
+          apiKey = qEnvironmentVariable("OPENAI_API_KEY");
+        }
+        QString model = settings->value("ai/openai/model", "gpt-4o-mini").toString();
+        int timeout = settings->value("ai/openai/timeout", 60).toInt();
+        
+        openai->setEndpoint(endpoint);
+        openai->setApiKey(apiKey);
+        openai->setModel(model);
+        openai->setTimeout(timeout);
+      }
+    }
+  }
+  
+  // Reload system prompts
+  SystemPrompts::instance()->loadFromSettings();
+  
   // Apply preview color scheme
   QString previewScheme =
       settings->value("appearance/previewColorScheme", "auto").toString();

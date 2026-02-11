@@ -2,6 +2,10 @@
 #include "mainwindow.h"
 #include "thememanager.h"
 #include "managers/windowmanager.h"
+#include "logic/aiprovider.h"
+#include "logic/ollamaprovider.h"
+#include "logic/openaiprovider.h"
+#include "logic/systemprompts.h"
 #include <QApplication>
 #include <QDir>
 #include <QFileInfo>
@@ -11,6 +15,11 @@
 void messageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg) {
   // Filter out inotify permission warnings
   if (msg.contains("inotify_add_watch") && msg.contains("Permission denied")) {
+    return;
+  }
+  
+  // Filter out missing ai.svg icon warnings (theme icon fallback)
+  if (msg.contains("Cannot open file ':/icons/ai.svg'")) {
     return;
   }
   
@@ -51,6 +60,51 @@ int main(int argc, char *argv[]) {
   QSettings settings(APP_LABEL, APP_LABEL);
   QString appTheme = settings.value("appearance/appTheme", "system").toString();
   ThemeManager::instance()->setAppTheme(appTheme);
+
+  // Initialize AI providers
+  QString ollamaHost = qEnvironmentVariable("OLLAMA_HOST");
+  if (ollamaHost.isEmpty()) {
+    ollamaHost = settings.value("ai/ollama/endpoint", "http://localhost:11434").toString();
+  }
+  
+  OllamaProvider *ollamaProvider = new OllamaProvider();
+  ollamaProvider->setEndpoint(ollamaHost);
+  
+  QString ollamaModel = settings.value("ai/ollama/model", "llama3.2").toString();
+  ollamaProvider->setModel(ollamaModel);
+  
+  int ollamaTimeout = settings.value("ai/ollama/timeout", 60).toInt();
+  ollamaProvider->setTimeout(ollamaTimeout);
+  
+  AIProviderManager::instance()->registerProvider("ollama", ollamaProvider);
+  
+  // Initialize OpenAI provider
+  QString openaiBase = qEnvironmentVariable("OPENAI_API_BASE");
+  if (openaiBase.isEmpty()) {
+    openaiBase = settings.value("ai/openai/endpoint", "https://api.openai.com/v1").toString();
+  }
+  
+  QString openaiKey = qEnvironmentVariable("OPENAI_API_KEY");
+  if (openaiKey.isEmpty()) {
+    openaiKey = settings.value("ai/openai/apikey", "").toString();
+  }
+  
+  OpenAIProvider *openaiProvider = new OpenAIProvider();
+  openaiProvider->setEndpoint(openaiBase);
+  openaiProvider->setApiKey(openaiKey);
+  
+  QString openaiModel = settings.value("ai/openai/model", "gpt-4o-mini").toString();
+  openaiProvider->setModel(openaiModel);
+  
+  int openaiTimeout = settings.value("ai/openai/timeout", 60).toInt();
+  openaiProvider->setTimeout(openaiTimeout);
+  
+  AIProviderManager::instance()->registerProvider("openai", openaiProvider);
+  
+  QString activeProvider = settings.value("ai/provider", "ollama").toString();
+  AIProviderManager::instance()->setActiveProvider(activeProvider);
+  
+  SystemPrompts::instance()->loadFromSettings();
 
   // Parse command-line arguments
   QString startupPath;

@@ -103,3 +103,16 @@ UI enhancements:
 - Context menu support for both [[wiki-links]] and [markdown](links)
 - Suppressed inotify permission warnings for system directories
 - View mode status messages only shown when explicitly changing mode
+
+0.5.1 - 2026-02-11
+
+AI Assistance:
+
+- Setting dialog
+- Connection to OpenAI-like providers and Ollama
+- System and custom prompts
+- AI assistance dialog
+
+File Management:
+
+- "Save All" button in close dialog when multiple documents are modified

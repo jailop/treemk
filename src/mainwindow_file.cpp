@@ -12,6 +12,7 @@
 #include <QFileInfo>
 #include <QMenu>
 #include <QMessageBox>
+#include <QPushButton>
 #include <QStatusBar>
 
 void MainWindow::newFile() { createNewTab(); }
@@ -199,33 +200,77 @@ void MainWindow::onFolderChanged(const QString &folderPath) {
 }
 
 bool MainWindow::maybeSave() {
+  // First pass: count modified documents
+  QList<TabEditor*> modifiedTabs;
   for (int i = 0; i < tabWidget->count(); ++i) {
     TabEditor *tab = qobject_cast<TabEditor *>(tabWidget->widget(i));
     if (tab && tab->isModified()) {
       // Skip empty documents - they can be discarded without prompting
       bool isDocumentEmpty = tab->editor()->toPlainText().trimmed().isEmpty();
-      if (isDocumentEmpty) {
-        continue;
-      }
-      
-      tabWidget->setCurrentIndex(i);
-      QMessageBox::StandardButton ret = QMessageBox::warning(
-          this, tr("Unsaved Changes"),
-          tr("The document '%1' has been modified.\n"
-             "Do you want to save your changes?")
-              .arg(tab->fileName()),
-          QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
-
-      if (ret == QMessageBox::Save) {
-        save();
-        if (tab->isModified()) {
-          return false;
-        }
-      } else if (ret == QMessageBox::Cancel) {
-        return false;
+      if (!isDocumentEmpty) {
+        modifiedTabs.append(tab);
       }
     }
   }
+  
+  // If no modified tabs, just close
+  if (modifiedTabs.isEmpty()) {
+    return true;
+  }
+  
+  // If multiple modified tabs, offer "Save All" option
+  bool saveAll = false;
+  
+  for (int i = 0; i < modifiedTabs.count(); ++i) {
+    TabEditor *tab = modifiedTabs[i];
+    int tabIndex = tabWidget->indexOf(tab);
+    tabWidget->setCurrentIndex(tabIndex);
+    
+    QMessageBox msgBox(this);
+    msgBox.setWindowTitle(tr("Unsaved Changes"));
+    msgBox.setText(tr("The document '%1' has been modified.\n"
+                      "Do you want to save your changes?")
+                   .arg(tab->fileName()));
+    msgBox.setIcon(QMessageBox::Warning);
+    
+    auto *saveButton = msgBox.addButton(tr("Save"), QMessageBox::AcceptRole);
+    msgBox.addButton(tr("Discard"), QMessageBox::DestructiveRole);
+    auto *cancelButton = msgBox.addButton(tr("Cancel"), QMessageBox::RejectRole);
+    QPushButton *saveAllButton = nullptr;
+    
+    // Add "Save All" button only if multiple modified tabs and not yet triggered
+    if (modifiedTabs.count() > 1 && !saveAll) {
+      saveAllButton = msgBox.addButton(tr("Save All"), QMessageBox::AcceptRole);
+    }
+    
+    msgBox.exec();
+    
+    auto *clicked = msgBox.clickedButton();
+    
+    if (clicked == static_cast<QAbstractButton*>(saveButton)) {
+      save();
+      if (tab->isModified()) {
+        return false; // Save failed
+      }
+    } else if (saveAllButton && clicked == static_cast<QAbstractButton*>(saveAllButton)) {
+      saveAll = true;
+      // Save this tab and all remaining modified tabs
+      for (int j = i; j < modifiedTabs.count(); ++j) {
+        TabEditor *t = modifiedTabs[j];
+        int idx = tabWidget->indexOf(t);
+        tabWidget->setCurrentIndex(idx);
+        save();
+        if (t->isModified()) {
+          return false; // Save failed
+        }
+      }
+      return true; // All saved successfully
+    } else if (clicked == static_cast<QAbstractButton*>(cancelButton)) {
+      return false;
+    }
+    // If Discard was clicked, continue to next tab
+  }
+  
   return true;
 }
 

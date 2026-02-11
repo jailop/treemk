@@ -2,7 +2,10 @@
 #include "markdowneditor.h"
 #include "quickopendialog.h"
 #include "searchdialog.h"
+#include "aiassistdialog.h"
 #include "tabeditor.h"
+#include "logic/aiprovider.h"
+#include <QApplication>
 #include <QInputDialog>
 #include <QLineEdit>
 #include <QMessageBox>
@@ -145,4 +148,93 @@ void MainWindow::jumpToLine(int lineNumber) {
    QTextCursor cursor(block);
    tab->editor()->setTextCursor(cursor);
    tab->editor()->ensureCursorVisible();
+}
+
+void MainWindow::openAIAssist() {
+  TabEditor *tab = currentTabEditor();
+  if (!tab)
+    return;
+
+  MarkdownEditor *editor = tab->editor();
+  QTextCursor cursor = editor->textCursor();
+  
+  QString selectedText = cursor.selectedText();
+  selectedText.replace(QChar(0x2029), '\n');
+  
+  int cursorPos = cursor.position();
+  int selStart = cursor.selectionStart();
+  int selEnd = cursor.selectionEnd();
+  
+  AIAssistDialog dialog(this, selectedText, cursorPos, selStart, selEnd);
+  
+  connect(&dialog, &AIAssistDialog::insertText,
+          [editor](int position, const QString &text) {
+            QTextCursor cursor = editor->textCursor();
+            cursor.setPosition(position);
+            cursor.insertText(text);
+            editor->setTextCursor(cursor);
+          });
+  
+  connect(&dialog, &AIAssistDialog::replaceText,
+          [editor](int start, int end, const QString &text) {
+            QTextCursor cursor = editor->textCursor();
+            cursor.setPosition(start);
+            cursor.setPosition(end, QTextCursor::KeepAnchor);
+            cursor.insertText(text);
+            editor->setTextCursor(cursor);
+          });
+  
+  dialog.exec();
+}
+
+void MainWindow::processAIWithPrompt(const QString &promptText) {
+  TabEditor *tab = currentTabEditor();
+  if (!tab)
+    return;
+
+  MarkdownEditor *editor = tab->editor();
+  QTextCursor cursor = editor->textCursor();
+  
+  QString selectedText = cursor.selectedText();
+  selectedText.replace(QChar(0x2029), '\n');
+  
+  bool hasSelection = cursor.hasSelection();
+  int selStart = cursor.selectionStart();
+  int selEnd = cursor.selectionEnd();
+  int cursorPos = cursor.position();
+  
+  // Show wait cursor and processing status
+  QApplication::setOverrideCursor(Qt::WaitCursor);
+  statusBar()->showMessage(tr("Processing with AI..."), 0);
+  
+  // Process with AI provider
+  AIProviderManager::instance()->process(promptText, selectedText,
+    [this, editor, hasSelection, selStart, selEnd, cursorPos](const QString &result) {
+      QTextCursor cursor = editor->textCursor();
+      
+      cursor.beginEditBlock();
+      if (hasSelection) {
+        // Replace selected text
+        cursor.setPosition(selStart);
+        cursor.setPosition(selEnd, QTextCursor::KeepAnchor);
+        cursor.insertText(result);
+      } else {
+        // Insert at cursor position
+        cursor.setPosition(cursorPos);
+        cursor.insertText(result);
+      }
+      cursor.endEditBlock();
+      
+      editor->setTextCursor(cursor);
+      
+      // Restore cursor and show completion message
+      QApplication::restoreOverrideCursor();
+      statusBar()->showMessage(tr("AI processing completed"), 3000);
+    },
+    [this](const QString &error) {
+      QApplication::restoreOverrideCursor();
+      QMessageBox::warning(this, tr("AI Error"), error);
+      statusBar()->clearMessage();
+    }
+  );
 }
