@@ -5,6 +5,7 @@
 #include "markdowneditor.h"
 #include "markdownhighlighter.h"
 #include "tabeditor.h"
+#include "logic/mainfilelocator.h"
 #include <QDir>
 #include <QFileDialog>
 #include <QFileInfo>
@@ -35,6 +36,14 @@ void MainWindow::openFolder() {
     linkParser->buildLinkIndex(folder);
 
     updateRecentFolders(folder);
+
+    // Try to auto-open main file
+    QString mainFileName = settings->value("workspace/mainFileName", "main.md").toString();
+    QString mainFilePath = MainFileLocator::findMainFile(folder, mainFileName);
+    
+    if (!mainFilePath.isEmpty()) {
+      loadFile(mainFilePath);
+    }
 
     statusBar()->showMessage(tr("Opened folder: %1").arg(folder));
     

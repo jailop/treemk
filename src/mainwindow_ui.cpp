@@ -9,6 +9,7 @@
 #include "shortcutsdialog.h"
 #include "tabeditor.h"
 #include "thememanager.h"
+#include "logic/mainfilelocator.h"
 #include <QDir>
 #include <QFileInfo>
 #include <QLabel>
@@ -331,6 +332,23 @@ void MainWindow::readSettings() {
       // Restore the active tab
       if (activeTabIndex >= 0 && activeTabIndex < tabWidget->count()) {
         tabWidget->setCurrentIndex(activeTabIndex);
+      }
+    } else if (!folderToOpen.isEmpty()) {
+      // No specific file or session to restore, try to open main file
+      QString mainFileName = settings->value("workspace/mainFileName", "main.md").toString();
+      QString mainFilePath = MainFileLocator::findMainFile(folderToOpen, mainFileName);
+      
+      if (!mainFilePath.isEmpty()) {
+        // Close the default empty tab if it exists
+        if (tabWidget->count() == 1) {
+          TabEditor *firstTab = qobject_cast<TabEditor *>(tabWidget->widget(0));
+          if (firstTab && firstTab->filePath().isEmpty() &&
+              !firstTab->editor()->isModified()) {
+            tabWidget->removeTab(0);
+            delete firstTab;
+          }
+        }
+        loadFile(mainFilePath);
       }
     }
     
