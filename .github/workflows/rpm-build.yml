@@ -1,4 +1,4 @@
-name: RPM Build and Release
+name: RPM Build and Release (v2)
 
 on:
   workflow_dispatch:

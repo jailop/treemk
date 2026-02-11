@@ -16,7 +16,7 @@ permissions:
   
 jobs:
   build-macos-dmg:
-    runs-on: macos-latest
+    runs-on: macos-14  # Apple Silicon (arm64)
     
     steps:
       - name: Checkout code
@@ -53,32 +53,9 @@ jobs:
           modules: 'qtwebengine qtwebchannel qtpositioning'
           cache: true
       
-      - name: Detect architecture and install dependencies
+      - name: Install dependencies
         run: |
-          ARCH=$(uname -m)
-          echo "Building for architecture: $ARCH"
-          
-          if [ "$ARCH" = "arm64" ]; then
-            # arm64 - use Homebrew (default location)
-            brew install md4c create-dmg
-          else
-            # x86_64 - need to use x86_64 Homebrew or build from source
-            # For now, install via conda-forge or build from source
-            brew install create-dmg
-            
-            # Install md4c from source for x86_64
-            cd /tmp
-            curl -L https://github.com/mity/md4c/archive/release-0.5.2.tar.gz -o md4c.tar.gz
-            tar xzf md4c.tar.gz
-            cd md4c-release-0.5.2
-            mkdir build && cd build
-            cmake -DCMAKE_BUILD_TYPE=Release \
-                  -DCMAKE_INSTALL_PREFIX=/usr/local \
-                  -DCMAKE_OSX_ARCHITECTURES=x86_64 ..
-            make -j$(sysctl -n hw.ncpu)
-            sudo make install
-            cd $GITHUB_WORKSPACE
-          fi
+          brew install md4c create-dmg
       
       - name: Configure CMake
         run: |
