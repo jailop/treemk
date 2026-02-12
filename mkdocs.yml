@@ -1,9 +1,9 @@
 site_name: TreeMk Documentation
-site_url: https://datainquiry.github.io/treemk
+site_url: https://jailop.github.io/treemk
 site_description: TreeMk - A Markdown editor with wiki-style linking and AI assistance
 site_author: DataInquiry Team
-repo_url: https://github.com/datainquiry/treemk
-repo_name: datainquiry/treemk
+repo_url: https://github.com/jailop/treemk
+repo_name: jailop/treemk
 edit_uri: edit/main/docs/
 
 theme:
@@ -101,3 +101,6 @@ extra:
       link: https://github.com/datainquiry/treemk
   version:
     provider: mike
+
+docs_dir: resources/help
+site_dir: docs

@@ -18,3 +18,4 @@ bundle.ts
 
 # MkDocs
 site/
+/.venv/
