@@ -118,7 +118,8 @@ void SettingsDialog::setupEditorTab() {
    lineBreakColumnsSpinBox->setSuffix(tr(" columns"));
    behaviorLayout->addRow(tr("Line break columns:"), lineBreakColumnsSpinBox);
 
-   connect(lineBreakCheckBox, &QCheckBox::toggled, lineBreakColumnsSpinBox, &QSpinBox::setEnabled);
+   connect(lineBreakCheckBox, &QCheckBox::toggled, lineBreakColumnsSpinBox,
+           &QSpinBox::setEnabled);
 
    layout->addWidget(behaviorGroup);
   layout->addStretch();
@@ -203,6 +204,8 @@ void SettingsDialog::setupMainTab() {
   autoSaveIntervalSpinBox->setRange(1, 60);
   autoSaveIntervalSpinBox->setSuffix(tr(" min"));
   generalLayout->addRow(tr("Auto-save interval:"), autoSaveIntervalSpinBox);
+  connect(autoSaveEnabledCheck, &QCheckBox::toggled,
+          autoSaveIntervalSpinBox, &QSpinBox::setEnabled);
 
   defaultFolderLineEdit = new QLineEdit();
   generalLayout->addRow(tr("Default folder:"), defaultFolderLineEdit);
@@ -323,7 +326,6 @@ void SettingsDialog::loadSettings() {
    if (themeIndex >= 0)
      themeComboBox->setCurrentIndex(themeIndex);
 
-   // AI settings
    loadAISettings();
 }
 
@@ -366,10 +368,8 @@ void SettingsDialog::saveSettings() {
   settings.setValue("general/restoreSession",
                     restoreSessionCheckBox->isChecked());
 
-  // Workspace settings
   settings.setValue("workspace/mainFileName", mainFileNameLineEdit->text());
 
-   // Appearance settings
    QString theme = themeComboBox->currentData().toString();
    settings.setValue("appearance/appTheme", theme);
    if (theme == "system") {
@@ -380,13 +380,11 @@ void SettingsDialog::saveSettings() {
      settings.setValue("appearance/previewColorScheme", theme);
    }
 
-   // AI settings
    saveAISettings();
 }
 
 void SettingsDialog::applySettings() {
   saveSettings();
-  // emit settingsChanged();
 }
 
 void SettingsDialog::onBrowseDefaultFolder() {
@@ -437,5 +435,3 @@ void SettingsDialog::onConfigureShortcuts() {
   dialog->exec();
   delete dialog;
 }
-
-

@@ -437,6 +437,10 @@ void MainWindow::applySettings() {
         highlighter->setCodeSyntaxEnabled(codeSyntaxEnabled);
         highlighter->rehighlight();
       }
+      // Apply line numbers visibility
+      bool showLineNumbers =
+          settings->value("editor/showLineNumbers", true).toBool();
+      tab->editor()->setLineNumbersVisible(showLineNumbers);
     }
   }
   // Apply auto-save settings

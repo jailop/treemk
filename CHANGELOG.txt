@@ -127,3 +127,5 @@ File Management:
 - Drag & drop feature. Drag a file from the file system view to the
   markdown editor, automatically create a link there.
 - Remove highlighting for task brackets
+- auto-saving doc fixed
+- show/hide line numbers setting is working. issue fixed

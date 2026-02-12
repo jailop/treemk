@@ -34,7 +34,7 @@
 #include <QUrl>
 
 MarkdownEditor::MarkdownEditor(QWidget *parent)
-    : QTextEdit(parent), m_predictionEnabled(true) {
+    : QTextEdit(parent), m_predictionEnabled(true), m_lineNumbersVisible(true) {
   lineNumberArea = new LineNumberArea(this);
   m_highlighter = new MarkdownHighlighter(document());
 
@@ -956,6 +956,10 @@ void MarkdownEditor::setupEditor() {
 }
 
 int MarkdownEditor::lineNumberAreaWidth() {
+  if (!m_lineNumbersVisible) {
+    return 0;
+  }
+
   int digits = 1;
   int max = qMax(1, document()->blockCount());
   while (max >= 10) {
@@ -965,6 +969,12 @@ int MarkdownEditor::lineNumberAreaWidth() {
 
   int space = 10 + fontMetrics().horizontalAdvance(QLatin1Char('9')) * digits;
   return space;
+}
+
+void MarkdownEditor::setLineNumbersVisible(bool visible) {
+  m_lineNumbersVisible = visible;
+  lineNumberArea->setVisible(visible);
+  updateLineNumberAreaWidth(0);
 }
 
 void MarkdownEditor::updateLineNumberAreaWidth(int /* newBlockCount */) {

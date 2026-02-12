@@ -18,6 +18,8 @@ public:
   void lineNumberAreaPaintEvent(QPaintEvent *event);
   int lineNumberAreaWidth();
 
+  void setLineNumbersVisible(bool visible);
+
   bool isModified() const;
   void setModified(bool modified);
 
@@ -93,6 +95,7 @@ private:
     QMap<QPair<QString, QString>, int> m_bigramFrequency; // Bigram model
     QString m_currentPrediction;
     bool m_predictionEnabled;
+    bool m_lineNumbersVisible;
 };
 
 class LineNumberArea : public QWidget {
