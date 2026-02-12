@@ -7,7 +7,7 @@ repo_name: jailop/treemk
 edit_uri: edit/main/docs/
 
 theme:
-  name: material
+  name: readthedocs
   palette:
     # Light mode
     - media: "(prefers-color-scheme: light)"
