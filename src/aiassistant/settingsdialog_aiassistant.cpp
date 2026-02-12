@@ -243,7 +243,7 @@ void SettingsDialog::setupAITab() {
   QVBoxLayout *featureLayout = new QVBoxLayout();
   
   aiEnabledCheckBox = new QCheckBox(tr("Enable AI Assistance"));
-  connect(aiEnabledCheckBox, &QCheckBox::checkStateChanged,
+  connect(aiEnabledCheckBox, &QCheckBox::stateChanged,
           this, &SettingsDialog::onAIEnabledChanged);
   featureLayout->addWidget(aiEnabledCheckBox);
   
