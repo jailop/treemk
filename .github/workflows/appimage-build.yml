@@ -169,7 +169,7 @@ jobs:
       
       - name: Summary
         run: |
-          echo "### ✅ AppImage Build Complete!" >> $GITHUB_STEP_SUMMARY
+          echo "### AppImage Build Complete!" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Version:** ${{ env.VERSION }}" >> $GITHUB_STEP_SUMMARY
           echo "**Release:** ${{ env.RELEASE_TAG }}" >> $GITHUB_STEP_SUMMARY

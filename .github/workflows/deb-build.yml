@@ -113,7 +113,7 @@ jobs:
           Priority: optional
           Architecture: amd64
           Depends: libqt6core6 (>= 6.2), libqt6gui6 (>= 6.2), libqt6widgets6 (>= 6.2), libqt6webenginewidgets6 (>= 6.2), libqt6svg6 (>= 6.2), libmd4c-html0 (>= 0.4)
-          Maintainer: TreeMk Developers <noreply@github.com>
+          Maintainer: Jaime Lopez <jailop@protonmail.com>
           Installed-Size: ${SIZE}
           Homepage: https://github.com/jailop/treemk
           Description: Wiki-style markdown editor with live preview
