@@ -1,8 +1,14 @@
 # Welcome to TreeMk
 
-TreeMk is a powerful Markdown editor designed for note-taking, documentation, and knowledge management. It combines the simplicity of Markdown with wiki-style linking and AI assistance.
+TreeMk is an integrated Markdown editor and file explorer that works directly with your file system. No proprietary vaults, no import/export hassles—just your files, organized your way, right where they already are.
 
 ![TreeMk Screenshot](https://raw.githubusercontent.com/datainquiry/treemk/main/screenshot.png)
+
+## Why TreeMk?
+
+Your notes and documents are valuable. They shouldn't be locked inside a proprietary vault or database. TreeMk respects this by working directly with standard Markdown files in your file system. You maintain full control—edit with other tools, sync with any service, backup however you prefer.
+
+TreeMk simply provides the tools to make working with these files more pleasant: wiki-style linking, live preview, full-text search, and intelligent organization—all without moving your files anywhere.
 
 ## Documentation
 
@@ -24,46 +30,36 @@ TreeMk is a powerful Markdown editor designed for note-taking, documentation, an
 - **[Contributing](contributing.md)** - Help improve TreeMk (web only)
 - **[License](license.md)** - License information (web only)
 
-### Reference
-- **[Contributing](contributing.md)** - Help improve TreeMk (web only)
-- **[License](license.md)** - License information (web only)
+## What You Get
 
-## Key Features
-
-### 📝 Powerful Editor
-- Syntax highlighting for Markdown
-- Auto-completion and snippets
-- Line numbers and code folding
-- Customizable themes and fonts
-- Multiple cursors and smart editing
+### 🗂️ File System Integration
+TreeMk provides an integrated file explorer alongside your editor. Navigate your folders, create new files, rename or delete—all while keeping your existing file organization. No import needed, no export required.
 
 ### 🔗 Wiki-Style Linking
-Connect your notes using `[[note-name]]` syntax. TreeMk automatically creates clickable links between your documents.
+Connect related notes using simple `[[note-name]]` syntax. TreeMk creates clickable links between documents and shows you backlinks—which other notes reference the current one. Your knowledge base grows organically without forced hierarchies.
 
-### 📊 Rich Content Support
-- **LaTeX Math Formulas** - Beautiful equations with KaTeX
-- **Code Syntax Highlighting** - 100+ programming languages
-- **Mermaid Diagrams** - Flowcharts, sequence diagrams, and more
-- **Tables and Task Lists** - Organize information effectively
+### 📝 Focused Editor
+A clean editing environment with line numbers, syntax highlighting, auto-completion, and smart formatting. Word prediction learns from your content. The AI assistant (via Ollama or OpenAI) helps when you need it.
 
-### 🤖 AI Assistant
-Integrate with Ollama or OpenAI-compatible providers for intelligent writing assistance.
+### 📊 Rich Content Rendering
+- **LaTeX math formulas** for equations and scientific notation
+- **Syntax-highlighted code blocks** for technical documentation  
+- **Mermaid diagrams** for flowcharts and visualizations
+- Live preview that updates as you type
 
-### 🗂️ Smart Organization
-- File tree navigation
-- Backlinks panel (see what links to current note)
-- Document outline with heading navigation
-- Full-text search across all files
+### 🔍 Smart Navigation
+Full-text search across all files, document outline for quick heading navigation, backlinks panel, and quick-open dialog. Find what you need, when you need it.
 
 ## Getting Help
 
-- Press **F1** to open keyboard shortcuts reference
-- Use the **search box** to find topics quickly
-- Visit [GitHub repository](https://github.com/datainquiry/treemk) for issues and discussions
+- Use the **search box** above to find topics
+- Browse the guides in the navigation panel
+- Press **F1** for keyboard shortcuts reference
+- Visit our [GitHub repository](https://github.com/datainquiry/treemk) for support
 
-## About
+## Philosophy
 
-TreeMk is an open-source project focused on providing a clean, distraction-free environment for managing personal knowledge bases and interconnected notes.
+TreeMk is built on a simple principle: your files should remain yours, accessible with any tool, stored wherever you choose. We provide the convenience of an integrated workspace without the lock-in of proprietary formats or databases.
 
 **License**: GPL-3.0  
 **Website**: https://github.com/datainquiry/treemk

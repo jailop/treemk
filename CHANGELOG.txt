@@ -133,3 +133,4 @@ File Management:
   editor
 - help dialog included with user guide
 - javascript libraries included as bundles
+- documentation site
