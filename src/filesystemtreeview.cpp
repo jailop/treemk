@@ -2,6 +2,7 @@
 #include "fileutils.h"
 #include <QContextMenuEvent>
 #include <QDebug>
+#include <QDesktopServices>
 #include <QDir>
 #include <QFileInfo>
 #include <QHeaderView>
@@ -9,6 +10,7 @@
 #include <QMenu>
 #include <QMessageBox>
 #include <QMouseEvent>
+#include <QUrl>
 
 FileSystemTreeView::FileSystemTreeView(QWidget *parent)
     : QTreeView(parent), clipboardIsCut(false) {
@@ -25,12 +27,10 @@ void FileSystemTreeView::setupModel() {
   fileSystemModel->setReadOnly(false);
   fileSystemModel->setFilter(QDir::AllDirs | QDir::Files |
                              QDir::NoDotAndDotDot);
-
-  QStringList filters;
-  filters << "*.md" << "*.markdown";
-  fileSystemModel->setNameFilters(filters);
-  fileSystemModel->setNameFilterDisables(false);
-
+  // QStringList filters;
+  // filters << "*.md" << "*.markdown";
+  // fileSystemModel->setNameFilters(filters);
+  // fileSystemModel->setNameFilterDisables(false);
   setModel(fileSystemModel);
 }
 
@@ -39,75 +39,58 @@ void FileSystemTreeView::setupView() {
   setColumnHidden(1, true); // Hide size column
   setColumnHidden(2, true); // Hide type column
   setColumnHidden(3, true); // Hide date modified column
-
   header()->setStretchLastSection(false);
   header()->setSectionResizeMode(0, QHeaderView::Stretch);
-
   setAnimated(true);
   setIndentation(20);
   setSortingEnabled(true);
   sortByColumn(0, Qt::AscendingOrder);
-
   setSelectionMode(QAbstractItemView::SingleSelection);
   setSelectionBehavior(QAbstractItemView::SelectRows);
-
   setEditTriggers(QAbstractItemView::EditKeyPressed);
-
   connect(selectionModel(), &QItemSelectionModel::currentChanged, this,
           &FileSystemTreeView::onSelectionChanged);
 }
 
 void FileSystemTreeView::createContextMenu() {
   contextMenu = new QMenu(this);
-
   newFileAction = new QAction(tr("New File"), this);
   connect(newFileAction, &QAction::triggered, this,
           &FileSystemTreeView::createNewFile);
-
   newFolderAction = new QAction(tr("New Folder"), this);
   connect(newFolderAction, &QAction::triggered, this,
           &FileSystemTreeView::createNewFolder);
-
   renameAction = new QAction(tr("Rename"), this);
   renameAction->setShortcut(QKeySequence(Qt::Key_F2));
   connect(renameAction, &QAction::triggered, this,
           &FileSystemTreeView::renameItem);
-
   deleteAction = new QAction(tr("Delete"), this);
   deleteAction->setShortcut(QKeySequence::Delete);
   connect(deleteAction, &QAction::triggered, this,
           &FileSystemTreeView::deleteItem);
-
   cutAction = new QAction(tr("Cut"), this);
   cutAction->setShortcut(QKeySequence::Cut);
   connect(cutAction, &QAction::triggered, this, &FileSystemTreeView::cutItem);
-
   copyAction = new QAction(tr("Copy"), this);
   copyAction->setShortcut(QKeySequence::Copy);
   connect(copyAction, &QAction::triggered, this, &FileSystemTreeView::copyItem);
-
   pasteAction = new QAction(tr("Paste"), this);
   pasteAction->setShortcut(QKeySequence::Paste);
   connect(pasteAction, &QAction::triggered, this,
           &FileSystemTreeView::pasteItem);
-
   refreshAction = new QAction(tr("Refresh"), this);
   refreshAction->setShortcut(QKeySequence::Refresh);
   connect(refreshAction, &QAction::triggered, this,
           &FileSystemTreeView::refreshDirectory);
-
   setCurrentFolderAction = new QAction(tr("Set as Current Folder"), this);
   connect(setCurrentFolderAction, &QAction::triggered, this,
           &FileSystemTreeView::setAsCurrentFolder);
-
   goToParentAction = new QAction(tr("Go to Parent Folder"), this);
   connect(goToParentAction, &QAction::triggered, this,
           &FileSystemTreeView::goToParentFolder);
-
   openInNewWindowAction = new QAction(tr("Open in New Window"), this);
   connect(openInNewWindowAction, &QAction::triggered, this,
           &FileSystemTreeView::openInNewWindow);
-
   contextMenu->addAction(newFileAction);
   contextMenu->addAction(newFolderAction);
   contextMenu->addSeparator();
@@ -124,7 +107,6 @@ void FileSystemTreeView::createContextMenu() {
   contextMenu->addAction(goToParentAction);
   contextMenu->addSeparator();
   contextMenu->addAction(refreshAction);
-
   addAction(newFileAction);
   addAction(newFolderAction);
   addAction(renameAction);
@@ -172,7 +154,6 @@ QString FileSystemTreeView::currentFilePath() const {
   if (!index.isValid()) {
     return QString();
   }
-
   return fileSystemModel->filePath(index);
 }
 
@@ -181,27 +162,28 @@ QString FileSystemTreeView::rootPath() const { return currentRootPath; }
 void FileSystemTreeView::onSelectionChanged(const QModelIndex &current,
                                             const QModelIndex &previous) {
   Q_UNUSED(previous);
-
   if (!current.isValid()) {
     return;
   }
-
   QString filePath = fileSystemModel->filePath(current);
   QFileInfo fileInfo(filePath);
-
   if (fileInfo.isFile()) {
-    if (!watchedFilePath.isEmpty() && watchedFilePath != filePath) {
-      if (fileSystemWatcher->files().contains(watchedFilePath)) {
-        fileSystemWatcher->removePath(watchedFilePath);
+    QString suffix = fileInfo.suffix().toLower();
+    bool isMarkdownFile = (suffix == "md" || suffix == "markdown" || suffix == "txt");
+    
+    if (isMarkdownFile) {
+      if (!watchedFilePath.isEmpty() && watchedFilePath != filePath) {
+        if (fileSystemWatcher->files().contains(watchedFilePath)) {
+          fileSystemWatcher->removePath(watchedFilePath);
+        }
       }
-    }
+      watchedFilePath = filePath;
+      if (!fileSystemWatcher->files().contains(filePath)) {
+        fileSystemWatcher->addPath(filePath);
+      }
 
-    watchedFilePath = filePath;
-    if (!fileSystemWatcher->files().contains(filePath)) {
-      fileSystemWatcher->addPath(filePath);
+      emit fileSelected(filePath);
     }
-
-    emit fileSelected(filePath);
   }
 }
 
@@ -233,17 +215,21 @@ void FileSystemTreeView::onFileChanged(const QString &path) {
 
 void FileSystemTreeView::mouseDoubleClickEvent(QMouseEvent *event) {
   QTreeView::mouseDoubleClickEvent(event);
-
   QModelIndex index = indexAt(event->pos());
   if (!index.isValid()) {
     return;
   }
-
   QString filePath = fileSystemModel->filePath(index);
   QFileInfo fileInfo(filePath);
-
   if (fileInfo.isFile()) {
-    emit fileDoubleClicked(filePath);
+    QString suffix = fileInfo.suffix().toLower();
+    bool isMarkdownFile = (suffix == "md" || suffix == "markdown" || suffix == "txt");
+    
+    if (isMarkdownFile) {
+      emit fileDoubleClicked(filePath);
+    } else {
+      QDesktopServices::openUrl(QUrl::fromLocalFile(filePath));
+    }
   }
 }
 
@@ -251,11 +237,16 @@ void FileSystemTreeView::contextMenuEvent(QContextMenuEvent *event) {
   QModelIndex index = indexAt(event->pos());
   bool hasSelection = index.isValid();
   bool isDirectory = false;
-
+  bool isMarkdownFile = false;
   if (hasSelection) {
     QString filePath = fileSystemModel->filePath(index);
     QFileInfo fileInfo(filePath);
     isDirectory = fileInfo.isDir();
+    
+    if (fileInfo.isFile()) {
+      QString suffix = fileInfo.suffix().toLower();
+      isMarkdownFile = (suffix == "md" || suffix == "markdown" || suffix == "txt");
+    }
   }
 
   // Enable/disable actions based on selection
@@ -264,6 +255,9 @@ void FileSystemTreeView::contextMenuEvent(QContextMenuEvent *event) {
   deleteAction->setEnabled(hasSelection);
   cutAction->setEnabled(hasSelection);
   copyAction->setEnabled(hasSelection);
+  
+  // Open in new window - only for md/txt files
+  openInNewWindowAction->setEnabled(hasSelection && isMarkdownFile);
   
   // Folder navigation actions - only for directories
   setCurrentFolderAction->setEnabled(hasSelection && isDirectory);

@@ -45,6 +45,7 @@ private slots:
   void setAsCurrentFolder();
   void goToParentFolder();
   void openInNewWindow();
+  void openWithDefaultApp();
 
 private:
   void setupModel();
@@ -68,6 +69,7 @@ private:
   QAction *setCurrentFolderAction;
   QAction *goToParentAction;
   QAction *openInNewWindowAction;
+  QAction *openWithAction;
 
   QString clipboardPath;
   bool clipboardIsCut;
