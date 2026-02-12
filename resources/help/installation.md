@@ -4,7 +4,7 @@
 
 TreeMk is available as a Windows installer (tested on Windows 10/11):
 
-**Download:** [TreeMk-0.6.0-win64.exe](https://github.com/datainquiry/treemk/releases/latest)
+**Download:** [TreeMk-0.6.0-win64.exe](https://github.com/jailop/treemk/releases/tag/v0.6.0)
 
 Simply download and run the installer. TreeMk will be added to your Start Menu.
 
