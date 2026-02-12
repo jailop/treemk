@@ -16,6 +16,16 @@ graph TD
 ```
 ````
 
+**Result:**
+
+```mermaid
+graph TD
+    A[Start] --> B{Is it working?}
+    B -->|Yes| C[Great!]
+    B -->|No| D[Debug]
+    D --> B
+```
+
 ## Flowcharts
 
 ### Basic Flowchart
@@ -31,6 +41,15 @@ graph TD
 ```
 ````
 
+```mermaid
+graph TD
+    A[Christmas] -->|Get money| B(Go shopping)
+    B --> C{Let me think}
+    C -->|One| D[Laptop]
+    C -->|Two| E[iPhone]
+    C -->|Three| F[Car]
+```
+
 ### Node Shapes
 
 ````
@@ -43,6 +62,15 @@ graph LR
     E --> F[/Parallelogram/]
 ```
 ````
+
+```mermaid
+graph LR
+    A[Rectangle] --> B(Rounded)
+    B --> C((Circle))
+    C --> D{Diamond}
+    D --> E>Flag]
+    E --> F[/Parallelogram/]
+```
 
 ### Flow Direction
 
@@ -72,6 +100,21 @@ sequenceDiagram
 ```
 ````
 
+```mermaid
+sequenceDiagram
+    participant User
+    participant Browser
+    participant Server
+    participant Database
+    
+    User->>Browser: Enter URL
+    Browser->>Server: HTTP Request
+    Server->>Database: Query data
+    Database-->>Server: Return results
+    Server-->>Browser: HTTP Response
+    Browser-->>User: Display page
+```
+
 ### Activation and Notes
 
 ````
@@ -83,6 +126,14 @@ sequenceDiagram
     Alice-)John: See you later!
 ```
 ````
+
+```mermaid
+sequenceDiagram
+    Alice->>+John: Hello John, how are you?
+    Note right of John: John thinks
+    John-->>-Alice: Great!
+    Alice-)John: See you later!
+```
 
 ## Class Diagrams
 
@@ -111,6 +162,27 @@ classDiagram
 ```
 ````
 
+```mermaid
+classDiagram
+    Animal <|-- Duck
+    Animal <|-- Fish
+    Animal : +int age
+    Animal : +String gender
+    Animal: +isMammal()
+    Animal: +mate()
+    
+    class Duck{
+        +String beakColor
+        +swim()
+        +quack()
+    }
+    
+    class Fish{
+        -int sizeInFeet
+        -canEat()
+    }
+```
+
 ## State Diagrams
 
 Show state transitions:
@@ -126,6 +198,16 @@ stateDiagram-v2
     Crash --> [*]
 ```
 ````
+
+```mermaid
+stateDiagram-v2
+    [*] --> Still
+    Still --> [*]
+    Still --> Moving
+    Moving --> Still
+    Moving --> Crash
+    Crash --> [*]
+```
 
 ## Entity Relationship Diagrams
 
@@ -155,6 +237,28 @@ erDiagram
 ```
 ````
 
+```mermaid
+erDiagram
+    CUSTOMER ||--o{ ORDER : places
+    ORDER ||--|{ LINE-ITEM : contains
+    CUSTOMER }|..|{ DELIVERY-ADDRESS : uses
+    
+    CUSTOMER {
+        string name
+        string email
+        int customer_id
+    }
+    ORDER {
+        int order_id
+        date order_date
+        string status
+    }
+    LINE-ITEM {
+        int quantity
+        decimal price
+    }
+```
+
 ## Gantt Charts
 
 Project timelines and schedules:
@@ -178,6 +282,23 @@ gantt
 ```
 ````
 
+```mermaid
+gantt
+    title Project Development Schedule
+    dateFormat  YYYY-MM-DD
+    section Planning
+    Requirements       :a1, 2024-01-01, 30d
+    Design            :a2, after a1, 20d
+    
+    section Development
+    Backend           :a3, 2024-02-01, 45d
+    Frontend          :a4, after a3, 30d
+    
+    section Testing
+    Unit Tests        :a5, after a4, 15d
+    Integration       :a6, after a5, 10d
+```
+
 ## Pie Charts
 
 Data visualization:
@@ -192,6 +313,15 @@ pie title Technology Stack Usage
     "Others" : 5
 ```
 ````
+
+```mermaid
+pie title Technology Stack Usage
+    "JavaScript" : 45
+    "Python" : 25
+    "Java" : 15
+    "Go" : 10
+    "Others" : 5
+```
 
 ## Git Graph
 
@@ -214,6 +344,22 @@ gitGraph
     commit
 ```
 ````
+
+```mermaid
+gitGraph
+    commit
+    commit
+    branch develop
+    checkout develop
+    commit
+    commit
+    checkout main
+    merge develop
+    commit
+    branch feature
+    checkout feature
+    commit
+```
 
 ## User Journey
 
