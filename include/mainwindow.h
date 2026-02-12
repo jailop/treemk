@@ -50,6 +50,7 @@ private slots:
   void save();
   void saveAs();
   void about();
+  void showUserGuide();
   void toggleSidebar();
   void togglePreview();
   void cycleViewMode();
@@ -57,6 +58,8 @@ private slots:
   void onFileDoubleClicked(const QString &filePath);
   void onFileModifiedExternally(const QString &filePath);
   void onFolderChanged(const QString &folderPath);
+  void onFileDeleted(const QString &filePath);
+  void onFileRenamed(const QString &oldPath, const QString &newPath);
   void onDocumentModified();
   void autoSave();
   void find();
@@ -178,6 +181,7 @@ private:
   QAction *previewThemeDarkAction;
   QAction *previewThemeSepiaAction;
   QAction *settingsAction;
+  QAction *userGuideAction;
   QAction *aboutAction;
   QAction *aboutQtAction;
   QAction *keyboardShortcutsAction;

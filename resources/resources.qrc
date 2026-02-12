@@ -22,4 +22,25 @@
         <file>theme-dark.css</file>
         <file>task-list.css</file>
     </qresource>
+    <qresource prefix="/js">
+        <file>preview-bundle.min.js</file>
+    </qresource>
+    <qresource prefix="/css-libs">
+        <file>katex.min.css</file>
+        <file>highlight-github.min.css</file>
+        <file>highlight-github-dark.min.css</file>
+    </qresource>
+    <qresource prefix="/help">
+        <file>help/index.md</file>
+        <file>help/getting-started.md</file>
+        <file>help/editor.md</file>
+        <file>help/navigation.md</file>
+        <file>help/preview.md</file>
+        <file>help/formulas.md</file>
+        <file>help/code-blocks.md</file>
+        <file>help/diagrams.md</file>
+        <file>help/ai-assistant.md</file>
+        <file>help/keyboard-shortcuts.md</file>
+        <file>help/images/filepanel.png</file>
+    </qresource>
 </RCC>

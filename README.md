@@ -26,6 +26,7 @@ managing interconnected notes.
 - Wiki-style linking between notes with `[[note]]` syntax
 - File inclusion with `[[!note]]` syntax - embeds content in preview
 - Markdown links `[text](url)` with Ctrl+Click to follow
+- Drag & drop from the file explorer to create wiki-links
 - Backlinks panel - shows all notes linking to current document
 - Document outline panel with heading navigation
 - Quick open dialog (Ctrl+P) with fuzzy search
@@ -64,12 +65,28 @@ managing interconnected notes.
 pandoc is required to export notes to formats like HTML, PDF, and DOCX.
 pandoc needs to be installed separately.
 
-To render the preview, the app uses external JavaScript libraries
-accessed via CDN:
+## JavaScript Libraries
 
-- KaTeX is used for rendering LaTeX formulas.
-- highlight.js is used for syntax highlighting in code blocks.
-- Mermaid.js is used for rendering diagrams.
+The app bundles the following JavaScript libraries locally:
+
+- **KaTeX** - LaTeX formula rendering
+- **Highlight.js** - Code syntax highlighting
+- **Mermaid** - Diagram rendering
+
+These are bundled into a single minified file (`preview-bundle.min.js`) using Bun.
+
+**Rebuilding the bundle** (only needed if updating library versions):
+
+```bash
+# Install Bun if not already installed
+curl -fsSL https://bun.sh/install | bash
+
+# Install dependencies and build bundle
+bun install
+./build-preview-bundle.sh
+```
+
+The bundled files are included in the repository, so rebuilding is not required for normal builds.
 
 To render Mermaid diagrams when exporting to HTML, PDF, or DOCX with Pandoc,
 you need to install `mermaid-filter`:
@@ -155,3 +172,32 @@ cmake .. -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="C:/Qt/6.x.x/msvc
 # Build
 cmake --build .
 ```
+
+## Documentation
+
+Comprehensive documentation is available online:
+
+**📚 [Read the Documentation](https://datainquiry.github.io/treemk)**
+
+Topics include:
+- Getting Started Guide
+- Editor Features
+- Math Formulas with LaTeX
+- Code Syntax Highlighting
+- Mermaid Diagrams
+- AI Assistant
+- Keyboard Shortcuts Reference
+
+### Building Documentation Locally
+
+```bash
+# Serve documentation locally
+./serve-docs.sh
+
+# Or manually:
+source .venv/bin/activate
+mkdocs serve
+```
+
+Visit http://127.0.0.1:8000 to view the documentation.
+

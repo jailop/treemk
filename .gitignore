@@ -1,2 +1,20 @@
-
 tmp/
+**/*_autogen/
+**/*.a
+**/*.cmake
+build/
+
+# Bun/Node dependencies
+node_modules/
+bun.lockb
+package.json
+tsconfig.json
+index.ts
+bundle.ts
+
+# Generated bundles (tracked in repo)
+# resources/js/preview-bundle.min.js
+# resources/css/*.min.css
+
+# MkDocs
+site/

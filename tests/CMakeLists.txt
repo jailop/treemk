@@ -106,7 +106,7 @@ add_executable(test_aiassist_dialog
     ${CMAKE_SOURCE_DIR}/include/logic/ollamaprovider.h
     ${CMAKE_SOURCE_DIR}/include/logic/openaiprovider.h
     ${CMAKE_SOURCE_DIR}/include/logic/systemprompts.h
-    ${CMAKE_SOURCE_DIR}/src/aiassistdialog.cpp
+    ${CMAKE_SOURCE_DIR}/src/aiassistant/aiassistdialog.cpp
     ${CMAKE_SOURCE_DIR}/src/logic/aiprovider.cpp
     ${CMAKE_SOURCE_DIR}/src/logic/ollamaprovider.cpp
     ${CMAKE_SOURCE_DIR}/src/logic/openaiprovider.cpp
@@ -127,60 +127,21 @@ add_test(NAME AIAssistDialog COMMAND test_aiassist_dialog)
 # Note: WindowManager unit tests require MainWindow, will be tested via integration
 
 # Integration Tests
+# Collect all main application sources and headers
+file(GLOB_RECURSE INTEGRATION_TEST_SOURCES
+    "${CMAKE_SOURCE_DIR}/src/*.cpp"
+)
+# Remove main.cpp as test has its own main
+list(FILTER INTEGRATION_TEST_SOURCES EXCLUDE REGEX ".*main\\.cpp$")
+
+file(GLOB_RECURSE INTEGRATION_TEST_HEADERS
+    "${CMAKE_SOURCE_DIR}/include/*.h"
+)
+
 add_executable(test_integration
     integration/test_integration.cpp
-    ${CMAKE_SOURCE_DIR}/include/mainwindow.h
-    ${CMAKE_SOURCE_DIR}/include/tabeditor.h
-    ${CMAKE_SOURCE_DIR}/include/filesystemtreeview.h
-    ${CMAKE_SOURCE_DIR}/include/markdowneditor.h
-    ${CMAKE_SOURCE_DIR}/include/markdownhighlighter.h
-    ${CMAKE_SOURCE_DIR}/include/markdownpreview.h
-    ${CMAKE_SOURCE_DIR}/include/linkparser.h
-    ${CMAKE_SOURCE_DIR}/include/searchdialog.h
-    ${CMAKE_SOURCE_DIR}/include/settingsdialog.h
-    ${CMAKE_SOURCE_DIR}/include/formuladialog.h
-    ${CMAKE_SOURCE_DIR}/include/quickopendialog.h
-    ${CMAKE_SOURCE_DIR}/include/outlinepanel.h
-    ${CMAKE_SOURCE_DIR}/include/shortcutsdialog.h
-    ${CMAKE_SOURCE_DIR}/include/shortcutmanager.h
-    ${CMAKE_SOURCE_DIR}/include/thememanager.h
-    ${CMAKE_SOURCE_DIR}/include/aiassistdialog.h
-    ${CMAKE_SOURCE_DIR}/include/systempromptsdialog.h
-    ${CMAKE_SOURCE_DIR}/include/logic/aiprovider.h
-    ${CMAKE_SOURCE_DIR}/include/logic/ollamaprovider.h
-    ${CMAKE_SOURCE_DIR}/include/logic/openaiprovider.h
-    ${CMAKE_SOURCE_DIR}/include/logic/systemprompts.h
-    ${CMAKE_SOURCE_DIR}/src/mainwindow.cpp
-    ${CMAKE_SOURCE_DIR}/src/mainwindow_about.cpp
-    ${CMAKE_SOURCE_DIR}/src/mainwindow_actions.cpp
-    ${CMAKE_SOURCE_DIR}/src/mainwindow_file.cpp
-    ${CMAKE_SOURCE_DIR}/src/mainwindow_edit.cpp
-    ${CMAKE_SOURCE_DIR}/src/mainwindow_insert.cpp
-    ${CMAKE_SOURCE_DIR}/src/mainwindow_export.cpp
-    ${CMAKE_SOURCE_DIR}/src/mainwindow_tabs.cpp
-    ${CMAKE_SOURCE_DIR}/src/mainwindow_view.cpp
-    ${CMAKE_SOURCE_DIR}/src/mainwindow_ui.cpp
-    ${CMAKE_SOURCE_DIR}/src/tabeditor.cpp
-    ${CMAKE_SOURCE_DIR}/src/filesystemtreeview.cpp
-    ${CMAKE_SOURCE_DIR}/src/markdowneditor.cpp
-    ${CMAKE_SOURCE_DIR}/src/markdownhighlighter.cpp
-    ${CMAKE_SOURCE_DIR}/src/markdownpreview.cpp
-    ${CMAKE_SOURCE_DIR}/src/linkparser.cpp
-    ${CMAKE_SOURCE_DIR}/src/searchdialog.cpp
-    ${CMAKE_SOURCE_DIR}/src/settingsdialog.cpp
-    ${CMAKE_SOURCE_DIR}/src/settingsdialog_aiassistant.cpp
-    ${CMAKE_SOURCE_DIR}/src/formuladialog.cpp
-    ${CMAKE_SOURCE_DIR}/src/quickopendialog.cpp
-    ${CMAKE_SOURCE_DIR}/src/outlinepanel.cpp
-    ${CMAKE_SOURCE_DIR}/src/shortcutsdialog.cpp
-    ${CMAKE_SOURCE_DIR}/src/shortcutmanager.cpp
-    ${CMAKE_SOURCE_DIR}/src/thememanager.cpp
-    ${CMAKE_SOURCE_DIR}/src/aiassistdialog.cpp
-    ${CMAKE_SOURCE_DIR}/src/systempromptsdialog.cpp
-    ${CMAKE_SOURCE_DIR}/src/logic/aiprovider.cpp
-    ${CMAKE_SOURCE_DIR}/src/logic/ollamaprovider.cpp
-    ${CMAKE_SOURCE_DIR}/src/logic/openaiprovider.cpp
-    ${CMAKE_SOURCE_DIR}/src/logic/systemprompts.cpp
+    ${INTEGRATION_TEST_SOURCES}
+    ${INTEGRATION_TEST_HEADERS}
 )
 
 set_target_properties(test_integration PROPERTIES AUTOMOC ON AUTOUIC ON)
