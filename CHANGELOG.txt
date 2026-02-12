@@ -126,3 +126,4 @@ File Management:
 
 - Drag & drop feature. Drag a file from the file system view to the
   markdown editor, automatically create a link there.
+- Remove highlighting for task brackets

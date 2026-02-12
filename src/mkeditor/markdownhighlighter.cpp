@@ -72,9 +72,11 @@ void MarkdownHighlighter::setupFormats() {
   strikethroughFormat.setFontStrikeOut(true);
   strikethroughFormat.setForeground(strikethroughColor);
 
+  /*
   taskPendingFormat.setForeground(QColor(255, 0, 0)); // red
   taskDoneFormat.setForeground(QColor(0, 255, 0)); // green
   taskPartialFormat.setForeground(QColor(255, 255, 0)); // yellow
+  */
 
   // Headers (H1-H6)
   h1Format.setForeground(headerColor);
@@ -508,6 +510,7 @@ void MarkdownHighlighter::highlightBlock(const QString &text) {
   }
 
   // Highlight tasks - [ ], - [X], - [.]
+  /*
   QRegularExpression taskRegex("[-*+] \\[([ xX.]?)\\]");
   QRegularExpressionMatchIterator taskIt = taskRegex.globalMatch(text);
   while (taskIt.hasNext()) {
@@ -523,6 +526,7 @@ void MarkdownHighlighter::highlightBlock(const QString &text) {
     }
     setFormat(match.capturedStart(), match.capturedLength(), format);
   }
+  */
 
   // Handle wiki links separately for validation
   // First handle inclusion links [[!target]] or [[!target|display]]
