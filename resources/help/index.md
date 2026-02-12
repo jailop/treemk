@@ -2,7 +2,7 @@
 
 TreeMk is an integrated Markdown editor and file explorer that works directly with your file system. No proprietary vaults, no import/export hassles—just your files, organized your way, right where they already are.
 
-![TreeMk Screenshot](https://raw.githubusercontent.com/datainquiry/treemk/main/screenshot.png)
+![TreeMk Screenshot](https://raw.githubusercontent.com/jailop/treemk/main/screenshot.png)
 
 ## Why TreeMk?
 
