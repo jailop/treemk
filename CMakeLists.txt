@@ -65,6 +65,7 @@ set(SOURCES
     src/linkparser.cpp
     src/searchdialog.cpp
     src/settingsdialog.cpp
+    src/settingsdialog_aiassistant.cpp
     src/formuladialog.cpp
     src/quickopendialog.cpp
     src/outlinepanel.cpp

@@ -18,6 +18,7 @@ managing interconnected notes.
 - Paste images directly from clipboard (auto-saves to document folder)
 - Smart text navigation (word, line, paragraph)
 - Line breaking and joining utilities
+- AI assistance (by Ollama or OpenAI-like providers)
 
 **Navigation and Organization**
 

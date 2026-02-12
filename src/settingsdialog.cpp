@@ -1,5 +1,5 @@
-#include "settingsdialog.h"
 #include "defs.h"
+#include "settingsdialog.h"
 #include "shortcutsdialog.h"
 #include "systempromptsdialog.h"
 #include "logic/systemprompts.h"
@@ -12,7 +12,6 @@
 #include <QFontComboBox>
 #include <QFormLayout>
 #include <QGroupBox>
-#include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
@@ -126,12 +125,6 @@ void SettingsDialog::setupEditorTab() {
 
   tabWidget->addTab(editorTab, tr("Editor"));
 }
-
-
-
-
-
-
 
 void SettingsDialog::setupMainTab() {
   QWidget *mainTab = new QWidget();

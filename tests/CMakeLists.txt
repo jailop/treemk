@@ -168,6 +168,7 @@ add_executable(test_integration
     ${CMAKE_SOURCE_DIR}/src/linkparser.cpp
     ${CMAKE_SOURCE_DIR}/src/searchdialog.cpp
     ${CMAKE_SOURCE_DIR}/src/settingsdialog.cpp
+    ${CMAKE_SOURCE_DIR}/src/settingsdialog_aiassistant.cpp
     ${CMAKE_SOURCE_DIR}/src/formuladialog.cpp
     ${CMAKE_SOURCE_DIR}/src/quickopendialog.cpp
     ${CMAKE_SOURCE_DIR}/src/outlinepanel.cpp
