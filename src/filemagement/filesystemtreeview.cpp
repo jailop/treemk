@@ -48,6 +48,13 @@ void FileSystemTreeView::setupView() {
   setSelectionMode(QAbstractItemView::SingleSelection);
   setSelectionBehavior(QAbstractItemView::SelectRows);
   setEditTriggers(QAbstractItemView::EditKeyPressed);
+
+  // Drag and drop enabled to support the auto creation of 
+  // wiki-links in the editor when dragging files from the
+  // file explorer to the editor.
+  setDragEnabled(true);
+  setDragDropMode(QAbstractItemView::DragOnly);
+
   connect(selectionModel(), &QItemSelectionModel::currentChanged, this,
           &FileSystemTreeView::onSelectionChanged);
 }

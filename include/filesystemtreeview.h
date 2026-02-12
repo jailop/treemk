@@ -5,6 +5,13 @@
 #include <QFileSystemWatcher>
 #include <QTreeView>
 
+/**
+ * This class represents a tree view for displaying
+ * and managing the file system. It provides functionalities
+ * such as navigating directories, selecting files, and performing
+ * file operations like creating, renaming, and deleting files and
+ * folders.
+ */
 class FileSystemTreeView : public QTreeView {
   Q_OBJECT
 
@@ -12,10 +19,21 @@ public:
   explicit FileSystemTreeView(QWidget *parent = nullptr);
   ~FileSystemTreeView();
 
+  /**
+   * The app manages the concept of a "root path" which is
+   * the base directory that the tree view displays. This allows
+   * the app to focus on a specific part of the file system. This
+   * method sets the root path for the tree view, which will update
+   * the displayed directory structure accordingly.
+   */
   void setRootPath(const QString &path);
+
   QString currentFilePath() const;
+
   QString rootPath() const;
+
   void notifyFileSaving(const QString &filePath);
+
   void selectFile(const QString &filePath);
 
 signals:
@@ -45,7 +63,6 @@ private slots:
   void setAsCurrentFolder();
   void goToParentFolder();
   void openInNewWindow();
-  void openWithDefaultApp();
 
 private:
   void setupModel();

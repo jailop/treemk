@@ -163,9 +163,9 @@ void MainWindow::createActions() {
           &MainWindow::insertWikiLink);
 
   attachDocumentAction =
-      new QAction(iconWithFallback("mail-attachment", QStyle::SP_DriveFDIcon),
+      new QAction(iconWithFallback("edit-paste", QStyle::SP_DriveFDIcon),
                   tr("Attach &Document..."), this);
-  attachDocumentAction->setShortcut(QKeySequence(tr("Ctrl+Shift+A")));
+  attachDocumentAction->setShortcut(QKeySequence(tr("Ctrl+Shift+D")));
   attachDocumentAction->setStatusTip(tr("Attach a document file"));
   attachDocumentAction->setToolTip(tr("Attach a document"));
   connect(attachDocumentAction, &QAction::triggered, this,

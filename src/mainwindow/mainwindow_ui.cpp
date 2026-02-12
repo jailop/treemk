@@ -149,7 +149,8 @@ void MainWindow::createToolbar() {
   mainToolbar->addAction(exportPlainTextAction);
   mainToolbar->addSeparator();
 
-  // Search
+  // AI and Search
+  mainToolbar->addAction(aiAssistAction);
   mainToolbar->addAction(findAction);
   mainToolbar->addAction(quickOpenAction);
   mainToolbar->addSeparator();

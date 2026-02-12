@@ -26,6 +26,7 @@ managing interconnected notes.
 - Wiki-style linking between notes with `[[note]]` syntax
 - File inclusion with `[[!note]]` syntax - embeds content in preview
 - Markdown links `[text](url)` with Ctrl+Click to follow
+- Drag & drop from the file explorer to create wiki-links
 - Backlinks panel - shows all notes linking to current document
 - Document outline panel with heading navigation
 - Quick open dialog (Ctrl+P) with fuzzy search

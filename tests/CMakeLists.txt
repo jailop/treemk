@@ -106,7 +106,7 @@ add_executable(test_aiassist_dialog
     ${CMAKE_SOURCE_DIR}/include/logic/ollamaprovider.h
     ${CMAKE_SOURCE_DIR}/include/logic/openaiprovider.h
     ${CMAKE_SOURCE_DIR}/include/logic/systemprompts.h
-    ${CMAKE_SOURCE_DIR}/src/aiassistdialog.cpp
+    ${CMAKE_SOURCE_DIR}/src/aiassistant/aiassistdialog.cpp
     ${CMAKE_SOURCE_DIR}/src/logic/aiprovider.cpp
     ${CMAKE_SOURCE_DIR}/src/logic/ollamaprovider.cpp
     ${CMAKE_SOURCE_DIR}/src/logic/openaiprovider.cpp

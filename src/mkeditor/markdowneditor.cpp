@@ -904,6 +904,14 @@ void MarkdownEditor::dropEvent(QDropEvent *event) {
         QString filePath = url.toLocalFile();
         QFileInfo fileInfo(filePath);
 
+        // Calculate relative path if current file path is set
+        QString linkPath = filePath;
+        if (!m_currentFilePath.isEmpty()) {
+          QFileInfo currentFileInfo(m_currentFilePath);
+          QDir currentDir = currentFileInfo.absoluteDir();
+          linkPath = currentDir.relativeFilePath(filePath);
+        }
+
         // Check if it's an image
         QStringList imageExtensions;
         imageExtensions << "png" << "jpg" << "jpeg" << "gif" << "bmp" << "svg";
@@ -911,15 +919,13 @@ void MarkdownEditor::dropEvent(QDropEvent *event) {
         if (imageExtensions.contains(fileInfo.suffix().toLower())) {
           // Insert as image
           QString imageMarkdown =
-              QString("![%1](%2)").arg(fileInfo.baseName(), filePath);
+              QString("![%1](%2)").arg(fileInfo.baseName(), linkPath);
           cursor.insertText(imageMarkdown);
-          cursor.insertText("\n");
         } else {
           // Insert as link
           QString linkMarkdown =
-              QString("[%1](%2)").arg(fileInfo.fileName(), filePath);
+              QString("[%1](%2)").arg(fileInfo.fileName(), linkPath);
           cursor.insertText(linkMarkdown);
-          cursor.insertText("\n");
         }
       }
     }
