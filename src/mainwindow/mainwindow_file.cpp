@@ -199,6 +199,27 @@ void MainWindow::onFolderChanged(const QString &folderPath) {
   statusBar()->showMessage(tr("Current folder changed to: %1").arg(folderPath), 3000);
 }
 
+void MainWindow::onFileDeleted(const QString &filePath) {
+  int tabIndex = findTabIndexByPath(filePath);
+  if (tabIndex >= 0) {
+    tabWidget->removeTab(tabIndex);
+    statusBar()->showMessage(tr("Closed tab for deleted file: %1").arg(QFileInfo(filePath).fileName()), 3000);
+  }
+}
+
+void MainWindow::onFileRenamed(const QString &oldPath, const QString &newPath) {
+  TabEditor *tab = findTabByPath(oldPath);
+  if (tab) {
+    int tabIndex = findTabIndexByPath(oldPath);
+    tab->setFilePath(newPath);
+    if (tabIndex >= 0) {
+      tabWidget->setTabText(tabIndex, QFileInfo(newPath).fileName());
+      tabWidget->setTabToolTip(tabIndex, newPath);
+    }
+    statusBar()->showMessage(tr("File renamed: %1").arg(QFileInfo(newPath).fileName()), 3000);
+  }
+}
+
 bool MainWindow::maybeSave() {
   // First pass: count modified documents
   QList<TabEditor*> modifiedTabs;

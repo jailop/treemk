@@ -129,3 +129,5 @@ File Management:
 - Remove highlighting for task brackets
 - auto-saving doc fixed
 - show/hide line numbers setting is working. issue fixed
+- rename and delete actions in the file panel are reflected in the tab
+  editor

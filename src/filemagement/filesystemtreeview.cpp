@@ -7,6 +7,7 @@
 #include <QFileInfo>
 #include <QHeaderView>
 #include <QInputDialog>
+#include <QKeyEvent>
 #include <QMenu>
 #include <QMessageBox>
 #include <QMouseEvent>
@@ -32,6 +33,16 @@ void FileSystemTreeView::setupModel() {
   // fileSystemModel->setNameFilters(filters);
   // fileSystemModel->setNameFilterDisables(false);
   setModel(fileSystemModel);
+
+  // Try both dataChanged and fileRenamed signals
+  connect(fileSystemModel, &QFileSystemModel::dataChanged, this,
+          &FileSystemTreeView::onItemRenamed);
+  connect(fileSystemModel, &QFileSystemModel::fileRenamed, this,
+          [this](const QString &path, const QString &oldName, const QString &newName) {
+    QString oldPath = QDir(path).filePath(oldName);
+    QString newPath = QDir(path).filePath(newName);
+    emit fileRenamed(oldPath, newPath);
+  });
 }
 
 void FileSystemTreeView::setupView() {
@@ -240,6 +251,16 @@ void FileSystemTreeView::mouseDoubleClickEvent(QMouseEvent *event) {
   }
 }
 
+void FileSystemTreeView::keyPressEvent(QKeyEvent *event) {
+  if (event->key() == Qt::Key_F2) {
+    QModelIndex index = currentIndex();
+    if (index.isValid()) {
+      renameOldPath = fileSystemModel->filePath(index);
+    }
+  }
+  QTreeView::keyPressEvent(event);
+}
+
 void FileSystemTreeView::contextMenuEvent(QContextMenuEvent *event) {
   QModelIndex index = indexAt(event->pos());
   bool hasSelection = index.isValid();
@@ -351,12 +372,17 @@ void FileSystemTreeView::createNewFolder() {
   }
 }
 
+void FileSystemTreeView::onEditStarted() {
+  // Not used anymore, can be removed
+}
+
 void FileSystemTreeView::renameItem() {
   QModelIndex index = currentIndex();
   if (!index.isValid()) {
     return;
   }
 
+  renameOldPath = fileSystemModel->filePath(index);
   edit(index);
 }
 
@@ -394,6 +420,8 @@ void FileSystemTreeView::deleteItem() {
   if (!success) {
     QMessageBox::warning(this, tr("Error"),
                          tr("Failed to delete %1!").arg(itemType));
+  } else {
+    emit fileDeleted(filePath);
   }
 }
 
@@ -591,4 +619,24 @@ void FileSystemTreeView::selectFile(const QString &filePath) {
 
 void FileSystemTreeView::notifyFileSaving(const QString &filePath) {
   fileSavingPath = filePath;
+}
+
+void FileSystemTreeView::onItemRenamed(const QModelIndex &topLeft, const QModelIndex &bottomRight) {
+  // Only process column 0 (filename) changes
+  if (topLeft.column() != 0) {
+    return;
+  }
+  
+  if (!renameOldPath.isEmpty()) {
+    QString newPath = fileSystemModel->filePath(topLeft);
+    
+    // Only emit if paths are different and the new path exists
+    if (newPath != renameOldPath && QFile::exists(newPath) && !QFile::exists(renameOldPath)) {
+      emit fileRenamed(renameOldPath, newPath);
+      renameOldPath.clear();
+    } else if (newPath == renameOldPath) {
+      // User cancelled the rename, clear the old path
+      renameOldPath.clear();
+    }
+  }
 }

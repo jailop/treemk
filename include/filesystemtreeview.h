@@ -42,10 +42,13 @@ signals:
   void fileModifiedExternally(const QString &filePath);
   void folderChanged(const QString &folderPath);
   void openInNewWindowRequested(const QString &path);
+  void fileDeleted(const QString &filePath);
+  void fileRenamed(const QString &oldPath, const QString &newPath);
 
 protected:
   void mouseDoubleClickEvent(QMouseEvent *event) override;
   void contextMenuEvent(QContextMenuEvent *event) override;
+  void keyPressEvent(QKeyEvent *event) override;
 
 private slots:
   void onSelectionChanged(const QModelIndex &current,
@@ -63,6 +66,8 @@ private slots:
   void setAsCurrentFolder();
   void goToParentFolder();
   void openInNewWindow();
+  void onItemRenamed(const QModelIndex &topLeft, const QModelIndex &bottomRight);
+  void onEditStarted();
 
 private:
   void setupModel();
@@ -93,6 +98,7 @@ private:
   QString currentRootPath;
   QString watchedFilePath;
   QString fileSavingPath;
+  QString renameOldPath;
 };
 
 #endif // FILESYSTEMTREEVIEW_H

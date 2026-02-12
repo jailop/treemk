@@ -191,6 +191,10 @@ void MainWindow::createLayout() {
       WindowManager::instance()->createWindow(info.absolutePath(), path);
     }
   });
+  connect(treeView, &FileSystemTreeView::fileDeleted, this,
+          &MainWindow::onFileDeleted);
+  connect(treeView, &FileSystemTreeView::fileRenamed, this,
+          &MainWindow::onFileRenamed);
 
   leftTabWidget->addTab(treePanel, tr("Files"));
 
