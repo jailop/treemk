@@ -1,2 +1,5 @@
 tmp/
 **/*_autogen/
+**/*.a
+**/*.cmake
+build/
