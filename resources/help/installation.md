@@ -1,32 +1,22 @@
 # Installation
 
-TreeMk is available for Linux, Windows, and macOS.
+## Windows
 
-## Linux
+TreeMk is available as a Windows installer (tested on Windows 10/11):
 
-### Binary Packages
+**Download:** [TreeMk-0.6.0-win64.exe](https://github.com/datainquiry/treemk/releases/latest)
 
-Download from the [releases page](https://github.com/datainquiry/treemk/releases):
-- `.deb` for Ubuntu/Debian
-- `.rpm` for Fedora/RHEL
-- `.pkg.tar.zst` for Arch Linux
+Simply download and run the installer. TreeMk will be added to your Start Menu.
 
-### Building from Source
+## Linux and Other Platforms
 
-```bash
-git clone https://github.com/datainquiry/treemk.git
-cd treemk
-mkdir build && cd build
-cmake ..
-make
-sudo make install
-```
+For Linux and macOS, please refer to the [GitHub repository](https://github.com/datainquiry/treemk) for building instructions and available packages.
 
 ## Requirements
 
 - Qt 6.2 or later
 - CMake 3.16+
-- C++17 compiler
+- C++17 compiler (for building from source)
 
 ## First Run
 

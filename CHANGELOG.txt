@@ -122,15 +122,6 @@ File Management:
 - When a new file is created from a wiki-link, all the needed
   directories, in case they don't exist, are created.
 
-2026-02-12:
+0.6.0 - 2026-02-12
 
-- Drag & drop feature. Drag a file from the file system view to the
-  markdown editor, automatically create a link there.
-- Remove highlighting for task brackets
-- auto-saving doc fixed
-- show/hide line numbers setting is working. issue fixed
-- rename and delete actions in the file panel are reflected in the tab
-  editor
-- help dialog included with user guide
-- javascript libraries included as bundles
-- documentation site
+- bump to new version
