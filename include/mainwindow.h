@@ -50,6 +50,7 @@ private slots:
   void save();
   void saveAs();
   void about();
+  void showUserGuide();
   void toggleSidebar();
   void togglePreview();
   void cycleViewMode();
@@ -180,6 +181,7 @@ private:
   QAction *previewThemeDarkAction;
   QAction *previewThemeSepiaAction;
   QAction *settingsAction;
+  QAction *userGuideAction;
   QAction *aboutAction;
   QAction *aboutQtAction;
   QAction *keyboardShortcutsAction;

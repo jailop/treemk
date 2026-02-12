@@ -2,15 +2,12 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/HIGHLIGHT_THEME">
-<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-<script type="module">
-import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
-mermaid.initialize({ startOnLoad: false, theme: 'MERMAID_THEME' });
-window.mermaid = mermaid;
+<link rel="stylesheet" href="qrc:/css-libs/katex.min.css">
+<link rel="stylesheet" href="qrc:/css-libs/HIGHLIGHT_THEME">
+<script src="qrc:/js/preview-bundle.min.js"></script>
+<script>
+// Initialize mermaid after bundle loads
+window.mermaid.initialize({ startOnLoad: false, theme: 'MERMAID_THEME' });
 </script>
 <style>
 CUSTOM_STYLESHEET
@@ -21,7 +18,7 @@ CUSTOM_STYLESHEET
 <script>
 var savedScrollPercentage = SCROLL_PERCENTAGE;
 document.addEventListener('DOMContentLoaded', function() {
-  renderMathInElement(document.body, {
+  window.renderMathInElement(document.body, {
     delimiters: [
       {left: '$$', right: '$$', display: true},
       {left: '$', right: '$', display: false}
@@ -42,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function() {
         container.innerHTML = '<div style="color: red; padding: 10px; border: 1px solid red; border-radius: 3px;">Mermaid Error: ' + err.message + '</div>';
       });
     } else {
-      hljs.highlightElement(block);
+      window.hljs.highlightElement(block);
     }
   });
   if (savedScrollPercentage > 0) {

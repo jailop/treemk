@@ -103,7 +103,7 @@ void MarkdownPreview::setMarkdownContent(const QString &markdown) {
   }
   QString previewStyleSheet = baseStyleSheet + "\n" + imageStyleSheet + "\n" + taskStyles;
   // Choose highlight.js theme based on current preview scheme
-  QString highlightTheme = "github.min.css";
+  QString highlightTheme = "highlight-github.min.css";
   // Determine if we're in dark mode
   QSettings appSettings(APP_LABEL, APP_LABEL);
   QString previewScheme =
@@ -124,6 +124,11 @@ void MarkdownPreview::setMarkdownContent(const QString &markdown) {
   } else if (previewScheme == "dark") {
     isDark = true;
   }
+  
+  // Set dark theme if needed
+  if (isDark) {
+    highlightTheme = "highlight-github-dark.min.css";
+  }
   // Add custom CSS
   QString customCSS = appSettings.value("preview/customCSS", "").toString();
   previewStyleSheet += "\n" + customCSS;
@@ -143,7 +148,21 @@ void MarkdownPreview::setMarkdownContent(const QString &markdown) {
   fullHtml.replace("SCROLL_PERCENTAGE", QString::number(lastScrollPercentage));
   fullHtml.replace("MARKDOWN_CONTENT", html);
   // Use setHtml with baseUrl to allow loading local images
-  QUrl baseUrl = QUrl::fromLocalFile(basePath + "/");
+  QUrl baseUrl;
+  if (basePath.startsWith("qrc:") || basePath.startsWith(":/")) {
+    // For Qt resources, use QUrl directly
+    QString qrcPath = basePath;
+    if (qrcPath.startsWith(":/")) {
+      qrcPath = "qrc" + qrcPath;
+    }
+    if (!qrcPath.endsWith("/")) {
+      qrcPath += "/";
+    }
+    baseUrl = QUrl(qrcPath);
+  } else {
+    // For local files, use fromLocalFile
+    baseUrl = QUrl::fromLocalFile(basePath + "/");
+  }
   setHtml(fullHtml, baseUrl);
 }
 void MarkdownPreview::setTheme(const QString &theme) { currentTheme = theme; }

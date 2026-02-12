@@ -1,4 +1,5 @@
 #include "filesystemtreeview.h"
+#include "helpdialog.h"
 #include "linkparser.h"
 #include "mainwindow.h"
 #include "markdowneditor.h"
@@ -104,6 +105,7 @@ void MainWindow::createMenus() {
   previewThemeMenu->addAction(previewThemeSepiaAction);
 
   helpMenu = menuBar()->addMenu(tr("&Help"));
+  helpMenu->addAction(userGuideAction);
   helpMenu->addAction(keyboardShortcutsAction);
   helpMenu->addSeparator();
   helpMenu->addAction(aboutAction);
@@ -547,6 +549,8 @@ void MainWindow::applySettings() {
 }
 
 void MainWindow::showKeyboardShortcuts() {
-  ShortcutsDialog dialog(this);
-  dialog.exec();
+  HelpDialog *helpDialog = new HelpDialog(this);
+  helpDialog->showTopic("keyboard-shortcuts");
+  helpDialog->setAttribute(Qt::WA_DeleteOnClose);
+  helpDialog->show();
 }

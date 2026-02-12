@@ -768,12 +768,6 @@ void MarkdownEditor::keyPressEvent(QKeyEvent *event) {
     } else if (event->text() == "{") {
       closingChar = "}";
       shouldClose = true;
-    } else if (event->text() == "\"") {
-      closingChar = "\"";
-      shouldClose = true;
-    } else if (event->text() == "'") {
-      closingChar = "'";
-      shouldClose = true;
     } else if (event->text() == "`") {
       closingChar = "`";
       shouldClose = true;
@@ -800,8 +794,6 @@ void MarkdownEditor::keyPressEvent(QKeyEvent *event) {
     if ((event->text() == ")" && nextChar == ")") ||
         (event->text() == "]" && nextChar == "]") ||
         (event->text() == "}" && nextChar == "}") ||
-        (event->text() == "\"" && nextChar == "\"") ||
-        (event->text() == "'" && nextChar == "'") ||
         (event->text() == "`" && nextChar == "`")) {
       cursor.movePosition(QTextCursor::Right, QTextCursor::MoveAnchor);
       setTextCursor(cursor);

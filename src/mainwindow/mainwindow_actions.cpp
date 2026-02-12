@@ -460,12 +460,19 @@ void MainWindow::createActions() {
   connect(settingsAction, &QAction::triggered, this, &MainWindow::openSettings);
 
   keyboardShortcutsAction = new QAction(tr("&Keyboard Shortcuts"), this);
+  keyboardShortcutsAction->setShortcut(QKeySequence(tr("F1")));
   keyboardShortcutsAction->setStatusTip(
       tr("Show keyboard shortcuts reference"));
   keyboardShortcutsAction->setToolTip(
       tr("Display all available keyboard shortcuts"));
   connect(keyboardShortcutsAction, &QAction::triggered, this,
           &MainWindow::showKeyboardShortcuts);
+
+  userGuideAction = new QAction(tr("User &Guide"), this);
+  userGuideAction->setShortcut(QKeySequence(tr("Ctrl+F1")));
+  userGuideAction->setStatusTip(tr("Open the user guide"));
+  userGuideAction->setToolTip(tr("View the TreeMk user guide"));
+  connect(userGuideAction, &QAction::triggered, this, &MainWindow::showUserGuide);
 
    aboutAction = new QAction(tr("&About"), this);
    aboutAction->setStatusTip(tr("Show the application's About box"));

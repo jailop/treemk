@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include "helpdialog.h"
 #include <QMessageBox>
 
 void MainWindow::about() {
@@ -9,4 +10,10 @@ void MainWindow::about() {
          "<p>A wiki-markdown text editor, "
          "designed for organizing and managing interconnected notes.</p>"
          "<p>© 2025-2026 - <mailto:jaime.lopez@datainquiry.dev>Jaime Lopez</a></p>"));
+}
+
+void MainWindow::showUserGuide() {
+  HelpDialog *helpDialog = new HelpDialog(this);
+  helpDialog->setAttribute(Qt::WA_DeleteOnClose);
+  helpDialog->show();
 }

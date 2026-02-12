@@ -34,7 +34,7 @@ MainWindow::MainWindow(QWidget *parent)
       cycleViewModeAction(nullptr),
       previewThemeLightAction(nullptr), previewThemeDarkAction(nullptr),
       previewThemeSepiaAction(nullptr), settingsAction(nullptr),
-      aboutAction(nullptr), aboutQtAction(nullptr),
+      userGuideAction(nullptr), aboutAction(nullptr), aboutQtAction(nullptr),
       keyboardShortcutsAction(nullptr), currentViewMode(ViewMode_Both) {
   settings = new QSettings(APP_LABEL, APP_LABEL, this);
   linkParser = new LinkParser();

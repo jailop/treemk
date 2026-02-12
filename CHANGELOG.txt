@@ -131,3 +131,5 @@ File Management:
 - show/hide line numbers setting is working. issue fixed
 - rename and delete actions in the file panel are reflected in the tab
   editor
+- help dialog included with user guide
+- javascript libraries included as bundles
