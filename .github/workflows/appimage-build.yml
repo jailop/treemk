@@ -1,4 +1,4 @@
-name: RPM Build and Release (v2)
+name: AppImage Build and Release
 
 on:
   workflow_dispatch:
@@ -15,26 +15,14 @@ permissions:
   contents: write
   
 jobs:
-  build-rpm:
-    runs-on: ubuntu-latest
-    container:
-      image: fedora:latest
+  build-appimage:
+    runs-on: ubuntu-20.04
     
     steps:
-      - name: Install dependencies
-        run: |
-          dnf install -y git cmake gcc-c++ rpm-build rpmdevtools \
-                         qt6-qtbase-devel qt6-qtwebengine-devel \
-                         qt6-qtsvg-devel md4c-devel
-      
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      
-      - name: Fix git ownership (container issue)
-        run: |
-          git config --global --add safe.directory /__w/treemk/treemk
       
       - name: Detect version
         id: version
@@ -55,23 +43,89 @@ jobs:
           echo "VERSION=$version" >> $GITHUB_ENV
           echo "version=$version" >> $GITHUB_OUTPUT
       
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '6.5.3'
+          host: 'linux'
+          target: 'desktop'
+          arch: 'gcc_64'
+          modules: 'qtwebengine qtwebchannel qtpositioning'
+          cache: true
+      
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+              cmake \
+              build-essential \
+              libmd4c-dev \
+              libmd4c-html0-dev \
+              pkg-config \
+              file \
+              libfuse2 \
+              wget
+      
+      - name: Download linuxdeploy and AppImage plugin
+        run: |
+          wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+          wget https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage
+          chmod +x linuxdeploy*.AppImage
+      
       - name: Configure CMake
         run: |
           cmake -B build \
                 -DCMAKE_BUILD_TYPE=Release \
                 -DCMAKE_INSTALL_PREFIX=/usr \
-                -DCMAKE_INSTALL_LIBDIR=lib64
+                -DBUILD_TESTS=OFF
       
-      - name: Build RPM package using script
+      - name: Build
+        run: cmake --build build --parallel
+      
+      - name: Install to AppDir
         run: |
-          chmod +x build-rpm.sh
-          VERSION=${{ env.VERSION }} ./build-rpm.sh
+          mkdir -p AppDir
+          DESTDIR=$PWD/AppDir cmake --install build
+      
+      - name: Copy additional files
+        run: |
+          # Ensure desktop file is in the right place
+          mkdir -p AppDir/usr/share/applications
+          cp resources/treemk.desktop AppDir/usr/share/applications/
+          
+          # Ensure icon is in the right place
+          mkdir -p AppDir/usr/share/icons/hicolor/256x256/apps
+          cp resources/treemk.png AppDir/usr/share/icons/hicolor/256x256/apps/
+          
+          # Create a symlink for the icon at the AppDir root (required by AppImage)
+          cp resources/treemk.png AppDir/treemk.png
+      
+      - name: Create AppImage
+        env:
+          VERSION: ${{ env.VERSION }}
+        run: |
+          export QMAKE=$Qt6_DIR/bin/qmake
+          export LD_LIBRARY_PATH=$Qt6_DIR/lib:$LD_LIBRARY_PATH
+          
+          ./linuxdeploy-x86_64.AppImage \
+              --appdir AppDir \
+              --plugin qt \
+              --output appimage \
+              --desktop-file=AppDir/usr/share/applications/treemk.desktop \
+              --icon-file=AppDir/usr/share/icons/hicolor/256x256/apps/treemk.png
+          
+          # Rename to include version
+          mv TreeMk-*.AppImage TreeMk-${{ env.VERSION }}-x86_64.AppImage || \
+          mv treemk-*.AppImage TreeMk-${{ env.VERSION }}-x86_64.AppImage || true
+          
+          # List created file
+          ls -lh TreeMk-*.AppImage
       
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: TreeMk-RPM-Package
-          path: treemk-*.rpm
+          name: TreeMk-AppImage
+          path: TreeMk-*.AppImage
           retention-days: 30
       
       - name: Get release info
@@ -108,19 +162,19 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ env.RELEASE_TAG }}
-          files: treemk-*.rpm
+          files: TreeMk-*.AppImage
           fail_on_unmatched_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Summary
         run: |
-          echo "### ✅ RPM Build Complete!" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ AppImage Build Complete!" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Version:** ${{ env.VERSION }}" >> $GITHUB_STEP_SUMMARY
           echo "**Release:** ${{ env.RELEASE_TAG }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Created Package:**" >> $GITHUB_STEP_SUMMARY
-          ls -1 treemk-*.rpm | sed 's/^/- /' >> $GITHUB_STEP_SUMMARY
+          ls -1 TreeMk-*.AppImage | sed 's/^/- /' >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "The RPM package has been uploaded to the release." >> $GITHUB_STEP_SUMMARY
+          echo "The AppImage has been uploaded to the release." >> $GITHUB_STEP_SUMMARY
