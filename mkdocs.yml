@@ -7,7 +7,7 @@ repo_name: jailop/treemk
 edit_uri: edit/main/docs/
 
 theme:
-  name: readthedocs
+  name: material
   palette:
     # Light mode
     - media: "(prefers-color-scheme: light)"
@@ -64,6 +64,8 @@ markdown_extensions:
       permalink: true
 
 extra_javascript:
+  - https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js
+  - javascripts/mermaid-init.js
   - javascripts/mathjax.js
   - https://polyfill.io/v3/polyfill.min.js?features=es6
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
