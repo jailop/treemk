@@ -45,69 +45,14 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 
 set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_SOURCE_DIR}/ui)
 
-set(SOURCES
-    src/main.cpp
-    src/mainwindow.cpp
-    src/mainwindow_about.cpp
-    src/mainwindow_actions.cpp
-    src/mainwindow_file.cpp
-    src/mainwindow_edit.cpp
-    src/mainwindow_insert.cpp
-    src/mainwindow_export.cpp
-    src/mainwindow_tabs.cpp
-    src/mainwindow_view.cpp
-    src/mainwindow_ui.cpp
-    src/tabeditor.cpp
-    src/filesystemtreeview.cpp
-    src/markdowneditor.cpp
-    src/markdownhighlighter.cpp
-    src/markdownpreview.cpp
-    src/linkparser.cpp
-    src/searchdialog.cpp
-    src/settingsdialog.cpp
-    src/settingsdialog_aiassistant.cpp
-    src/formuladialog.cpp
-    src/quickopendialog.cpp
-    src/outlinepanel.cpp
-    src/shortcutsdialog.cpp
-    src/shortcutmanager.cpp
-    src/thememanager.cpp
-    src/aiassistdialog.cpp
-    src/systempromptsdialog.cpp
-    src/logic/mainfilelocator.cpp
-    src/logic/aiprovider.cpp
-    src/logic/ollamaprovider.cpp
-    src/logic/openaiprovider.cpp
-    src/logic/systemprompts.cpp
-    src/managers/workspacemanager.cpp
-    src/managers/windowmanager.cpp
+# Automatically collect source files
+file(GLOB_RECURSE SOURCES
+    "${CMAKE_SOURCE_DIR}/src/*.cpp"
 )
 
-set(HEADERS
-    include/mainwindow.h
-    include/tabeditor.h
-    include/filesystemtreeview.h
-    include/markdowneditor.h
-    include/markdownhighlighter.h
-    include/markdownpreview.h
-    include/linkparser.h
-    include/searchdialog.h
-    include/settingsdialog.h
-    include/formuladialog.h
-    include/quickopendialog.h
-    include/outlinepanel.h
-    include/shortcutsdialog.h
-    include/shortcutmanager.h
-    include/thememanager.h
-    include/aiassistdialog.h
-    include/systempromptsdialog.h
-    include/logic/mainfilelocator.h
-    include/logic/aiprovider.h
-    include/logic/ollamaprovider.h
-    include/logic/openaiprovider.h
-    include/logic/systemprompts.h
-    include/managers/workspacemanager.h
-    include/managers/windowmanager.h
+# Automatically collect header files
+file(GLOB_RECURSE HEADERS
+    "${CMAKE_SOURCE_DIR}/include/*.h"
 )
 
 set(RESOURCES

@@ -3,6 +3,7 @@
 #include "6YEA5652QU/moc_filesystemtreeview.cpp"
 #include "6YEA5652QU/moc_formuladialog.cpp"
 #include "S7XL32JGZH/moc_ollamaprovider.cpp"
+#include "S7XL32JGZH/moc_openaiprovider.cpp"
 #include "6YEA5652QU/moc_mainwindow.cpp"
 #include "DYM3NKFDCS/moc_windowmanager.cpp"
 #include "DYM3NKFDCS/moc_workspacemanager.cpp"

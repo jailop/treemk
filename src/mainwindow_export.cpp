@@ -1,7 +1,7 @@
 #include "mainwindow.h"
 #include "markdowneditor.h"
 #include "tabeditor.h"
-#include <QFile>
+#include "fileutils.h"
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QMessageBox>
@@ -183,16 +183,13 @@ void MainWindow::exportToPlainText() {
     return;
   }
 
-  QFile file(outputPath);
-  if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-    QMessageBox::warning(this, tr("Export Failed"),
-                         tr("Could not open file for writing."));
+  FileUtils::FileCreationResult result = 
+      FileUtils::createFileWithDirectories(outputPath, tab->editor()->toPlainText());
+  
+  if (!result.success) {
+    QMessageBox::warning(this, tr("Export Failed"), result.errorMessage);
     return;
   }
-
-  QTextStream out(&file);
-  out << tab->editor()->toPlainText();
-  file.close();
 
   statusBar()->showMessage(tr("Exported to plain text: %1").arg(outputPath),
                            3000);

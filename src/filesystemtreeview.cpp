@@ -1,8 +1,8 @@
 #include "filesystemtreeview.h"
+#include "fileutils.h"
 #include <QContextMenuEvent>
 #include <QDebug>
 #include <QDir>
-#include <QFile>
 #include <QFileInfo>
 #include <QHeaderView>
 #include <QInputDialog>
@@ -308,12 +308,13 @@ void FileSystemTreeView::createNewFile() {
     return;
   }
 
-  QFile file(filePath);
-  if (!file.open(QIODevice::WriteOnly)) {
-    QMessageBox::warning(this, tr("Error"), tr("Failed to create file!"));
+  FileUtils::FileCreationResult result = 
+      FileUtils::createFileWithDirectories(filePath, QString());
+  
+  if (!result.success) {
+    QMessageBox::warning(this, tr("Error"), result.errorMessage);
     return;
   }
-  file.close();
 }
 
 void FileSystemTreeView::createNewFolder() {

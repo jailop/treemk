@@ -116,3 +116,8 @@ AI Assistance:
 File Management:
 
 - "Save All" button in close dialog when multiple documents are modified
+
+2026-02-11:
+
+- When a new file is created from a wiki-link, all the needed
+  directories, in case they don't exist, are created.

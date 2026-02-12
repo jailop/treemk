@@ -2,7 +2,7 @@
 #include "markdowneditor.h"
 #include "markdownpreview.h"
 #include "outlinepanel.h"
-#include <QFile>
+#include "fileutils.h"
 #include <QFileInfo>
 #include <QScrollBar>
 #include <QSplitter>
@@ -111,15 +111,12 @@ bool TabEditor::saveFile() {
 }
 
 bool TabEditor::saveFileAs(const QString &filePath) {
-  QFile file(filePath);
-  if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+  FileUtils::FileCreationResult result = 
+      FileUtils::createFileWithDirectories(filePath, m_editor->toPlainText());
+  
+  if (!result.success) {
     return false;
   }
-
-  QTextStream out(&file);
-  out.setEncoding(QStringConverter::Utf8);
-  out << m_editor->toPlainText();
-  file.close();
 
   m_filePath = filePath;
   m_editor->setCurrentFilePath(filePath);
