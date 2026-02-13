@@ -5,6 +5,7 @@ Welcome! This guide will help you start using TreeMk effectively.
 ## First Steps
 
 ### 1. Open a Folder
+
 TreeMk works with folders containing your Markdown notes.
 
 - Go to **File → Open Folder** (or press **Ctrl+O**)
@@ -31,19 +32,24 @@ When you **Ctrl+Click** on the link, TreeMk opens that note. If the file doesn't
 ## Understanding the Interface
 
 ### Left Panel (Files & Outline)
+
 - **Files Tab**: Browse your folder structure
 - **Outline Tab**: Navigate headings in the current document
 - **Backlinks Tab**: See which notes link to the current one
 
 ### Center Panel (Editor)
+
 The main editor supports:
+
 - Multiple tabs for different notes
 - Line numbers
 - Syntax highlighting
 - Word prediction
 
 ### Right Panel (Preview)
+
 Live preview of your formatted Markdown, including:
+
 - Rendered text with proper formatting
 - Code blocks with syntax highlighting
 - Mathematical formulas
@@ -60,6 +66,7 @@ Toggle the preview with **Ctrl+R** or from the View menu.
 
 **Bold text**
 *Italic text*
+~~strikeout text~~
 
 - Bullet list item
 - Another item

@@ -10,6 +10,26 @@ Your notes and documents are valuable. They shouldn't be locked inside a proprie
 
 TreeMk simply provides the tools to make working with these files more pleasant: wiki-style linking, live preview, full-text search, and intelligent organization—all without moving your files anywhere.
 
+## Download
+
+The current version is 0.6.0:
+
+- [Windows x64_86 Installer](https://github.com/jailop/treemk/releases/download/v0.6.0/TreeMk-0.6.0-Setup.exe)
+- [Windows x64_86 Portable](https://github.com/jailop/treemk/releases/download/v0.6.0/TreeMk-0.6.0-Windows-x64-Portable.zip)
+- [MacOS arm64](https://github.com/jailop/treemk/releases/download/v0.6.0/TreeMk-0.6.0-macOS-arm64.dmg)*
+- [Linux x86_64 AppImage](https://github.com/jailop/treemk/releases/download/v0.6.0/TreeMk-0.6.0-x86_64.AppImage) 
+- [Linux x86_64 Deb](https://github.com/jailop/treemk/releases/download/v0.6.0/treemk_0.6.0_amd64.deb)
+
+(*) MacOS users, take care to bypass the security gatekeeper for this app.
+
+Archlinux users:
+
+```
+git clone https://github.com/jailop/treemk.git
+cd treemk
+makepkg -si
+```
+  
 ## Documentation
 
 ### Getting Started
@@ -33,21 +53,26 @@ TreeMk simply provides the tools to make working with these files more pleasant:
 ## What You Get
 
 ### 🗂️ File System Integration
+
 TreeMk provides an integrated file explorer alongside your editor. Navigate your folders, create new files, rename or delete—all while keeping your existing file organization. No import needed, no export required.
 
 ### 🔗 Wiki-Style Linking
+
 Connect related notes using simple `[[note-name]]` syntax. TreeMk creates clickable links between documents and shows you backlinks—which other notes reference the current one. Your knowledge base grows organically without forced hierarchies.
 
 ### 📝 Focused Editor
+
 A clean editing environment with line numbers, syntax highlighting, auto-completion, and smart formatting. Word prediction learns from your content. The AI assistant (via Ollama or OpenAI) helps when you need it.
 
 ### 📊 Rich Content Rendering
+
 - **LaTeX math formulas** for equations and scientific notation
 - **Syntax-highlighted code blocks** for technical documentation  
 - **Mermaid diagrams** for flowcharts and visualizations
 - Live preview that updates as you type
 
 ### 🔍 Smart Navigation
+
 Full-text search across all files, document outline for quick heading navigation, backlinks panel, and quick-open dialog. Find what you need, when you need it.
 
 ## Getting Help
@@ -62,4 +87,4 @@ Full-text search across all files, document outline for quick heading navigation
 TreeMk is built on a simple principle: your files should remain yours, accessible with any tool, stored wherever you choose. We provide the convenience of an integrated workspace without the lock-in of proprietary formats or databases.
 
 **License**: GPL-3.0  
-**Website**: https://github.com/datainquiry/treemk
+**Website**: https://github.com/jailop/treemk

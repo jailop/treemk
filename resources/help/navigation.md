@@ -5,6 +5,7 @@ TreeMk provides powerful navigation features to help you organize and explore yo
 ## Wiki-Style Links
 
 ### Creating Links
+
 Create links between your notes using double brackets:
 
 ```markdown
@@ -12,11 +13,13 @@ Create links between your notes using double brackets:
 ```
 
 ### Following Links
+
 - **Ctrl+Click** on a link to open the target note
 - If the file doesn't exist, TreeMk will ask if you want to create it
 - Links automatically adapt to your folder structure
 
 ### Link Syntax Variations
+
 ```markdown
 [[simple-link]]                    # Links to simple-link.md
 [[folder/note]]                    # Links to file in subfolder
@@ -32,12 +35,14 @@ Create links between your notes using double brackets:
 
 
 The left panel shows your folder structure:
+
 - Browse folders and files
 - Right-click for context menu (New, Rename, Delete)
 - Drag files to the editor to create links
 - **F5** to refresh the tree
 
 ### Quick Operations
+
 - **F2**: Rename selected file
 - **Delete**: Delete selected file (with confirmation)
 - **Double-click**: Open file in editor
@@ -45,6 +50,7 @@ The left panel shows your folder structure:
 - **Drag & Drop**: Drag files from tree to editor to create `[[wiki-links]]`
 
 ### Clipboard Support
+
 - Paste images directly into notes with **Ctrl+V**
 - Images are auto-saved to the document folder
 - Automatic filename generation with timestamps
@@ -53,13 +59,17 @@ The left panel shows your folder structure:
 ## Outline Panel
 
 ### Document Structure
+
 The Outline tab shows all headings in the current document:
+
 - Click any heading to jump to that section
 - Hierarchical view of document structure
 - Auto-updates as you edit
 
 ### Heading Levels
+
 TreeMk recognizes all Markdown heading levels:
+
 - `# H1` - Main document title
 - `## H2` - Major sections
 - `### H3` - Subsections
@@ -68,15 +78,18 @@ TreeMk recognizes all Markdown heading levels:
 ## Backlinks
 
 ### What Are Backlinks?
+
 Backlinks show all notes that link to the current document.
 
 ### Using Backlinks
+
 1. Open any note
 2. Switch to the **Backlinks** tab
 3. See all notes that reference this one
 4. Click any backlink to open that note
 
 ### Benefits
+
 - Discover connections between notes
 - Find all references to a topic
 - Navigate your knowledge graph
@@ -85,14 +98,18 @@ Backlinks show all notes that link to the current document.
 ## Quick Open
 
 ### Fast File Access
+
 Press **Ctrl+P** to open the Quick Open dialog:
+
 - Start typing a filename
 - Fuzzy search matches parts of names
 - Arrow keys to select
 - **Enter** to open
 
 ### Fuzzy Matching
+
 Type any part of the filename:
+
 - `gett` matches "getting-started.md"
 - `key sho` matches "keyboard-shortcuts.md"
 - Works with partial matches
@@ -100,13 +117,16 @@ Type any part of the filename:
 ## Search in Files
 
 ### Full-Text Search
+
 Press **Ctrl+Shift+F** to search across all files:
+
 - Enter search term
 - See all matches with context
 - Click any result to open that file
 - Search is case-insensitive by default
 
 ### Search Features
+
 - Preview matching lines
 - Jump directly to matches
 - Search entire workspace
@@ -115,13 +135,16 @@ Press **Ctrl+Shift+F** to search across all files:
 ## Tab Navigation
 
 ### Multiple Tabs
+
 Work with multiple notes simultaneously:
+
 - **Ctrl+Tab**: Next tab
 - **Ctrl+Shift+Tab**: Previous tab
 - **Ctrl+W**: Close current tab
 - **Ctrl+Shift+T**: Reopen closed tab
 
 ### Tab Management
+
 - Tabs remember their position
 - Session restoration on restart
 - Close tabs from other folders when switching workspaces
@@ -130,7 +153,9 @@ Work with multiple notes simultaneously:
 ## Recent Folders
 
 ### Workspace Switching
+
 Access recently opened folders:
+
 - **File → Recent Folders** menu
 - Quick switching between projects
 - Recently used folders at the top

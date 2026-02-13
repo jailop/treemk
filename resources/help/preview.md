@@ -10,25 +10,30 @@ TreeMk's preview panel shows your Markdown rendered in real-time with support fo
 ## Live Preview
 
 ### Real-Time Rendering
+
 As you type in the editor, the preview updates automatically:
 - Configurable refresh rate (100-2000ms)
 - Smooth scrolling synchronized with editor
 - Theme-aware styling
 
 ### Toggle Preview
+
 - **Ctrl+R**: Toggle preview panel on/off
 - **Ctrl+\\**: Cycle through view modes (editor only, preview only, both)
 
 ## Markdown Rendering
 
 ### Basic Formatting
+
 All standard Markdown is supported:
+
 - **Bold** with `**text**` or `__text__`
 - *Italic* with `*text*` or `_text_`
 - `Code` with backticks
 - ~~Strikethrough~~ with `~~text~~`
 
 ### Headings
+
 ```markdown
 # Heading 1
 ## Heading 2
@@ -39,6 +44,7 @@ All standard Markdown is supported:
 ```
 
 ### Lists
+
 ```markdown
 - Bullet list
   - Nested item
@@ -54,6 +60,7 @@ All standard Markdown is supported:
 ```
 
 ### Links and Images
+
 ```markdown
 [External link](https://example.com)
 [[Internal wiki link]]
@@ -63,10 +70,13 @@ All standard Markdown is supported:
 ## Mathematical Formulas
 
 ### LaTeX Support
+
 TreeMk renders LaTeX formulas using KaTeX or MathJax.
 
 #### Inline Formulas
+
 Use single dollar signs for inline math:
+
 ```markdown
 The formula $E = mc^2$ is Einstein's famous equation.
 ```
@@ -74,7 +84,9 @@ The formula $E = mc^2$ is Einstein's famous equation.
 Result: The formula $E = mc^2$ is Einstein's famous equation.
 
 #### Block Formulas
+
 Use double dollar signs for display math:
+
 ```markdown
 $$
 \int_{-\infty}^{\infty} e^{-x^2} dx = \sqrt{\pi}
@@ -82,6 +94,7 @@ $$
 ```
 
 Result:
+
 $$
 \int_{-\infty}^{\infty} e^{-x^2} dx = \sqrt{\pi}
 $$
@@ -89,11 +102,13 @@ $$
 ### Common Formula Examples
 
 **Quadratic Formula:**
+
 ```markdown
 $$x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$$
 ```
 
 **Matrix:**
+
 ```markdown
 $$
 \begin{bmatrix}
@@ -104,6 +119,7 @@ $$
 ```
 
 **Sum Notation:**
+
 ```markdown
 $$\sum_{i=1}^{n} i = \frac{n(n+1)}{2}$$
 ```
@@ -111,6 +127,7 @@ $$\sum_{i=1}^{n} i = \frac{n(n+1)}{2}$$
 ## Code Blocks
 
 ### Syntax Highlighting
+
 Code blocks support syntax highlighting for many languages:
 
 \`\`\`python
@@ -133,17 +150,10 @@ int main() {
 }
 \`\`\`
 
-### Supported Languages
-- Python, JavaScript, TypeScript
-- C, C++, C#, Java
-- Rust, Go, Ruby, PHP
-- HTML, CSS, SQL
-- Markdown, JSON, YAML
-- And many more...
-
 ## Tables
 
 ### Markdown Tables
+
 Create tables with pipes and hyphens:
 
 ```markdown
@@ -154,6 +164,7 @@ Create tables with pipes and hyphens:
 ```
 
 ### Alignment
+
 ```markdown
 | Left | Center | Right |
 |:-----|:------:|------:|
@@ -164,6 +175,7 @@ Create tables with pipes and hyphens:
 ## Blockquotes
 
 ### Quote Formatting
+
 ```markdown
 > This is a blockquote.
 > It can span multiple lines.
@@ -172,7 +184,9 @@ Create tables with pipes and hyphens:
 ```
 
 ### Callouts (with custom CSS)
+
 Use blockquotes with special formatting for callouts:
+
 ```markdown
 > **Note:** This is an informational callout.
 
@@ -184,7 +198,9 @@ Use blockquotes with special formatting for callouts:
 ## File Inclusion
 
 ### Embedding Content
+
 Include content from other files:
+
 ```markdown
 [[!filename]]
 ```
@@ -192,35 +208,27 @@ Include content from other files:
 When the preview renders, it will embed the content of that file inline.
 
 ### Use Cases
+
 - Reusable snippets
 - Template inclusion
 - Modular documentation
 - Shared content blocks
 
-## Theme Support
-
-### Preview Themes
-Choose from multiple preview themes:
-- **Light**: Clean, bright theme for daytime use
-- **Dark**: Easy on the eyes for night work
-- **Sepia**: Warm, paper-like reading experience
-
-### Changing Themes
-- **View → Preview Theme** menu
-- Theme persists across sessions
-- Synchronized with editor theme (optional)
-
 ## Custom Styling
 
 ### Custom CSS
+
 Load a custom CSS file to style your preview:
+
 1. Go to **Edit → Preferences**
 2. Navigate to **Preview** section
 3. Browse for your custom CSS file
 4. CSS applies immediately
 
 ### CSS File Location
+
 Place custom CSS anywhere, but consider:
+
 - Project-specific: in your workspace folder
 - Global: in a dedicated styles folder
 - Version control: include with your notes
@@ -228,19 +236,23 @@ Place custom CSS anywhere, but consider:
 ## Preview Settings
 
 ### Configurable Options
+
 Access via **Edit → Preferences**:
 
 **Refresh Rate:**
+
 - 100-2000 milliseconds
 - Lower = more responsive
 - Higher = less CPU usage
 
 **Font Size:**
+
 - 8-72 points
 - Independent from editor font
 - Zoom with Ctrl+Plus/Minus
 
 **Custom CSS:**
+
 - Optional styling override
 - Applies on top of theme
 - Full CSS3 support
@@ -257,45 +269,52 @@ Access via **Edit → Preferences**:
 ## Troubleshooting
 
 ### Formula Not Rendering
+
 - Check for balanced delimiters ($..$ or $$...$$)
 - Verify LaTeX syntax is correct
 - Ensure formulas are enabled in settings
 
 ### Image Not Showing
+
 - Check file path is correct
 - Use relative paths from document location
 - Verify image file exists
 
 ### Slow Preview
+
 - Increase refresh rate in settings
 - Disable features you don't need
 - Consider document size
 
 ## Export Features
 
-TreeMk can export your notes to multiple formats using Pandoc.
+TreeMk can export your notes to multiple formats using [Pandoc](https://pandoc.org/).
 
 ### Supported Formats
 
 **HTML Export**
+
 - Self-contained HTML file
 - Includes CSS styling
 - Preserves syntax highlighting
 - Mermaid diagrams (with mermaid-filter)
 
 **PDF Export**
+
 - Professional document layout
 - Code syntax highlighting
 - LaTeX formula rendering
 - Requires Pandoc with PDF support
 
 **DOCX Export**
+
 - Microsoft Word format
 - Preserves formatting
 - Tables and lists
 - Code blocks
 
 **Plain Text**
+
 - Simple text export
 - No formatting
 - Quick and lightweight
@@ -336,6 +355,7 @@ If `mermaid-filter` is in your PATH, TreeMk will automatically use it during exp
 ### Export Options
 
 Access **Edit → Preferences → Export** to configure:
+
 - Default export format
 - PDF engine (pdflatex, xelatex, etc.)
 - Custom Pandoc options
@@ -348,9 +368,3 @@ Access **Edit → Preferences → Export** to configure:
 3. **Relative Image Paths**: Use relative paths for images
 4. **Check Formulas**: Ensure LaTeX renders correctly in preview
 5. **Code Language**: Specify language in code blocks for syntax highlighting
-
-## Next Steps
-
-- Explore **[Editor Features](editor.md)** for editing
-- Learn **[Navigation](navigation.md)** techniques
-- Return to **[User Guide](index.md)** home

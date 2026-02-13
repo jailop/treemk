@@ -4,10 +4,11 @@ Thank you for your interest in contributing to TreeMk!
 
 ## Ways to Contribute
 
-- 🐛 Report bugs
-- 💡 Suggest features  
-- 📝 Improve documentation
-- 💻 Contribute code
+- Report bugs
+- Polish the user interface
+- Improve documentation
+
+At the moment, our priority is focused on current features: fixing bugs, improving the interface and making the user experience more enjoyable.
 
 ## Getting Started
 
@@ -29,7 +30,6 @@ make
 
 ## Code Style
 
-- Use 2 spaces for indentation
 - Follow Qt naming conventions
 - Add tests for new features
 - Update documentation
@@ -50,4 +50,4 @@ make
 
 By contributing, you agree your contributions will be licensed under GPL-3.0.
 
-Thank you for helping make TreeMk better! 🎉
+Thank you for helping make TreeMk better!

@@ -42,5 +42,6 @@
         <file>help/ai-assistant.md</file>
         <file>help/keyboard-shortcuts.md</file>
         <file>help/images/filepanel.png</file>
+        <file>help/images/aiassistant.png</file>
     </qresource>
 </RCC>
