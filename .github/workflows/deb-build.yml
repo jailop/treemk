@@ -66,6 +66,7 @@ jobs:
               libqt6svg6-dev \
               libmd4c-dev \
               libmd4c-html0-dev \
+              libxcb-cursor0 \
               pkg-config \
               debhelper \
               file
