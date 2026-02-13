@@ -64,6 +64,7 @@ jobs:
               pkg-config \
               file \
               libfuse2 \
+              libxcb-cursor0 \
               wget
       
       - name: Download linuxdeploy and AppImage plugin
