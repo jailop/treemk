@@ -125,3 +125,8 @@ File Management:
 0.6.0 - 2026-02-12
 
 - bump to new version
+
+2026-02-13:
+
+- tab switching actions implemented
+- new main menu: Go

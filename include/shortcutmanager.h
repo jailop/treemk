@@ -39,7 +39,13 @@ public:
     DeleteWordLeft,
     DeleteWordRight,
     DeleteToStartOfLine,
-    DeleteToEndOfLine
+    DeleteToEndOfLine,
+
+    // Tabs
+    SwitchToNextTab,
+    SwitchToPreviousTab,
+    CloseCurrentTab,
+    CloseAllTabs
   };
   Q_ENUM(Action)
 

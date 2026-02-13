@@ -206,6 +206,9 @@ void MainWindow::updatePreview() {
   }
 }
 
+/* TODO to be removed. theme is general for all the app, not just
+ * preview.
+ *
 void MainWindow::setPreviewThemeLight() {
   TabEditor *tab = currentTabEditor();
   if (tab) {
@@ -229,6 +232,7 @@ void MainWindow::setPreviewThemeSepia() {
     settings->setValue("previewTheme", "sepia");
   }
 }
+*/
 
 void MainWindow::onDocumentModified() {
   TabEditor *tab = currentTabEditor();
