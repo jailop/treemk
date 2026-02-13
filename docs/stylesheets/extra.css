@@ -1,0 +1,11 @@
+/* Additional styles for TreeMk documentation */
+
+:root {
+  --md-primary-fg-color: #2196F3;
+  --md-accent-fg-color: #FF9800;
+}
+
+.md-typeset kbd {
+  box-shadow: 0 0 0 0.05rem var(--md-default-fg-color--lighter),
+              0 0.1rem 0 0.05rem var(--md-default-fg-color--lighter);
+}
