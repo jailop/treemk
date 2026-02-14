@@ -2069,77 +2069,101 @@
 <p>Think of it as a text editor that understands connections between notes, with a file tree always visible on the side. No import, no export, no database—just Markdown files where they already live.</p>
 <h3 id="why-use-treemk-alongside-obsidian">Why use TreeMk alongside Obsidian?<a class="headerlink" href="#why-use-treemk-alongside-obsidian" title="Permanent link">&para;</a></h3>
 <p>TreeMk isn't designed to replace Obsidian—it's designed to complement existing tools.</p>
-<p><strong>TreeMk works alongside other editors:</strong>
-- Edit project documentation in TreeMk while coding in VS Code
-- Keep technical notes in TreeMk, personal knowledge base in Obsidian
-- Use TreeMk for work files in their project folders, Obsidian for personal vault
-- Switch between tools based on the task at hand</p>
-<p><strong>TreeMk's specific strengths:</strong>
-- No vault requirement—works with files in existing project structures
-- Integrated file tree shows actual directory structure
-- Simpler, focused interface without feature overload
-- Direct file system access without import/export steps</p>
-<p><strong>When TreeMk fits best:</strong>
-- Documentation alongside code repositories
-- Technical notes that need to stay with project files
-- Situations where vault-based organization doesn't make sense
-- Users who value simplicity and file system transparency</p>
+<p><strong>TreeMk works alongside other editors:</strong></p>
+<ul>
+<li>Edit project documentation in TreeMk while coding in VS Code</li>
+<li>Keep technical notes in TreeMk, personal knowledge base in Obsidian</li>
+<li>Use TreeMk for work files in their project folders, Obsidian for personal vault</li>
+<li>Switch between tools based on the task at hand</li>
+</ul>
+<p><strong>TreeMk's specific strengths:</strong></p>
+<ul>
+<li>No vault requirement—works with files in existing project structures</li>
+<li>Integrated file tree shows actual directory structure</li>
+<li>Simpler, focused interface without feature overload</li>
+<li>Direct file system access without import/export steps</li>
+</ul>
+<p><strong>When TreeMk fits best:</strong></p>
+<ul>
+<li>Documentation alongside code repositories</li>
+<li>Technical notes that need to stay with project files</li>
+<li>Situations where vault-based organization doesn't make sense</li>
+<li>Users who value simplicity and file system transparency</li>
+</ul>
 <p>TreeMk doesn't compete with Obsidian's graph view, plugins, or mobile apps. It solves a different problem: editing Markdown files where they naturally live, without reorganizing into a vault.</p>
 <h3 id="how-does-treemk-work-with-vs-code">How does TreeMk work with VS Code?<a class="headerlink" href="#how-does-treemk-work-with-vs-code" title="Permanent link">&para;</a></h3>
 <p>VS Code is a programming IDE. TreeMk is a note-taking editor. They serve different purposes and work well together.</p>
-<p><strong>VS Code excels at:</strong>
-- Coding with Markdown documentation alongside
-- Powerful extension ecosystem
-- Excellent Git integration
-- Multi-language development workflows</p>
-<p><strong>TreeMk excels at:</strong>
-- Dedicated note-taking interface (outline, backlinks, history panels)
-- Live preview optimized for reading, not just viewing
-- Wiki-style linking with automatic backlink tracking
-- Focused UI without development tool complexity</p>
+<p><strong>VS Code excels at:</strong></p>
+<ul>
+<li>Coding with Markdown documentation alongside</li>
+<li>Powerful extension ecosystem</li>
+<li>Excellent Git integration</li>
+<li>Multi-language development workflows</li>
+</ul>
+<p><strong>TreeMk excels at:</strong></p>
+<ul>
+<li>Dedicated note-taking interface (outline, backlinks, history panels)</li>
+<li>Live preview optimized for reading, not just viewing</li>
+<li>Wiki-style linking with automatic backlink tracking</li>
+<li>Focused UI without development tool complexity</li>
+</ul>
 <p><strong>Typical workflow:</strong> Use VS Code for coding, TreeMk for note-taking and documentation review. Keep a project's <code>/docs</code> folder open in TreeMk while working on code in VS Code. Both editors see the same files—no conflicts, no duplication.</p>
 <h2 id="technical-questions">Technical Questions<a class="headerlink" href="#technical-questions" title="Permanent link">&para;</a></h2>
 <h3 id="what-platforms-does-treemk-support">What platforms does TreeMk support?<a class="headerlink" href="#what-platforms-does-treemk-support" title="Permanent link">&para;</a></h3>
-<p><strong>Officially supported:</strong>
-- Linux (primary development platform)
-- Windows 10/11
-- macOS (10.15+)</p>
+<p><strong>Officially supported:</strong></p>
+<ul>
+<li>Linux (primary development platform)</li>
+<li>Windows 10/11</li>
+<li>macOS (10.15+)</li>
+</ul>
 <p><strong>Reality check:</strong> TreeMk is developed primarily on Linux. Windows and macOS builds exist but receive less testing. Platform-specific issues should be reported—fixes depend on maintainer availability and resources.</p>
 <h3 id="what-are-the-system-requirements">What are the system requirements?<a class="headerlink" href="#what-are-the-system-requirements" title="Permanent link">&para;</a></h3>
-<p><strong>Minimum:</strong>
-- 4GB RAM
-- 100MB disk space
-- 1280×720 display</p>
-<p><strong>Recommended:</strong>
-- 8GB RAM (for large workspaces with thousands of files)
-- SSD for better file indexing performance
-- 1920×1080 or higher display</p>
+<p><strong>Minimum:</strong></p>
+<ul>
+<li>4GB RAM</li>
+<li>100MB disk space</li>
+<li>1280×720 display</li>
+</ul>
+<p><strong>Recommended:</strong></p>
+<ul>
+<li>8GB RAM (for large workspaces with thousands of files)</li>
+<li>SSD for better file indexing performance</li>
+<li>1920×1080 or higher display</li>
+</ul>
 <p><strong>Reality:</strong> TreeMk runs on modest hardware. Performance depends on workspace size and search/indexing frequency.</p>
 <h3 id="how-does-treemk-handle-large-file-sets">How does TreeMk handle large file sets?<a class="headerlink" href="#how-does-treemk-handle-large-file-sets" title="Permanent link">&para;</a></h3>
 <p>Honestly? It depends.</p>
-<p><strong>What works well:</strong>
-- Up to 1,000 files: Smooth, no noticeable lag
-- File tree navigation: Fast even with 10,000+ files (Qt's file system model is efficient)
-- Individual file editing: Always fast regardless of workspace size</p>
-<p><strong>What can be slow:</strong>
-- Full-text search across 5,000+ files: Expect a few seconds
-- Initial backlink indexing on startup: Takes longer with more files (runs in background)
-- Wiki-link resolution in deeply nested directories: Slightly slower but usually acceptable</p>
+<p><strong>What works well:</strong></p>
+<ul>
+<li>Up to 1,000 files: Smooth, no noticeable lag</li>
+<li>File tree navigation: Fast even with 10,000+ files (Qt's file system model is efficient)</li>
+<li>Individual file editing: Always fast regardless of workspace size</li>
+</ul>
+<p><strong>What can be slow:</strong></p>
+<ul>
+<li>Full-text search across 5,000+ files: Expect a few seconds</li>
+<li>Initial backlink indexing on startup: Takes longer with more files (runs in background)</li>
+<li>Wiki-link resolution in deeply nested directories: Slightly slower but usually acceptable</li>
+</ul>
 <p><strong>TreeMk doesn't scale to 100,000 files gracefully.</strong> For workspaces that large, consider organizing into separate smaller workspaces or using specialized tools designed for massive datasets.</p>
 <h3 id="how-do-wiki-links-work-across-directories">How do wiki links work across directories?<a class="headerlink" href="#how-do-wiki-links-work-across-directories" title="Permanent link">&para;</a></h3>
 <p>When typing <code>[[note]]</code>, TreeMk searches for matching files using a depth-based strategy from the current file's location:</p>
-<p><strong>Search pattern:</strong>
-- Depth 0 (current directory): Searches current folder + all subdirectories recursively
-- Depth 1 (one up): Goes up one folder, searches that folder + all its subdirectories
-- Depth 2 (default): Goes up two folders, searches those folders + all their subdirectories</p>
-<p><strong>File matching priority:</strong>
-1. Exact match: <code>note.md</code> or <code>note.markdown</code>
-2. Fuzzy match: Any file containing "note" in the name
-3. Case-insensitive matching</p>
+<p><strong>Search pattern:</strong></p>
+<ul>
+<li>Depth 0 (current directory): Searches current folder + all subdirectories recursively</li>
+<li>Depth 1 (one up): Goes up one folder, searches that folder + all its subdirectories</li>
+<li>Depth 2 (default): Goes up two folders, searches those folders + all their subdirectories</li>
+</ul>
+<p><strong>File matching priority:</strong></p>
+<ol>
+<li>Exact match: <code>note.md</code> or <code>note.markdown</code></li>
+<li>Fuzzy match: Any file containing "note" in the name</li>
+<li>Case-insensitive matching</li>
+</ol>
 <p><strong>Search depth:</strong> Configurable in settings (default: 2 levels up). Setting it to 0 limits search to current directory tree only. Higher values search more of the workspace but take longer.</p>
 <p><strong>Performance:</strong> Link resolution uses caching. First click may take milliseconds for deeply nested structures, subsequent clicks are instant. Typical workspaces (hundreds of files) feel instant.</p>
 <p><strong>Limitation:</strong> Search starts from the current file's location, not the workspace root. This is intentional—it keeps link resolution fast and predictable by searching nearby files first.</p>
-<p><strong>Technical approach:</strong> The <code>resolveLinkTarget()</code> method uses Qt's <code>QDir::cdUp()</code> to navigate up the folder hierarchy. At each level, it searches the directory and all subdirectories using <code>QDirIterator</code> with recursive flags. Search stops when a match is found or the maximum depth is reached. The algorithm prioritizes closer files (same directory first) before searching parent directories, making relative wiki links like <code>[[../other-folder/note]]</code> work as expected. Home directory boundaries are enforced to prevent escaping outside the user's file system area.</p>
+<p><strong>Technical approach:</strong> The link resolver navigates up the folder hierarchy. At each level, it searches the directory and all subdirectories with recursive flags. Search stops when a match is found or the maximum depth is reached. The algorithm prioritizes closer files (same directory first) before searching parent directories, making relative wiki links like <code>[[../other-folder/note]]</code> work as expected. Home directory boundaries are enforced to prevent escaping outside the user's file system area.</p>
 <h3 id="how-are-backlinks-tracked">How are backlinks tracked?<a class="headerlink" href="#how-are-backlinks-tracked" title="Permanent link">&para;</a></h3>
 <p>TreeMk builds an index of all <code>[[wiki-links]]</code> in files within the configured search depth:</p>
 <ol>
@@ -2242,10 +2266,10 @@
 <p>TreeMk is not a security tool. It's a text editor. Encryption is the operating system's responsibility.</p>
 <h2 id="stability-and-maturity-questions">Stability and Maturity Questions<a class="headerlink" href="#stability-and-maturity-questions" title="Permanent link">&para;</a></h2>
 <h3 id="is-treemk-production-ready">Is TreeMk production-ready?<a class="headerlink" href="#is-treemk-production-ready" title="Permanent link">&para;</a></h3>
-<p><strong>It works.</strong> It is used daily for real work.</p>
+<p><strong>It works.</strong> It is used daily for real work, but it is not stable yet.</p>
 <p><strong>However:</strong> TreeMk is a community project, not a commercial product. Expect:</p>
 <ul>
-<li>Core features stable and functional</li>
+<li>Core features functional</li>
 <li>Regular bug fixes</li>
 <li>No guaranteed support response time</li>
 <li>Occasional bugs in edge cases</li>

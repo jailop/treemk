@@ -15,18 +15,21 @@ Think of it as a text editor that understands connections between notes, with a 
 TreeMk isn't designed to replace Obsidian—it's designed to complement existing tools.
 
 **TreeMk works alongside other editors:**
+
 - Edit project documentation in TreeMk while coding in VS Code
 - Keep technical notes in TreeMk, personal knowledge base in Obsidian
 - Use TreeMk for work files in their project folders, Obsidian for personal vault
 - Switch between tools based on the task at hand
 
 **TreeMk's specific strengths:**
+
 - No vault requirement—works with files in existing project structures
 - Integrated file tree shows actual directory structure
 - Simpler, focused interface without feature overload
 - Direct file system access without import/export steps
 
 **When TreeMk fits best:**
+
 - Documentation alongside code repositories
 - Technical notes that need to stay with project files
 - Situations where vault-based organization doesn't make sense
@@ -39,12 +42,14 @@ TreeMk doesn't compete with Obsidian's graph view, plugins, or mobile apps. It s
 VS Code is a programming IDE. TreeMk is a note-taking editor. They serve different purposes and work well together.
 
 **VS Code excels at:**
+
 - Coding with Markdown documentation alongside
 - Powerful extension ecosystem
 - Excellent Git integration
 - Multi-language development workflows
 
 **TreeMk excels at:**
+
 - Dedicated note-taking interface (outline, backlinks, history panels)
 - Live preview optimized for reading, not just viewing
 - Wiki-style linking with automatic backlink tracking
@@ -57,6 +62,7 @@ VS Code is a programming IDE. TreeMk is a note-taking editor. They serve differe
 ### What platforms does TreeMk support?
 
 **Officially supported:**
+
 - Linux (primary development platform)
 - Windows 10/11
 - macOS (10.15+)
@@ -66,11 +72,13 @@ VS Code is a programming IDE. TreeMk is a note-taking editor. They serve differe
 ### What are the system requirements?
 
 **Minimum:**
+
 - 4GB RAM
 - 100MB disk space
 - 1280×720 display
 
 **Recommended:**
+
 - 8GB RAM (for large workspaces with thousands of files)
 - SSD for better file indexing performance
 - 1920×1080 or higher display
@@ -82,11 +90,13 @@ VS Code is a programming IDE. TreeMk is a note-taking editor. They serve differe
 Honestly? It depends.
 
 **What works well:**
+
 - Up to 1,000 files: Smooth, no noticeable lag
 - File tree navigation: Fast even with 10,000+ files (Qt's file system model is efficient)
 - Individual file editing: Always fast regardless of workspace size
 
 **What can be slow:**
+
 - Full-text search across 5,000+ files: Expect a few seconds
 - Initial backlink indexing on startup: Takes longer with more files (runs in background)
 - Wiki-link resolution in deeply nested directories: Slightly slower but usually acceptable
@@ -98,11 +108,13 @@ Honestly? It depends.
 When typing `[[note]]`, TreeMk searches for matching files using a depth-based strategy from the current file's location:
 
 **Search pattern:**
+
 - Depth 0 (current directory): Searches current folder + all subdirectories recursively
 - Depth 1 (one up): Goes up one folder, searches that folder + all its subdirectories
 - Depth 2 (default): Goes up two folders, searches those folders + all their subdirectories
 
 **File matching priority:**
+
 1. Exact match: `note.md` or `note.markdown`
 2. Fuzzy match: Any file containing "note" in the name
 3. Case-insensitive matching
@@ -113,7 +125,7 @@ When typing `[[note]]`, TreeMk searches for matching files using a depth-based s
 
 **Limitation:** Search starts from the current file's location, not the workspace root. This is intentional—it keeps link resolution fast and predictable by searching nearby files first.
 
-**Technical approach:** The `resolveLinkTarget()` method uses Qt's `QDir::cdUp()` to navigate up the folder hierarchy. At each level, it searches the directory and all subdirectories using `QDirIterator` with recursive flags. Search stops when a match is found or the maximum depth is reached. The algorithm prioritizes closer files (same directory first) before searching parent directories, making relative wiki links like `[[../other-folder/note]]` work as expected. Home directory boundaries are enforced to prevent escaping outside the user's file system area.
+**Technical approach:** The link resolver navigates up the folder hierarchy. At each level, it searches the directory and all subdirectories with recursive flags. Search stops when a match is found or the maximum depth is reached. The algorithm prioritizes closer files (same directory first) before searching parent directories, making relative wiki links like `[[../other-folder/note]]` work as expected. Home directory boundaries are enforced to prevent escaping outside the user's file system area.
 
 ### How are backlinks tracked?
 
@@ -254,11 +266,11 @@ TreeMk is not a security tool. It's a text editor. Encryption is the operating s
 
 ### Is TreeMk production-ready?
 
-**It works.** It is used daily for real work.
+**It works.** It is used daily for real work, but it is not stable yet.
 
 **However:** TreeMk is a community project, not a commercial product. Expect:
 
-- Core features stable and functional
+- Core features functional
 - Regular bug fixes
 - No guaranteed support response time
 - Occasional bugs in edge cases
