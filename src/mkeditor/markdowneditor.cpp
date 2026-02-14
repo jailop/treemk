@@ -118,8 +118,8 @@ QString MarkdownEditor::getLinkAtPosition(int position) const {
   QString line = cursor.block().text();
   int posInBlock = cursor.positionInBlock();
 
-  // Pattern for [[target]] or [[target|display]]
-  QRegularExpression wikiLinkPattern("\\[\\[([^\\]|]+)(\\|([^\\]]+))?\\]\\]");
+  // Pattern for [[target]] or [[target|display]] or ![[target]] or ![[target|display]]
+  QRegularExpression wikiLinkPattern("!?\\[\\[([^\\]|]+)(\\|([^\\]]+))?\\]\\]");
   QRegularExpressionMatchIterator matchIterator =
       wikiLinkPattern.globalMatch(line);
 
@@ -186,8 +186,8 @@ QString MarkdownEditor::getMarkdownLinkAtPosition(int position) const {
   QString line = cursor.block().text();
   int posInBlock = cursor.positionInBlock();
 
-  // Pattern for [text](url)
-  QRegularExpression markdownLinkPattern("\\[([^\\]]+)\\]\\(([^\\)]+)\\)");
+  // Pattern for [text](url) or ![text](url) (markdown links and images)
+  QRegularExpression markdownLinkPattern("!?\\[([^\\]]+)\\]\\(([^\\)]+)\\)");
   QRegularExpressionMatchIterator matchIterator =
       markdownLinkPattern.globalMatch(line);
 
@@ -459,6 +459,57 @@ void MarkdownEditor::paintEvent(QPaintEvent *event) {
 void MarkdownEditor::contextMenuEvent(QContextMenuEvent *event) {
   QMenu *menu = createStandardContextMenu();
   
+  // Check if cursor is on a wiki-link or markdown link
+  QTextCursor cursor = cursorForPosition(event->pos());
+  int position = cursor.position();
+  QString linkTarget = getLinkAtPosition(position);
+  
+  // If not a wiki-link, check for markdown link
+  if (linkTarget.isEmpty()) {
+    linkTarget = getMarkdownLinkAtPosition(position);
+  }
+  
+  if (!linkTarget.isEmpty()) {
+    // Resolve to absolute path if it's a relative link
+    QString absolutePath = linkTarget;
+    if (!m_currentFilePath.isEmpty() && QFileInfo(linkTarget).isRelative()) {
+      QDir currentDir = QFileInfo(m_currentFilePath).dir();
+      absolutePath = currentDir.absoluteFilePath(linkTarget);
+    }
+    
+    // Check if it's a local file that exists
+    QFileInfo fileInfo(absolutePath);
+    bool isLocalFile = fileInfo.exists() && fileInfo.isFile();
+    
+    menu->addSeparator();
+    
+    QAction *openNewWindowAction = menu->addAction(tr("Open Link in New Window"));
+    connect(openNewWindowAction, &QAction::triggered, this, [this, linkTarget]() {
+      emit openLinkInNewWindowRequested(linkTarget);
+    });
+    
+    // Always show Rename and Delete actions for local (non-http) links
+    if (!linkTarget.startsWith("http://") && !linkTarget.startsWith("https://")) {
+      QAction *renameAction = menu->addAction(QIcon::fromTheme("edit-rename"), tr("Rename Linked File..."));
+      renameAction->setEnabled(isLocalFile);
+      if (!isLocalFile) {
+        renameAction->setToolTip(tr("File not found: %1").arg(absolutePath));
+      }
+      connect(renameAction, &QAction::triggered, this, [this, absolutePath]() {
+        emit fileRenameRequested(absolutePath);
+      });
+      
+      QAction *deleteAction = menu->addAction(QIcon::fromTheme("edit-delete"), tr("Delete Linked File..."));
+      deleteAction->setEnabled(isLocalFile);
+      if (!isLocalFile) {
+        deleteAction->setToolTip(tr("File not found: %1").arg(absolutePath));
+      }
+      connect(deleteAction, &QAction::triggered, this, [this, absolutePath]() {
+        emit fileDeleteRequested(absolutePath);
+      });
+    }
+  }
+  
   // Add AI Assist submenu
   menu->addSeparator();
   QMenu *aiMenu = menu->addMenu(QIcon::fromTheme("edit-ai"), tr("AI Assist"));
@@ -481,24 +532,6 @@ void MarkdownEditor::contextMenuEvent(QContextMenuEvent *event) {
   connect(customAction, &QAction::triggered, this, [this]() {
     emit aiAssistRequested();
   });
-  
-  // Check if cursor is on a wiki-link or markdown link
-  QTextCursor cursor = cursorForPosition(event->pos());
-  int position = cursor.position();
-  QString linkTarget = getLinkAtPosition(position);
-  
-  // If not a wiki-link, check for markdown link
-  if (linkTarget.isEmpty()) {
-    linkTarget = getMarkdownLinkAtPosition(position);
-  }
-  
-  if (!linkTarget.isEmpty()) {
-    menu->addSeparator();
-    QAction *openNewWindowAction = menu->addAction(tr("Open Link in New Window"));
-    connect(openNewWindowAction, &QAction::triggered, this, [this, linkTarget]() {
-      emit openLinkInNewWindowRequested(linkTarget);
-    });
-  }
   
   menu->exec(event->globalPos());
   delete menu;
@@ -716,7 +749,14 @@ void MarkdownEditor::insertFromMimeData(const QMimeData *source) {
     }
   }
 
-  // Default behavior for other content
+  // Always paste as plain text (strip HTML formatting)
+  if (source->hasText()) {
+    QTextCursor cursor = textCursor();
+    cursor.insertText(source->text());
+    return;
+  }
+
+  // Fallback to default behavior for other content types
   QTextEdit::insertFromMimeData(source);
 }
 

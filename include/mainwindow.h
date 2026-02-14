@@ -109,6 +109,8 @@ class MainWindow : public QMainWindow {
     void joinLines();
     void openAIAssist();
     void processAIWithPrompt(const QString& promptText);
+    void onEditorFileRenameRequested(const QString& filePath);
+    void onEditorFileDeleteRequested(const QString& filePath);
 
    private:
     void createActions();

@@ -41,6 +41,8 @@ signals:
   void openLinkInNewWindowRequested(const QString &linkTarget);
   void aiAssistRequested();
   void aiAssistWithPromptRequested(const QString &promptText);
+  void fileDeleteRequested(const QString &filePath);
+  void fileRenameRequested(const QString &filePath);
 
 protected:
   void resizeEvent(QResizeEvent *event) override;

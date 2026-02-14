@@ -137,3 +137,7 @@ File Management:
 - issue: hanging marging after list. it was remaining when the list
   ended and a new normal paragraph started. fixed.
 - issue: undo/redo where not working, they are now. fixed.
+- issue fixed: pasted copy from a different application gets format
+  removed. it is pasted as plain text.
+- rename/delete files from the Markdown Editor, when they are included
+  in links.

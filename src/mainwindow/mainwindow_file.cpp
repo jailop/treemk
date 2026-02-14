@@ -8,12 +8,19 @@
 #include "logic/mainfilelocator.h"
 #include "managers/windowmanager.h"
 #include <QDir>
+#include <QFile>
 #include <QFileDialog>
 #include <QFileInfo>
+#include <QInputDialog>
+#include <QLineEdit>
 #include <QMenu>
 #include <QMessageBox>
 #include <QPushButton>
+#include <QRegularExpression>
 #include <QStatusBar>
+#include <QTextCursor>
+#include <QTextDocument>
+#include <algorithm>
 
 void MainWindow::newFile() { createNewTab(); }
 

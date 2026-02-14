@@ -59,6 +59,10 @@ TabEditor* MainWindow::createNewTab() {
             &MainWindow::openAIAssist);
     connect(tab->editor(), &MarkdownEditor::aiAssistWithPromptRequested, this,
             &MainWindow::processAIWithPrompt);
+    connect(tab->editor(), &MarkdownEditor::fileRenameRequested, this,
+            &MainWindow::onEditorFileRenameRequested);
+    connect(tab->editor(), &MarkdownEditor::fileDeleteRequested, this,
+            &MainWindow::onEditorFileDeleteRequested);
     connect(tab->preview(), &MarkdownPreview::wikiLinkClicked, this,
             &MainWindow::onWikiLinkClicked);
     connect(tab->preview(), &MarkdownPreview::markdownLinkClicked, this,
