@@ -147,3 +147,5 @@ File Management:
 - export buttons removed from the toolbar
 - AI prompt sorting fixed.
 - Join/Break lines feature fixed
+- Go the parent directory was blocking. Fixed.
+- Insert Date/Time features included

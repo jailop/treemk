@@ -100,6 +100,64 @@ void MainWindow::createMenus() {
     insertMenu->addSeparator();
     insertMenu->addAction(insertHorizontalRuleAction);
     insertMenu->addAction(insertTableAction);
+    insertMenu->addSeparator();
+    
+    // Date submenu
+    insertDateMenu = insertMenu->addMenu(tr("Date"));
+    
+    QAction* dateYMD = insertDateMenu->addAction(tr("YYYY-MM-DD"));
+    connect(dateYMD, &QAction::triggered, this, [this]() {
+        insertDateWithFormat("yyyy-MM-dd");
+    });
+    
+    QAction* dateDMY = insertDateMenu->addAction(tr("DD/MM/YYYY"));
+    connect(dateDMY, &QAction::triggered, this, [this]() {
+        insertDateWithFormat("dd/MM/yyyy");
+    });
+    
+    QAction* dateMDY = insertDateMenu->addAction(tr("MM/DD/YYYY"));
+    connect(dateMDY, &QAction::triggered, this, [this]() {
+        insertDateWithFormat("MM/dd/yyyy");
+    });
+    
+    QAction* dateLong = insertDateMenu->addAction(tr("Month DD, YYYY"));
+    connect(dateLong, &QAction::triggered, this, [this]() {
+        insertDateWithFormat("MMMM dd, yyyy");
+    });
+    
+    QAction* dateFull = insertDateMenu->addAction(tr("Weekday, Month DD, YYYY"));
+    connect(dateFull, &QAction::triggered, this, [this]() {
+        insertDateWithFormat("dddd, MMMM dd, yyyy");
+    });
+    
+    insertDateMenu->addSeparator();
+    insertDateMenu->addAction(insertDateAction);  // Insert with last format
+    
+    // Time submenu
+    insertTimeMenu = insertMenu->addMenu(tr("Time"));
+    
+    QAction* timeHM = insertTimeMenu->addAction(tr("HH:MM"));
+    connect(timeHM, &QAction::triggered, this, [this]() {
+        insertTimeWithFormat("HH:mm");
+    });
+    
+    QAction* timeHMS = insertTimeMenu->addAction(tr("HH:MM:SS"));
+    connect(timeHMS, &QAction::triggered, this, [this]() {
+        insertTimeWithFormat("HH:mm:ss");
+    });
+    
+    QAction* time12H = insertTimeMenu->addAction(tr("hh:mm AM/PM"));
+    connect(time12H, &QAction::triggered, this, [this]() {
+        insertTimeWithFormat("hh:mm AP");
+    });
+    
+    QAction* time12HMS = insertTimeMenu->addAction(tr("hh:mm:ss AM/PM"));
+    connect(time12HMS, &QAction::triggered, this, [this]() {
+        insertTimeWithFormat("hh:mm:ss AP");
+    });
+    
+    insertTimeMenu->addSeparator();
+    insertTimeMenu->addAction(insertTimeAction);  // Insert with last format
 
     viewMenu = menuBar()->addMenu(tr("&View"));
     viewMenu->addAction(toggleSidebarAction);

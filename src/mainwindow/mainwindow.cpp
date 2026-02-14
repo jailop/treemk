@@ -17,7 +17,9 @@
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), fileMenu(nullptr), editMenu(nullptr),
       insertMenu(nullptr), viewMenu(nullptr), helpMenu(nullptr),
-      recentFoldersMenu(nullptr), aiAssistMenu(nullptr), newAction(nullptr), openFolderAction(nullptr),
+      recentFoldersMenu(nullptr), aiAssistMenu(nullptr), 
+      insertDateMenu(nullptr), insertTimeMenu(nullptr),
+      newAction(nullptr), openFolderAction(nullptr),
       saveAction(nullptr), saveAsAction(nullptr), exportHtmlAction(nullptr),
       exportPdfAction(nullptr), exportDocxAction(nullptr),
       exportPlainTextAction(nullptr), insertImageAction(nullptr),
@@ -29,6 +31,7 @@ MainWindow::MainWindow(QWidget *parent)
       insertListAction(nullptr), insertNumberedListAction(nullptr),
       insertBlockquoteAction(nullptr), insertHorizontalRuleAction(nullptr),
       insertLinkAction(nullptr), insertTableAction(nullptr),
+      insertDateAction(nullptr), insertTimeAction(nullptr),
       exitAction(nullptr), undoAction(nullptr), redoAction(nullptr),
       cutAction(nullptr), copyAction(nullptr), pasteAction(nullptr),
       findAction(nullptr), findReplaceAction(nullptr),

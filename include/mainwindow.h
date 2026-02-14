@@ -116,6 +116,10 @@ class MainWindow : public QMainWindow {
     void navigateBack();
     void navigateForward();
     void updateNavigationActions();
+    void insertDate();
+    void insertTime();
+    void insertDateWithFormat(const QString& format);
+    void insertTimeWithFormat(const QString& format);
 
    private:
     void createActions();
@@ -150,6 +154,8 @@ class MainWindow : public QMainWindow {
     QMenu* helpMenu;
     QMenu* recentFoldersMenu;
     QMenu* aiAssistMenu;
+    QMenu* insertDateMenu;
+    QMenu* insertTimeMenu;
 
     QAction* newAction;
     QAction* openFolderAction;
@@ -175,6 +181,8 @@ class MainWindow : public QMainWindow {
     QAction* insertHorizontalRuleAction;
     QAction* insertLinkAction;
     QAction* insertTableAction;
+    QAction* insertDateAction;
+    QAction* insertTimeAction;
     QAction* exitAction;
     QAction* undoAction;
     QAction* redoAction;

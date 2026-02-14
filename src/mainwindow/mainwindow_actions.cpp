@@ -268,6 +268,20 @@ void MainWindow::createActions() {
     connect(insertTableAction, &QAction::triggered, this,
             &MainWindow::insertTable);
 
+    insertDateAction = new QAction(tr("Insert Date"), this);
+    insertDateAction->setShortcut(QKeySequence(tr("Alt+D")));
+    insertDateAction->setStatusTip(tr("Insert current date with last used format"));
+    insertDateAction->setToolTip(tr("Insert date (Alt+D)"));
+    connect(insertDateAction, &QAction::triggered, this,
+            &MainWindow::insertDate);
+
+    insertTimeAction = new QAction(tr("Insert Time"), this);
+    insertTimeAction->setShortcut(QKeySequence(tr("Alt+T")));
+    insertTimeAction->setStatusTip(tr("Insert current time with last used format"));
+    insertTimeAction->setToolTip(tr("Insert time (Alt+T)"));
+    connect(insertTimeAction, &QAction::triggered, this,
+            &MainWindow::insertTime);
+
     // Navigation actions
     backAction = new QAction(
         iconWithFallback("go-previous", QStyle::SP_FileDialogBack),

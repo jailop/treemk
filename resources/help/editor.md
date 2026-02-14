@@ -108,6 +108,20 @@ Insert headers quickly:
 - Insert inline formulas: `$x = y$`
 - Insert block formulas: `$$x = y$$`
 
+#### Date and Time
+- **Insert Date**: **Alt+D** - Insert current date with format options
+  - YYYY-MM-DD (e.g., 2026-02-14)
+  - DD/MM/YYYY (e.g., 14/02/2026)
+  - MM/DD/YYYY (e.g., 02/14/2026)
+  - Month DD, YYYY (e.g., February 14, 2026)
+  - Weekday, Month DD, YYYY (e.g., Friday, February 14, 2026)
+- **Insert Time**: **Alt+T** - Insert current time with format options
+  - HH:MM (e.g., 14:30)
+  - HH:MM:SS (e.g., 14:30:45)
+  - hh:mm AM/PM (e.g., 02:30 PM)
+  - hh:mm:ss AM/PM (e.g., 02:30:45 PM)
+- The last selected format is remembered for quick insertion
+
 ### Line Numbers and Display
 
 - Toggle line numbers from **Settings → Editor**

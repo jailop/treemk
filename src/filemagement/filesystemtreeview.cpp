@@ -207,8 +207,9 @@ void FileSystemTreeView::onSelectionChanged(const QModelIndex &current,
 
 void FileSystemTreeView::onDirectoryChanged(const QString &path) {
   Q_UNUSED(path);
-
-  addDirectoriesToWatcher(currentRootPath);
+  
+  // QFileSystemModel automatically handles directory changes and updates the view.
+  // No additional action needed here.
 }
 
 void FileSystemTreeView::onFileChanged(const QString &path) {
@@ -536,16 +537,14 @@ void FileSystemTreeView::addDirectoriesToWatcher(const QString &path) {
 
   if (!fileSystemWatcher->directories().contains(path)) {
     // Try to add, but don't show error if permission denied
-    if (!fileSystemWatcher->addPath(path)) {
-      // Silently ignore permission errors
-      return;
-    }
+    fileSystemWatcher->addPath(path);
+    // Silently ignore errors - QFileSystemWatcher returns false on error
   }
 
-  foreach (const QFileInfo &fileInfo,
-           dir.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot)) {
-    addDirectoriesToWatcher(fileInfo.filePath());
-  }
+  // NOTE: We only watch the root directory, not all subdirectories.
+  // QFileSystemModel automatically handles subdirectory updates.
+  // Recursively watching all subdirectories causes severe performance issues
+  // with large directory trees and blocks the UI.
 }
 
 void FileSystemTreeView::refreshDirectory() {

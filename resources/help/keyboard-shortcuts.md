@@ -55,6 +55,8 @@ Complete list of keyboard shortcuts available in TreeMk.
 | Insert Wiki Link | Ctrl+K |
 | Insert Markdown Link | Ctrl+Shift+K |
 | Insert Formula | Ctrl+Shift+M |
+| Insert Date | Alt+D |
+| Insert Time | Alt+T |
 | Paste Image from Clipboard | Ctrl+V |
 
 ## Navigation
