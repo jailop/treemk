@@ -1,4 +1,5 @@
 #include "settingsdialog.h"
+#include "colorpalette.h"
 
 #include <QCheckBox>
 #include <QComboBox>
@@ -45,7 +46,7 @@ void SettingsDialog::setupUI() {
 
     // Dialog buttons
     QDialogButtonBox* buttonBox = new QDialogButtonBox(
-        QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
+        QDialogButtonBox::Ok | QDialogButtonBox::Apply | QDialogButtonBox::Cancel, this);
 
     connect(buttonBox, &QDialogButtonBox::accepted, this, [this]() {
         saveSettings();
@@ -53,6 +54,10 @@ void SettingsDialog::setupUI() {
         accept();
     });
     connect(buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
+    connect(buttonBox->button(QDialogButtonBox::Apply), &QPushButton::clicked, this, [this]() {
+        saveSettings();
+        emit settingsChanged();
+    });
     mainLayout->addWidget(buttonBox);
 }
 
@@ -152,7 +157,11 @@ void SettingsDialog::setupMainTab() {
         new QLabel(tr("Note: Application restart may be required "
                       "for theme changes to fully apply."));
     themeNote->setWordWrap(true);
-    themeNote->setStyleSheet("color: gray; font-size: 9pt;");
+    bool isDark = palette().color(QPalette::Window).lightness() < 128;
+    QColor noteColor = isDark ? ColorPalette::getDarkTheme().textSecondary 
+                              : ColorPalette::getLightTheme().textSecondary;
+    themeNote->setStyleSheet(QString("color: %1; font-size: 9pt;")
+                            .arg(ColorPalette::toHexString(noteColor)));
     themeLayout->addRow(themeNote);
 
     layout->addWidget(themeGroup);
@@ -186,7 +195,8 @@ void SettingsDialog::setupMainTab() {
     QLabel* cssBrowseLabel =
         new QLabel(tr("You can load a custom CSS file to style the preview."));
     cssBrowseLabel->setWordWrap(true);
-    cssBrowseLabel->setStyleSheet("color: gray; font-size: 9pt;");
+    cssBrowseLabel->setStyleSheet(QString("color: %1; font-size: 9pt;")
+                                 .arg(ColorPalette::toHexString(noteColor)));
     cssLayout->addWidget(cssBrowseLabel);
 
     browseCSSButton = new QPushButton(tr("Browse..."));
@@ -241,7 +251,8 @@ void SettingsDialog::setupMainTab() {
         new QLabel(tr("File to automatically open when opening a folder. "
                       "Common alternatives: index.md, README.md"));
     mainFileNote->setWordWrap(true);
-    mainFileNote->setStyleSheet("color: gray; font-size: 9pt;");
+    mainFileNote->setStyleSheet(QString("color: %1; font-size: 9pt;")
+                               .arg(ColorPalette::toHexString(noteColor)));
     workspaceLayout->addRow(mainFileNote);
 
     linkSearchDepthSpinBox = new QSpinBox();
@@ -404,7 +415,10 @@ void SettingsDialog::saveSettings() {
     saveAISettings();
 }
 
-void SettingsDialog::applySettings() { saveSettings(); }
+void SettingsDialog::applySettings() {
+    saveSettings();
+    emit settingsChanged();
+}
 
 void SettingsDialog::onBrowseDefaultFolder() {
     QString folder = QFileDialog::getExistingDirectory(

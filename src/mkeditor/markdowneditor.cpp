@@ -1,4 +1,5 @@
 #include "markdowneditor.h"
+#include "colorpalette.h"
 
 #include <QApplication>
 #include <QClipboard>
@@ -686,9 +687,9 @@ void MarkdownEditor::highlightCurrentLine() {
         QString scheme = m_highlighter->getColorScheme();
         QColor lineColor;
         if (scheme.contains("dark", Qt::CaseInsensitive)) {
-            lineColor = QColor(64, 64, 64);  // Subtle gray for dark themes
+            lineColor = ColorPalette::getDarkTheme().backgroundCurrentLine;
         } else {
-            lineColor = QColor(Qt::yellow).lighter(160);
+            lineColor = ColorPalette::getLightTheme().backgroundCurrentLine;
         }
 
         selection.format.setBackground(lineColor);
@@ -700,7 +701,6 @@ void MarkdownEditor::highlightCurrentLine() {
 
     setExtraSelections(extraSelections);
 
-    // Update the highlighter with current cursor line
     if (m_highlighter) {
         m_highlighter->setCurrentCursorLine(textCursor().blockNumber());
     }
@@ -710,15 +710,14 @@ void MarkdownEditor::lineNumberAreaPaintEvent(QPaintEvent* event) {
     QPainter painter(lineNumberArea);
 
     QColor backgroundColor, textColor;
-    // Detect theme
     if (palette().color(QPalette::Base).lightness() > 128) {
-        // Light theme: light gray background, darker text
-        backgroundColor = QColor(240, 240, 240);
-        textColor = QColor(120, 120, 120);
+        const auto& colors = ColorPalette::getLightTheme();
+        backgroundColor = colors.lineNumberBackground;
+        textColor = colors.lineNumberText;
     } else {
-        // Dark theme: dark background, light text
-        backgroundColor = QColor(45, 45, 45);
-        textColor = QColor(160, 160, 160);
+        const auto& colors = ColorPalette::getDarkTheme();
+        backgroundColor = colors.lineNumberBackground;
+        textColor = colors.lineNumberText;
     }
 
     painter.fillRect(event->rect(), backgroundColor);

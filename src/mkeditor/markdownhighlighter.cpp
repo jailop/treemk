@@ -1,4 +1,5 @@
 #include "markdownhighlighter.h"
+#include "colorpalette.h"
 
 #include <QColor>
 #include <QDir>
@@ -17,59 +18,60 @@ void MarkdownHighlighter::setupFormats() {
     highlightingRules.clear();
     HighlightingRule rule;
 
-    // Determine colors based on scheme
     QColor headerColor, textColor, codeColor, linkColor, listColor, quoteColor,
         latexColor, strikethroughColor;
     QColor codeBg, wikiLinkColor, brokenLinkColor;
 
     if (currentColorScheme == "dark") {
-        headerColor = QColor(255, 165, 0);
-        textColor = QColor(220, 220, 220);
-        codeColor = QColor(206, 145, 120);   // Light salmon
-        linkColor = QColor(78, 201, 176);    // Bright teal
-        listColor = QColor(152, 195, 121);   // Light green
-        quoteColor = QColor(150, 150, 150);  // Lighter gray
-        latexColor = QColor(250, 240, 230);
-        codeBg = QColor(45, 45, 45);
-        wikiLinkColor = QColor(156, 220, 254);    // Light blue
-        brokenLinkColor = QColor(240, 113, 120);  // Light red
-        strikethroughColor = QColor(150, 150, 150);
+        const auto& colors = ColorPalette::getDarkTheme();
+        headerColor = colors.header;
+        textColor = colors.text;
+        codeColor = colors.code;
+        linkColor = colors.link;
+        listColor = colors.listMarker;
+        quoteColor = colors.blockquote;
+        latexColor = colors.latex;
+        codeBg = colors.backgroundCode;
+        wikiLinkColor = colors.wikiLink;
+        brokenLinkColor = colors.brokenLink;
+        strikethroughColor = colors.strikethrough;
     } else if (currentColorScheme == "solarized-light") {
-        headerColor = QColor(38, 139, 210);  // blue
+        headerColor = QColor(38, 139, 210);
         textColor = QColor(101, 123, 131);
-        codeColor = QColor(220, 50, 47);  // red
+        codeColor = QColor(220, 50, 47);
         linkColor = QColor(38, 139, 210);
-        listColor = QColor(133, 153, 0);  // green
+        listColor = QColor(133, 153, 0);
         quoteColor = QColor(147, 161, 161);
-        latexColor = QColor(203, 75, 22);  // orange
+        latexColor = QColor(203, 75, 22);
         codeBg = QColor(238, 232, 213);
-        wikiLinkColor = QColor(42, 161, 152);    // cyan
-        brokenLinkColor = QColor(211, 54, 130);  // magenta
+        wikiLinkColor = QColor(42, 161, 152);
+        brokenLinkColor = QColor(211, 54, 130);
         strikethroughColor = QColor(147, 161, 161);
     } else if (currentColorScheme == "solarized-dark") {
-        headerColor = QColor(38, 139, 210);  // blue
+        headerColor = QColor(38, 139, 210);
         textColor = QColor(131, 148, 150);
-        codeColor = QColor(220, 50, 47);  // red
+        codeColor = QColor(220, 50, 47);
         linkColor = QColor(38, 139, 210);
-        listColor = QColor(133, 153, 0);  // green
+        listColor = QColor(133, 153, 0);
         quoteColor = QColor(88, 110, 117);
-        latexColor = QColor(203, 75, 22);  // orange
+        latexColor = QColor(203, 75, 22);
         codeBg = QColor(7, 54, 66);
-        wikiLinkColor = QColor(42, 161, 152);    // cyan
-        brokenLinkColor = QColor(211, 54, 130);  // magenta
+        wikiLinkColor = QColor(42, 161, 152);
+        brokenLinkColor = QColor(211, 54, 130);
         strikethroughColor = QColor(88, 110, 117);
-    } else {  // light
-        headerColor = QColor(0, 0, 139);
-        textColor = QColor(0, 0, 0);
-        codeColor = QColor(139, 0, 0);
-        linkColor = QColor(0, 0, 255);
-        listColor = QColor(0, 100, 0);
-        quoteColor = QColor(128, 128, 128);
-        latexColor = QColor(139, 69, 19);
-        codeBg = QColor(240, 240, 240);
-        wikiLinkColor = QColor(0, 128, 128);
-        brokenLinkColor = QColor(178, 34, 34);
-        strikethroughColor = QColor(128, 128, 128);
+    } else {
+        const auto& colors = ColorPalette::getLightTheme();
+        headerColor = colors.header;
+        textColor = colors.text;
+        codeColor = colors.code;
+        linkColor = colors.link;
+        listColor = colors.listMarker;
+        quoteColor = colors.blockquote;
+        latexColor = colors.latex;
+        codeBg = colors.backgroundCode;
+        wikiLinkColor = colors.wikiLink;
+        brokenLinkColor = colors.brokenLink;
+        strikethroughColor = colors.strikethrough;
     }
 
     strikethroughFormat.setFontStrikeOut(true);
@@ -201,80 +203,87 @@ void MarkdownHighlighter::setupFormats() {
     brokenWikiLinkFormat.setFontWeight(QFont::Bold);
     brokenWikiLinkFormat.setFontUnderline(true);
 
-    // Inclusion links - use distinct styling
-    QColor inclusionColor = currentColorScheme == "dark" ? QColor(129, 250, 183)
-                                                         : QColor(34, 139, 34);
+    QColor inclusionColor;
+    QColor inclusionBg;
+    QColor brokenInclusionBg;
+    if (currentColorScheme == "dark") {
+        const auto& colors = ColorPalette::getDarkTheme();
+        inclusionColor = colors.inclusion;
+        inclusionBg = colors.backgroundInclusion;
+        brokenInclusionBg = colors.backgroundInclusionBroken;
+    } else {
+        const auto& colors = ColorPalette::getLightTheme();
+        inclusionColor = colors.inclusion;
+        inclusionBg = colors.backgroundInclusion;
+        brokenInclusionBg = colors.backgroundInclusionBroken;
+    }
+    
     inclusionLinkFormat.setForeground(inclusionColor);
     inclusionLinkFormat.setFontWeight(QFont::Bold);
     inclusionLinkFormat.setFontUnderline(true);
-    if (currentColorScheme == "dark") {
-        inclusionLinkFormat.setBackground(QColor(30, 60, 40));
-    } else {
-        inclusionLinkFormat.setBackground(QColor(230, 255, 230));
-    }
+    inclusionLinkFormat.setBackground(inclusionBg);
 
     brokenInclusionLinkFormat.setForeground(brokenLinkColor);
     brokenInclusionLinkFormat.setFontWeight(QFont::Bold);
     brokenInclusionLinkFormat.setFontUnderline(true);
-    if (currentColorScheme == "dark") {
-        brokenInclusionLinkFormat.setBackground(QColor(60, 30, 30));
-    } else {
-        brokenInclusionLinkFormat.setBackground(QColor(255, 230, 230));
-    }
+    brokenInclusionLinkFormat.setBackground(brokenInclusionBg);
 
-    // LaTeX formulas - inline $...$
     inlineLatexFormat.setForeground(latexColor);
     if (currentColorScheme == "dark") {
-        inlineLatexFormat.setBackground(QColor(60, 50, 60));
+        const auto& colors = ColorPalette::getDarkTheme();
+        inlineLatexFormat.setBackground(colors.backgroundLatexInline);
     } else if (currentColorScheme.startsWith("solarized")) {
         inlineLatexFormat.setBackground(QColor(238, 232, 213));
     } else {
-        inlineLatexFormat.setBackground(QColor(250, 240, 250));
+        const auto& colors = ColorPalette::getLightTheme();
+        inlineLatexFormat.setBackground(colors.backgroundLatexInline);
     }
 
-    // LaTeX formulas - block $$...$$
     blockLatexFormat.setForeground(latexColor);
     if (currentColorScheme == "dark") {
-        blockLatexFormat.setBackground(QColor(60, 50, 60));
+        const auto& colors = ColorPalette::getDarkTheme();
+        blockLatexFormat.setBackground(colors.backgroundLatexBlock);
     } else if (currentColorScheme.startsWith("solarized")) {
         blockLatexFormat.setBackground(QColor(238, 232, 213));
     } else {
-        blockLatexFormat.setBackground(QColor(245, 235, 245));
+        const auto& colors = ColorPalette::getLightTheme();
+        blockLatexFormat.setBackground(colors.backgroundLatexBlock);
     }
     blockLatexFormat.setFontWeight(QFont::Bold);
 
-    // Code syntax highlighting formats
     QColor keywordColor, stringColor, commentColor, numberColor, functionColor,
         typeColor;
 
     if (currentColorScheme == "dark") {
-        keywordColor = QColor(198, 120, 221);  // Purple
-        stringColor = QColor(152, 195, 121);   // Green
-        commentColor = QColor(92, 99, 112);    // Gray
-        numberColor = QColor(209, 154, 102);   // Orange
-        functionColor = QColor(97, 175, 239);  // Blue
-        typeColor = QColor(229, 192, 123);     // Yellow
+        const auto& colors = ColorPalette::getDarkTheme();
+        keywordColor = colors.syntaxKeyword;
+        stringColor = colors.syntaxString;
+        commentColor = colors.syntaxComment;
+        numberColor = colors.syntaxNumber;
+        functionColor = colors.syntaxFunction;
+        typeColor = colors.syntaxType;
     } else if (currentColorScheme == "solarized-light") {
-        keywordColor = QColor(133, 153, 0);    // Green
-        stringColor = QColor(42, 161, 152);    // Cyan
-        commentColor = QColor(147, 161, 161);  // Gray
-        numberColor = QColor(203, 75, 22);     // Orange
-        functionColor = QColor(38, 139, 210);  // Blue
-        typeColor = QColor(181, 137, 0);       // Yellow
+        keywordColor = QColor(133, 153, 0);
+        stringColor = QColor(42, 161, 152);
+        commentColor = QColor(147, 161, 161);
+        numberColor = QColor(203, 75, 22);
+        functionColor = QColor(38, 139, 210);
+        typeColor = QColor(181, 137, 0);
     } else if (currentColorScheme == "solarized-dark") {
-        keywordColor = QColor(133, 153, 0);    // Green
-        stringColor = QColor(42, 161, 152);    // Cyan
-        commentColor = QColor(88, 110, 117);   // Gray
-        numberColor = QColor(203, 75, 22);     // Orange
-        functionColor = QColor(38, 139, 210);  // Blue
-        typeColor = QColor(181, 137, 0);       // Yellow
-    } else {                                   // light
-        keywordColor = QColor(0, 0, 255);      // Blue
-        stringColor = QColor(0, 128, 0);       // Green
-        commentColor = QColor(128, 128, 128);  // Gray
-        numberColor = QColor(255, 140, 0);     // Orange
-        functionColor = QColor(139, 0, 139);   // Purple
-        typeColor = QColor(0, 128, 128);       // Teal
+        keywordColor = QColor(133, 153, 0);
+        stringColor = QColor(42, 161, 152);
+        commentColor = QColor(88, 110, 117);
+        numberColor = QColor(203, 75, 22);
+        functionColor = QColor(38, 139, 210);
+        typeColor = QColor(181, 137, 0);
+    } else {
+        const auto& colors = ColorPalette::getLightTheme();
+        keywordColor = colors.syntaxKeyword;
+        stringColor = colors.syntaxString;
+        commentColor = colors.syntaxComment;
+        numberColor = colors.syntaxNumber;
+        functionColor = colors.syntaxFunction;
+        typeColor = colors.syntaxType;
     }
 
     codeKeywordFormat.setForeground(keywordColor);
@@ -332,12 +341,10 @@ void MarkdownHighlighter::setCurrentCursorLine(int lineNumber) {
 }
 
 QColor MarkdownHighlighter::getSubtleColor() const {
-    // Return a subtle gray color based on the theme
-    if (currentColorScheme == "dark" ||
-        currentColorScheme == "solarized-dark") {
-        return QColor(100, 100, 100);  // Medium gray for dark themes
+    if (currentColorScheme == "dark" || currentColorScheme == "solarized-dark") {
+        return ColorPalette::getDarkTheme().subtleMarkup;
     } else {
-        return QColor(180, 180, 180);  // Light gray for light themes
+        return ColorPalette::getLightTheme().subtleMarkup;
     }
 }
 
