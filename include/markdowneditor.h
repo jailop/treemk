@@ -80,6 +80,7 @@ private:
     QVector<QTextBlock> findChildBlocks(const QTextBlock &block);
     int getIndentLevel(const QTextBlock &block);
     void applyListHangingIndent(const QTextBlock &block);
+    void applyListHangingIndentToCurrentBlock();
 
     bool isCurrentLineListItem() const;
     void moveListItemUp();

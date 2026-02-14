@@ -136,3 +136,4 @@ File Management:
   beginning of a wiki-link or url. removed.
 - issue: hanging marging after list. it was remaining when the list
   ended and a new normal paragraph started. fixed.
+- issue: undo/redo where not working, they are now. fixed.

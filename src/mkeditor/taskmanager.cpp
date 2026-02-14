@@ -266,6 +266,60 @@ void MarkdownEditor::applyListHangingIndent(const QTextBlock &block) {
   cursor.setBlockFormat(blockFormat);
 }
 
+void MarkdownEditor::applyListHangingIndentToCurrentBlock() {
+  // Apply formatting only to current block without adding to undo stack
+  // We do this by temporarily disabling undo/redo for just this operation
+  
+  QTextCursor cursor = textCursor();
+  QTextBlock currentBlock = cursor.block();
+  
+  // Check if we need to update format
+  QString text = currentBlock.text();
+  QRegularExpression listPattern("^(\\s*)([-*+]|[0-9]+\\.)\\s+");
+  QRegularExpressionMatch match = listPattern.match(text);
+  
+  QTextBlockFormat currentFormat = cursor.blockFormat();
+  
+  bool needsUpdate = false;
+  qreal targetLeftMargin = 0;
+  qreal targetTextIndent = 0;
+  
+  if (match.hasMatch()) {
+    // Is a list item - calculate target format
+    QFont font = this->font();
+    QFontMetrics fm(font);
+    QString indent = match.captured(1);
+    QString bullet = match.captured(2);
+    int bulletWidth = fm.horizontalAdvance(indent + bullet + " ");
+    targetLeftMargin = bulletWidth;
+    targetTextIndent = -bulletWidth;
+    
+    if (currentFormat.leftMargin() != targetLeftMargin || 
+        currentFormat.textIndent() != targetTextIndent) {
+      needsUpdate = true;
+    }
+  } else {
+    // Not a list item - should have zero margins
+    if (currentFormat.leftMargin() != 0 || currentFormat.textIndent() != 0) {
+      needsUpdate = true;
+    }
+  }
+  
+  if (needsUpdate) {
+    // Temporarily disable undo/redo for this single formatting operation
+    bool undoEnabled = document()->isUndoRedoEnabled();
+    document()->setUndoRedoEnabled(false);
+    
+    QTextBlockFormat newFormat = currentFormat;
+    newFormat.setLeftMargin(targetLeftMargin);
+    newFormat.setTextIndent(targetTextIndent);
+    cursor.setBlockFormat(newFormat);
+    
+    // Re-enable undo/redo immediately
+    document()->setUndoRedoEnabled(undoEnabled);
+  }
+}
+
 void MarkdownEditor::applyDeferredFormatting() {
   // This method is called after user stops typing (via QTimer)
   // It safely applies hanging indent formatting to all list items

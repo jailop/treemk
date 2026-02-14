@@ -430,9 +430,8 @@ void MarkdownEditor::onTextChanged() {
 
   showPrediction();
 
-  // Restart the format timer - formatting will happen after user stops typing
-  m_formatTimer->stop();
-  m_formatTimer->start();
+  // Apply hanging indent to current block only (doesn't affect undo/redo)
+  applyListHangingIndentToCurrentBlock();
 }
 
 void MarkdownEditor::paintEvent(QPaintEvent *event) {
