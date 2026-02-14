@@ -99,7 +99,7 @@ Backlinks show all notes that link to the current document.
 
 ### Fast File Access
 
-Press **Ctrl+P** to open the Quick Open dialog:
+Press **Ctrl+P** (menu: Go + Quick Open) to open the Quick Open dialog:
 
 - Start typing a filename
 - Fuzzy search matches parts of names
@@ -138,10 +138,12 @@ Press **Ctrl+Shift+F** to search across all files:
 
 Work with multiple notes simultaneously:
 
-- **Ctrl+Tab**: Next tab
-- **Ctrl+Shift+Tab**: Previous tab
-- **Ctrl+W**: Close current tab
-- **Ctrl+Shift+T**: Reopen closed tab
+- `Ctrl+Tab`: Next tab
+- `Ctrl+Shift+Tab`: Previous tab
+- `Ctrl+w`: Close current tab
+- `Ctrl+Shift+t`: Reopen closed tab
+
+These options are also available in the main menu under option `Go`
 
 ### Tab Management
 

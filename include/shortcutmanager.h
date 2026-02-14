@@ -22,6 +22,8 @@ public:
     MoveToNextParagraph,
     MoveUpOnePage,
     MoveDownOnePage,
+    MoveListItemUp,
+    MoveListItemDown,
 
     // Selection + Navigation
     SelectToStartOfLine,

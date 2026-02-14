@@ -109,6 +109,8 @@ void ShortcutsDialog::loadShortcuts() {
   addShortcut(tr("Edit"), tr("Copy"), tr("Ctrl+C"));
   addShortcut(tr("Edit"), tr("Paste"), tr("Ctrl+V"));
   addShortcut(tr("Edit"), tr("Select All"), tr("Ctrl+A"));
+  addShortcut(tr("Edit"), tr("Move List Item Up"), tr("Ctrl+Up"));
+  addShortcut(tr("Edit"), tr("Move List Item Down"), tr("Ctrl+Down"));
   addShortcut(tr("Edit"), tr("Find"), tr("Ctrl+F"));
   addShortcut(tr("Edit"), tr("Find and Replace"), tr("Ctrl+H"));
   addShortcut(tr("Edit"), tr("Search in Files"), tr("Ctrl+Shift+F"));

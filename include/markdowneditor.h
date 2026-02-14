@@ -81,6 +81,11 @@ private:
     int getIndentLevel(const QTextBlock &block);
     void applyListHangingIndent(const QTextBlock &block);
 
+    bool isCurrentLineListItem() const;
+    void moveListItemUp();
+    void moveListItemDown();
+    void swapTextBlocks(QTextBlock &block1, QTextBlock &block2);
+
   private slots:
     void applyDeferredFormatting();
 

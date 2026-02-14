@@ -47,6 +47,7 @@ void ShortcutManager::initializeDefaults() {
   m_actionDescriptions[MoveWordRight] = tr("Move One Word Right");
   m_actionCategories[MoveWordRight] = tr("Navigation");
 
+  /* Keys reasigned to Move List Item Up/Down
   m_shortcuts[MoveToPreviousParagraph] = QKeySequence(Qt::CTRL | Qt::Key_Up);
   m_actionNames[MoveToPreviousParagraph] = "MoveToPreviousParagraph";
   m_actionDescriptions[MoveToPreviousParagraph] =
@@ -57,6 +58,7 @@ void ShortcutManager::initializeDefaults() {
   m_actionNames[MoveToNextParagraph] = "MoveToNextParagraph";
   m_actionDescriptions[MoveToNextParagraph] = tr("Move to Next Paragraph");
   m_actionCategories[MoveToNextParagraph] = tr("Navigation");
+    */
 
   m_shortcuts[MoveUpOnePage] = QKeySequence(Qt::Key_PageUp);
   m_actionNames[MoveUpOnePage] = "MoveUpOnePage";
@@ -67,6 +69,16 @@ void ShortcutManager::initializeDefaults() {
   m_actionNames[MoveDownOnePage] = "MoveDownOnePage";
   m_actionDescriptions[MoveDownOnePage] = tr("Move Down One Page");
   m_actionCategories[MoveDownOnePage] = tr("Navigation");
+
+  m_shortcuts[MoveListItemUp] = QKeySequence(Qt::CTRL | Qt::Key_Up);
+  m_actionNames[MoveListItemUp] = "MoveListItemUp";
+  m_actionDescriptions[MoveListItemUp] = tr("Move List Item Up");
+  m_actionCategories[MoveListItemUp] = tr("Navigation");
+
+  m_shortcuts[MoveListItemDown] = QKeySequence(Qt::CTRL | Qt::Key_Down);
+  m_actionNames[MoveListItemDown] = "MoveListItemDown";
+  m_actionDescriptions[MoveListItemDown] = tr("Move List Item Down");
+  m_actionCategories[MoveListItemDown] = tr("Navigation");
 
   // Selection + Navigation
   m_shortcuts[SelectToStartOfLine] = QKeySequence(Qt::SHIFT | Qt::Key_Home);
@@ -149,6 +161,16 @@ void ShortcutManager::initializeDefaults() {
   m_actionNames[DeleteToEndOfLine] = "DeleteToEndOfLine";
   m_actionDescriptions[DeleteToEndOfLine] = tr("Delete to End of Line");
   m_actionCategories[DeleteToEndOfLine] = tr("Editing");
+
+  m_shortcuts[SwitchToNextTab] = QKeySequence(Qt::CTRL | Qt::Key_Tab);
+  m_actionNames[SwitchToNextTab] = "SwitchToNextTab";
+  m_actionDescriptions[SwitchToNextTab] = tr("Switch to Next Tab");
+  m_actionCategories[SwitchToNextTab] = tr("Tabs");
+
+  m_shortcuts[SwitchToPreviousTab] = QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_Tab);
+  m_actionNames[SwitchToPreviousTab] = "SwitchToPreviousTab";
+  m_actionDescriptions[SwitchToPreviousTab] = tr("Switch to Previous Tab");
+  m_actionCategories[SwitchToPreviousTab] = tr("Tabs");
 }
 
 QKeySequence ShortcutManager::getShortcut(Action action) const {
