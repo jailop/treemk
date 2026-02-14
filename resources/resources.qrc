@@ -105,6 +105,7 @@
         <file>help/exporting.md</file>
         <file>help/settings.md</file>
         <file>help/workflows.md</file>
+        <file>help/faq.md</file>
         <file>help/images/filepanel.png</file>
         <file>help/images/aiassistant.png</file>
     </qresource>

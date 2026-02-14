@@ -75,6 +75,8 @@ void HelpDialog::initializeTopics() {
          tr("Real-world use cases and patterns")},
         {"settings", tr("Settings Reference"),
          tr("Complete settings documentation")},
+        {"faq", tr("FAQ"),
+         tr("Frequently asked questions")},
         {"keyboard-shortcuts", tr("Keyboard Shortcuts"),
          tr("Complete shortcuts reference")}};
 }

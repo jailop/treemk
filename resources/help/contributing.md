@@ -20,9 +20,9 @@ TreeMk's core strength is the tight integration between editing and file system 
 
 Your Markdown files remain plain text files in your file system, accessible to any tool, script, or application you choose. TreeMk enhances how you work with them without claiming ownership.
 
-### What We Focus On
+### What TreeMk Focuses On
 
-We invest our energy in two core areas that work together:
+TreeMk development centers on two core areas that work together:
 
 **Markdown Editing Excellence:**
 
@@ -43,21 +43,21 @@ We invest our energy in two core areas that work together:
 
 These two aspects complement each other: great editing tools meet great navigation tools, all working directly with your file system.
 
-### What's Outside Our Scope
+### What's Outside TreeMk's Scope
 
 Some features, while valuable, are best handled by specialized tools that already excel at them:
 
 - **File synchronization**: Tools like Syncthing, Nextcloud, Dropbox, and rsync are purpose-built for robust, reliable sync across devices. TreeMk works perfectly with any of them.
-- **Version control**: Git provides comprehensive versioning, branching, and collaboration far beyond what we could build. Your plain Markdown files integrate seamlessly with any VCS.
+- **Version control**: Git provides comprehensive versioning, branching, and collaboration far beyond what any editor could build. Plain Markdown files integrate seamlessly with any VCS.
 - **Cloud storage**: Countless excellent storage solutions exist—use the one you trust. TreeMk just works with files wherever they are.
 - **Advanced project management**: Full-featured PM tools offer complex workflow management. TreeMk focuses on note-taking and document navigation.
 - **Diagram creation**: Specialized diagramming tools create better diagrams. Reference them from your Markdown; TreeMk will display them.
 
-By keeping TreeMk focused on what it does uniquely well—integrating editing with file system navigation—we ensure every feature receives the attention it deserves. We'd rather have features that work beautifully together than scatter our efforts trying to replace tools that already excel at their specific tasks.
+By keeping TreeMk focused on what it does uniquely well—integrating editing with file system navigation—every feature receives the attention it deserves. Features work beautifully together rather than scattering efforts trying to replace tools that already excel at their specific tasks.
 
 ## Ways to Contribute
 
-We welcome contributions that align with TreeMk's philosophy:
+Contributions that align with TreeMk's philosophy are welcome:
 
 - **Report bugs**: Help us make existing features more reliable
 - **Polish the user interface**: Improve usability and visual consistency between editor and file browser
@@ -81,7 +81,7 @@ The best contributions often aren't about adding more—they're about making wha
 ## Development Setup
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/treemk.git
+git clone https://github.com/jailop/treemk.git
 cd treemk
 mkdir build && cd build
 cmake -DCMAKE_BUILD_TYPE=Debug ..
