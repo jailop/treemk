@@ -12,6 +12,8 @@ The AI Assistant provides intelligent writing help powered by:
 - **OpenAI** - GPT models via API
 - **Compatible Services** - Any OpenAI-compatible endpoint
 
+**Important:** AI assistance is optional and can be completely disabled. When disabled in preferences, all AI-related interface elements (toolbar button, menu items, and context menu options) are hidden or disabled, providing a distraction-free writing environment. See the Configuration section below for details.
+
 ## Getting Started
 
 ### 1. Configure AI Provider
@@ -284,6 +286,20 @@ Identify any logical gaps in this argument
 ## Configuration Options
 
 Access **Edit → Preferences → AI Assistant**:
+
+**Enable AI Assistance:**
+
+- **What it does:** Master toggle for all AI features
+- **When disabled:** 
+  - AI Assist toolbar button becomes disabled (grayed out)
+  - Edit → AI Assist menu submenu becomes disabled
+  - AI Assist options are hidden from editor context menus
+  - No AI-related interface elements are shown
+- **When to disable:** 
+  - If you don't use AI features and want a cleaner interface
+  - For privacy-sensitive work where you don't want AI options visible
+  - To reduce interface clutter
+- **When enabled:** All AI features become available based on your provider settings
 
 **Provider Settings:**
 

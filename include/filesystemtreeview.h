@@ -66,6 +66,8 @@ private slots:
   void setAsCurrentFolder();
   void goToParentFolder();
   void openInNewWindow();
+  void openFile();
+  void openFileWith();
   void onItemRenamed(const QModelIndex &topLeft, const QModelIndex &bottomRight);
   void onEditStarted();
 
@@ -91,6 +93,7 @@ private:
   QAction *setCurrentFolderAction;
   QAction *goToParentAction;
   QAction *openInNewWindowAction;
+  QAction *openAction;
   QAction *openWithAction;
 
   QString clipboardPath;

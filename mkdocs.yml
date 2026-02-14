@@ -91,8 +91,13 @@ nav:
     - Code Blocks: code-blocks.md
     - Mermaid Diagrams: diagrams.md
     - AI Assistant: ai-assistant.md
+    - Themes and Appearance: themes-and-appearance.md
+    - Exporting Your Notes: exporting.md
+  - Workflows:
+    - Real-World Use Cases: workflows.md
   - Reference:
     - Keyboard Shortcuts: keyboard-shortcuts.md
+    - Settings Reference: settings.md
   - About:
     - License: license.md
     - Contributing: contributing.md
@@ -103,6 +108,9 @@ extra:
       link: https://github.com/datainquiry/treemk
   version:
     provider: mike
+  analytics:
+    provider: google
+    property: G-9BHCRMT8E3
 
 docs_dir: resources/help
 site_dir: docs

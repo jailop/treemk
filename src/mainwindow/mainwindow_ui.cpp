@@ -69,8 +69,8 @@ void MainWindow::createMenus() {
     editMenu->addSeparator();
     // Create AI Assistant submenu
     createAIAssistMenu();
-    QMenu* aiAssistSubmenu = editMenu->addMenu(tr("AI &Assistant"));
-    aiAssistSubmenu->addActions(aiAssistMenu->actions());
+    aiAssistEditSubmenu = editMenu->addMenu(tr("AI &Assistant"));
+    aiAssistEditSubmenu->addActions(aiAssistMenu->actions());
     editMenu->addSeparator();
     editMenu->addAction(breakLinesAction);
     editMenu->addAction(joinLinesAction);
@@ -428,6 +428,16 @@ void MainWindow::readSettings() {
         }
 
         buildLinkIndexAsync();
+        
+        // Restore the file tree root if it was set to a subdirectory
+        QString fileTreeRoot = settings->value("session/fileTreeRoot").toString();
+        if (!fileTreeRoot.isEmpty() && 
+            QDir(fileTreeRoot).exists() && 
+            fileTreeRoot != folderToOpen &&
+            fileTreeRoot.startsWith(folderToOpen)) {
+            // Only restore if it's a subdirectory of the current folder
+            treeView->setRootPath(fileTreeRoot);
+        }
 
         statusBar()->showMessage(tr("Opened folder: %1").arg(folderToOpen));
     }
@@ -508,6 +518,11 @@ void MainWindow::writeSettings() {
     settings->setValue("viewMode", static_cast<int>(currentViewMode));
     settings->setValue("lastFolder", currentFolder);
     settings->setValue("recentFolders", recentFolders);
+    
+    // Save the current file tree root path (which may be a subdirectory)
+    if (treeView) {
+        settings->setValue("session/fileTreeRoot", treeView->rootPath());
+    }
 
     // Save open files
     QStringList openFiles;
@@ -569,6 +584,11 @@ void MainWindow::applySettings() {
             bool showLineNumbers =
                 settings->value("editor/showLineNumbers", true).toBool();
             tab->editor()->setLineNumbersVisible(showLineNumbers);
+            
+            // Apply word prediction setting
+            bool wordPredictionEnabled =
+                settings->value("editor/enableWordPrediction", true).toBool();
+            tab->editor()->setPredictionEnabled(wordPredictionEnabled);
         }
     }
     // Apply auto-save settings
@@ -632,15 +652,27 @@ void MainWindow::applySettings() {
     // Reload system prompts
     SystemPrompts::instance()->loadFromSettings();
 
-    // Recreate AI Assistant menu to reflect changes in prompts order/visibility
+    // Rebuild AI assist menu (may have changed)
     createAIAssistMenu();
 
-    // Apply preview color scheme
-    QString previewScheme =
-        settings->value("appearance/previewColorScheme", "auto").toString();
-    if (ThemeManager::instance()) {
-        ThemeManager::instance()->setPreviewColorScheme(previewScheme);
+    // Apply AI enabled/disabled state
+    bool aiEnabled = settings->value("ai/enabled", true).toBool();
+    aiAssistAction->setEnabled(aiEnabled);
+    if (aiAssistMenu) {
+        aiAssistMenu->setEnabled(aiEnabled);
     }
+    if (aiAssistEditSubmenu) {
+        aiAssistEditSubmenu->setEnabled(aiEnabled);
+    }
+    
+    // Apply AI enabled state to all editor tabs
+    for (int i = 0; i < tabWidget->count(); ++i) {
+        TabEditor* tab = qobject_cast<TabEditor*>(tabWidget->widget(i));
+        if (tab && tab->editor()) {
+            tab->editor()->setAIAssistEnabled(aiEnabled);
+        }
+    }
+
     // Get the resolved preview theme
     QString theme = settings->value("previewTheme", "light").toString();
     if (ThemeManager::instance()) {

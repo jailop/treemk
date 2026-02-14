@@ -14,14 +14,14 @@ TreeMk is a desktop Markdown editor that works directly with your file system—
 
 - Multi-tab editing with session management
 - Line numbers and line highlighting
-- Word prediction based on document content (unigram and bigram models)
+- Word prediction based on workspace vocabulary
 - Auto-indent and auto-close brackets/quotes
 - List continuation and hanging indent formatting
 - Customizable keyboard shortcuts
-- Paste images directly from clipboard (auto-saves to document folder)
-- Smart text navigation (word, line, paragraph)
+- Paste images directly from clipboard
+- Smart text navigation
 - Line breaking and joining utilities
-- AI assistance (by Ollama or OpenAI-like providers)
+- AI assistance (Ollama or OpenAI-like providers)
 
 **Navigation and Organization**
 
@@ -29,6 +29,7 @@ TreeMk is a desktop Markdown editor that works directly with your file system—
 - Wiki-style linking between notes with `[[note]]` syntax
 - File inclusion with `[[!note]]` syntax - embeds content in preview
 - Markdown links `[text](url)` with Ctrl+Click to follow
+- Task lists with checkbox support
 - Drag & drop from the file explorer to create wiki-links
 - Backlinks panel - shows all notes linking to current document
 - Document outline panel with heading navigation
@@ -180,16 +181,7 @@ cmake --build .
 
 Comprehensive documentation is available online:
 
-**📚 [Read the Documentation](https://datainquiry.github.io/treemk)**
-
-Topics include:
-- Getting Started Guide
-- Editor Features
-- Math Formulas with LaTeX
-- Code Syntax Highlighting
-- Mermaid Diagrams
-- AI Assistant
-- Keyboard Shortcuts Reference
+**📚 [Read the Documentation](https://jailop.github.io/treemk)**
 
 ### Building Documentation Locally
 
@@ -203,4 +195,24 @@ mkdocs serve
 ```
 
 Visit http://127.0.0.1:8000 to view the documentation.
+
+## Contributing
+
+Visit [Contributing to
+TreeMk](https://jailop.github.io/treemk/contributing/) for guidelines on
+how to contribute to the project, report issues, and submit pull
+requests
+
+## License
+
+TreeMk is licensed under the GNU General Public License v3.0. See
+[LICENSE](LICENSE) for details.
+
+Third-party libraries used in TreeMk are subject to their own licenses.
+
+## Disclaimer
+
+TreeMk is provided "as is" without any warranties. The developers are
+not liable for any damage or loss of data resulting from the use of this
+software. Always back up your notes before using new software.
 

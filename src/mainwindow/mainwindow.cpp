@@ -25,6 +25,7 @@ MainWindow::MainWindow(QWidget* parent)
       helpMenu(nullptr),
       recentFoldersMenu(nullptr),
       aiAssistMenu(nullptr),
+      aiAssistEditSubmenu(nullptr),
       insertDateMenu(nullptr),
       insertTimeMenu(nullptr),
       newAction(nullptr),
@@ -154,7 +155,10 @@ void MainWindow::setStartupArguments(const QString& path, const QString& file) {
     m_startupFile = file;
 }
 
-void MainWindow::initializeSettings() { readSettings(); }
+void MainWindow::initializeSettings() {
+    readSettings();
+    applySettings();
+}
 
 void MainWindow::closeEvent(QCloseEvent* event) {
     if (maybeSave()) {

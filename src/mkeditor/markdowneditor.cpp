@@ -37,7 +37,7 @@
 #include "thememanager.h"
 
 MarkdownEditor::MarkdownEditor(QWidget* parent)
-    : QTextEdit(parent), m_predictionEnabled(true), m_lineNumbersVisible(true) {
+    : QTextEdit(parent), m_predictionEnabled(true), m_aiAssistEnabled(true), m_lineNumbersVisible(true) {
     lineNumberArea = new LineNumberArea(this);
     m_highlighter = new MarkdownHighlighter(document());
 
@@ -78,6 +78,11 @@ MarkdownEditor::MarkdownEditor(QWidget* parent)
 
     // Apply initial theme
     onThemeChanged();
+
+    // Load prediction setting
+    QSettings settings(APP_LABEL, APP_LABEL);
+    m_predictionEnabled = settings.value("editor/enableWordPrediction", true).toBool();
+    m_aiAssistEnabled = settings.value("ai/enabled", true).toBool();
 }
 
 MarkdownEditor::~MarkdownEditor() {}
@@ -109,6 +114,17 @@ bool MarkdownEditor::isModified() const { return document()->isModified(); }
 
 void MarkdownEditor::setModified(bool modified) {
     document()->setModified(modified);
+}
+
+void MarkdownEditor::setPredictionEnabled(bool enabled) {
+    m_predictionEnabled = enabled;
+    if (!enabled) {
+        hidePrediction();
+    }
+}
+
+void MarkdownEditor::setAIAssistEnabled(bool enabled) {
+    m_aiAssistEnabled = enabled;
 }
 
 MarkdownHighlighter* MarkdownEditor::getHighlighter() const {
@@ -275,6 +291,7 @@ void MarkdownEditor::updateWordFrequency() {
     m_wordFrequency.clear();
     m_bigramFrequency.clear();
 
+    // Process current file
     QString text = toPlainText();
     QRegularExpression wordRegex("\\b[a-zA-Z]{3,}\\b");
     QRegularExpressionMatchIterator it = wordRegex.globalMatch(text);
@@ -287,10 +304,62 @@ void MarkdownEditor::updateWordFrequency() {
         m_wordFrequency[word]++;
     }
 
-    // Build bigram model
+    // Build bigram model from current file
     for (int i = 0; i < words.size() - 1; i++) {
         QPair<QString, QString> bigram(words[i], words[i + 1]);
         m_bigramFrequency[bigram]++;
+    }
+
+    // Add words from other markdown files in the directory
+    updateDirectoryWordFrequency();
+}
+
+void MarkdownEditor::updateDirectoryWordFrequency() {
+    if (m_currentFilePath.isEmpty()) {
+        return;
+    }
+
+    QFileInfo fileInfo(m_currentFilePath);
+    QDir dir = fileInfo.absoluteDir();
+    
+    // Get all markdown files in the directory
+    QStringList filters;
+    filters << "*.md" << "*.markdown";
+    QFileInfoList files = dir.entryInfoList(filters, QDir::Files);
+
+    QRegularExpression wordRegex("\\b[a-zA-Z]{3,}\\b");
+
+    for (const QFileInfo& file : files) {
+        // Skip the current file (already processed)
+        if (file.absoluteFilePath() == m_currentFilePath) {
+            continue;
+        }
+
+        // Read the file
+        QFile f(file.absoluteFilePath());
+        if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            continue;
+        }
+
+        QString content = QString::fromUtf8(f.readAll());
+        f.close();
+
+        // Process words from this file
+        QRegularExpressionMatchIterator it = wordRegex.globalMatch(content);
+        QStringList words;
+        
+        while (it.hasNext()) {
+            QRegularExpressionMatch match = it.next();
+            QString word = match.captured(0).toLower();
+            words.append(word);
+            m_wordFrequency[word]++;
+        }
+
+        // Build bigram model from this file
+        for (int i = 0; i < words.size() - 1; i++) {
+            QPair<QString, QString> bigram(words[i], words[i + 1]);
+            m_bigramFrequency[bigram]++;
+        }
     }
 }
 
@@ -386,8 +455,7 @@ QString MarkdownEditor::predictWord(const QString& prefix) const {
 }
 
 void MarkdownEditor::showPrediction() {
-    QSettings settings(APP_LABEL, APP_LABEL);
-    if (!settings.value("editor/enableWordPrediction", true).toBool()) {
+    if (!m_predictionEnabled) {
         return;
     }
 
@@ -526,28 +594,30 @@ void MarkdownEditor::contextMenuEvent(QContextMenuEvent* event) {
         }
     }
 
-    // Add AI Assist submenu
-    menu->addSeparator();
-    QMenu* aiMenu = menu->addMenu(QIcon::fromTheme("edit-ai"), tr("AI Assist"));
+    // Add AI Assist submenu (only if AI is enabled)
+    if (m_aiAssistEnabled) {
+        menu->addSeparator();
+        QMenu* aiMenu = menu->addMenu(QIcon::fromTheme("edit-ai"), tr("AI Assist"));
 
-    // Add predefined prompts
-    QList<SystemPrompt> prompts =
-        SystemPrompts::instance()->getEnabledPrompts();
-    for (const SystemPrompt& prompt : prompts) {
-        QAction* promptAction = aiMenu->addAction(prompt.name);
-        connect(promptAction, &QAction::triggered, this, [this, prompt]() {
-            emit aiAssistWithPromptRequested(prompt.prompt);
-        });
-    }
+        // Add predefined prompts
+        QList<SystemPrompt> prompts =
+            SystemPrompts::instance()->getEnabledPrompts();
+        for (const SystemPrompt& prompt : prompts) {
+            QAction* promptAction = aiMenu->addAction(prompt.name);
+            connect(promptAction, &QAction::triggered, this, [this, prompt]() {
+                emit aiAssistWithPromptRequested(prompt.prompt);
+            });
+        }
 
-    // Add Custom option
-    if (!prompts.isEmpty()) {
-        aiMenu->addSeparator();
+        // Add Custom option
+        if (!prompts.isEmpty()) {
+            aiMenu->addSeparator();
+        }
+        QAction* customAction = aiMenu->addAction(tr("Custom..."));
+        customAction->setShortcut(QKeySequence(tr("Ctrl+Shift+A")));
+        connect(customAction, &QAction::triggered, this,
+                [this]() { emit aiAssistRequested(); });
     }
-    QAction* customAction = aiMenu->addAction(tr("Custom..."));
-    customAction->setShortcut(QKeySequence(tr("Ctrl+Shift+A")));
-    connect(customAction, &QAction::triggered, this,
-            [this]() { emit aiAssistRequested(); });
 
     menu->exec(event->globalPos());
     delete menu;

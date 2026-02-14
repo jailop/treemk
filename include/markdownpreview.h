@@ -34,6 +34,7 @@ private:
   QString processWikiLinks(const QString &html);
   QString resolveAndIncludeFile(const QString &linkTarget,
                                 const QString &displayText);
+  QString readFileContent(const QString &linkTarget, QString &errorMsg);
 
   QString currentTheme;
   QString basePath;

@@ -260,9 +260,68 @@ QString MarkdownPreview::processLatexFormulas(const QString& html) {
 
 QString MarkdownPreview::processWikiLinks(const QString& html) {
     QString result = html;
-    // Process inclusion links [[!target]] or [[!target|display]]
+    
+    // First, process inclusion links inside code blocks [[!filename]]
+    // These are preserved as literal text by md4c inside <code> tags
+    // We need to find and replace just the [[!filename]] pattern within code blocks
+    QRegularExpression codeBlockPattern(
+        "<code([^>]*)>([^<]*)</code>", 
+        QRegularExpression::DotMatchesEverythingOption);
+    QRegularExpressionMatchIterator codeIt = codeBlockPattern.globalMatch(result);
+    QList<QRegularExpressionMatch> codeMatches;
+    while (codeIt.hasNext()) {
+        codeMatches.prepend(codeIt.next());
+    }
+    
+    for (const QRegularExpressionMatch& match : codeMatches) {
+        QString codeAttrs = match.captured(1);
+        QString codeContent = match.captured(2);
+        
+        // Check if this code block contains [[!filename]]
+        QRegularExpression inclusionPattern("\\[\\[!([^\\]]+)\\]\\]");
+        QRegularExpressionMatch inclMatch = inclusionPattern.match(codeContent);
+        if (!inclMatch.hasMatch()) {
+            continue;  // No inclusion in this code block, skip it
+        }
+        
+        // Process all inclusions in this code block by repeatedly replacing
+        QString processedContent = codeContent;
+        while (true) {
+            QRegularExpressionMatch inclMatch = inclusionPattern.match(processedContent);
+            if (!inclMatch.hasMatch()) {
+                break;  // No more inclusions
+            }
+            
+            QString target = inclMatch.captured(1).trimmed();
+            
+            // Read the file content
+            QString errorMsg;
+            QString fileContent = readFileContent(target, errorMsg);
+            
+            if (!errorMsg.isEmpty()) {
+                // Show error in code block
+                fileContent = QString("Error: %1").arg(errorMsg);
+            }
+            
+            // HTML escape the file content for display in code block
+            fileContent = fileContent.toHtmlEscaped();
+            
+            // Replace this specific [[!filename]] with the content
+            processedContent.replace(inclMatch.capturedStart(), 
+                                    inclMatch.capturedLength(), 
+                                    fileContent);
+        }
+        
+        // Replace the entire code block with the processed version
+        QString replacement = QString("<code%1>%2</code>").arg(codeAttrs, processedContent);
+        result.replace(match.capturedStart(), match.capturedLength(), replacement);
+    }
+    
+    // md4c converts [[!target]] or [[!target|display]] to 
+    // <x-wikilink data-target="!target">display</x-wikilink>
+    // Process inclusion links first (before converting regular wiki links to <a> tags)
     QRegularExpression inclusionPattern(
-        "\\[\\[!([^\\]|]+)(\\|([^\\]]+))?\\]\\]");
+        "<x-wikilink data-target=\"!([^\"]+)\">([^<]+)</x-wikilink>");
     QRegularExpressionMatchIterator inclusionIt =
         inclusionPattern.globalMatch(result);
     // Collect matches in reverse order to avoid position shifts
@@ -272,9 +331,11 @@ QString MarkdownPreview::processWikiLinks(const QString& html) {
     }
     for (const QRegularExpressionMatch& match : inclusionMatches) {
         QString target = match.captured(1).trimmed();
-        QString display = match.captured(3).trimmed();
-        if (display.isEmpty()) {
-            display = target;
+        QString display = match.captured(2).trimmed();
+        // md4c already extracted the display text correctly from [[!target|display]]
+        // If no pipe was used, display will be "!target", so we need to clean it
+        if (display.startsWith("!")) {
+            display = target;  // Use target as display if no custom display was provided
         }
         QString includedContent = resolveAndIncludeFile(target, display);
         result.replace(match.capturedStart(), match.capturedLength(),
@@ -374,6 +435,44 @@ QString MarkdownPreview::resolveAndIncludeFile(const QString& linkTarget,
             "</div>")
             .arg(displayText.toHtmlEscaped(), includedHtml);
     return wrappedContent;
+}
+
+QString MarkdownPreview::readFileContent(const QString& linkTarget,
+                                         QString& errorMsg) {
+    // Resolve the file path relative to basePath
+    QDir baseDir(basePath);
+    QString cleanTarget = linkTarget.trimmed();
+    // Try different file extensions
+    QStringList possibleFiles;
+    possibleFiles << cleanTarget << cleanTarget + ".md"
+                  << cleanTarget + ".markdown" << cleanTarget + ".txt"
+                  << cleanTarget + ".py" << cleanTarget + ".cpp"
+                  << cleanTarget + ".java" << cleanTarget + ".js"
+                  << cleanTarget + ".rs" << cleanTarget + ".go";
+    QString resolvedPath;
+    for (const QString& fileName : possibleFiles) {
+        QString fullPath = baseDir.filePath(fileName);
+        if (QFileInfo::exists(fullPath)) {
+            resolvedPath = fullPath;
+            break;
+        }
+    }
+    if (resolvedPath.isEmpty()) {
+        errorMsg = QString("File not found: %1").arg(linkTarget);
+        return QString();
+    }
+    // Read file content
+    QFile file(resolvedPath);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        errorMsg = QString("Cannot read file: %1").arg(linkTarget);
+        return QString();
+    }
+    QTextStream in(&file);
+    in.setEncoding(QStringConverter::Utf8);
+    QString content = in.readAll();
+    file.close();
+    errorMsg.clear();
+    return content;
 }
 
 void MarkdownPreview::showContextMenu(const QPoint& pos) {
