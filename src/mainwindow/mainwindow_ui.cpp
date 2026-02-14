@@ -101,61 +101,53 @@ void MainWindow::createMenus() {
     insertMenu->addAction(insertHorizontalRuleAction);
     insertMenu->addAction(insertTableAction);
     insertMenu->addSeparator();
-    
+
     // Date submenu
     insertDateMenu = insertMenu->addMenu(tr("Date"));
-    
+
     QAction* dateYMD = insertDateMenu->addAction(tr("YYYY-MM-DD"));
-    connect(dateYMD, &QAction::triggered, this, [this]() {
-        insertDateWithFormat("yyyy-MM-dd");
-    });
-    
+    connect(dateYMD, &QAction::triggered, this,
+            [this]() { insertDateWithFormat("yyyy-MM-dd"); });
+
     QAction* dateDMY = insertDateMenu->addAction(tr("DD/MM/YYYY"));
-    connect(dateDMY, &QAction::triggered, this, [this]() {
-        insertDateWithFormat("dd/MM/yyyy");
-    });
-    
+    connect(dateDMY, &QAction::triggered, this,
+            [this]() { insertDateWithFormat("dd/MM/yyyy"); });
+
     QAction* dateMDY = insertDateMenu->addAction(tr("MM/DD/YYYY"));
-    connect(dateMDY, &QAction::triggered, this, [this]() {
-        insertDateWithFormat("MM/dd/yyyy");
-    });
-    
+    connect(dateMDY, &QAction::triggered, this,
+            [this]() { insertDateWithFormat("MM/dd/yyyy"); });
+
     QAction* dateLong = insertDateMenu->addAction(tr("Month DD, YYYY"));
-    connect(dateLong, &QAction::triggered, this, [this]() {
-        insertDateWithFormat("MMMM dd, yyyy");
-    });
-    
-    QAction* dateFull = insertDateMenu->addAction(tr("Weekday, Month DD, YYYY"));
-    connect(dateFull, &QAction::triggered, this, [this]() {
-        insertDateWithFormat("dddd, MMMM dd, yyyy");
-    });
-    
+    connect(dateLong, &QAction::triggered, this,
+            [this]() { insertDateWithFormat("MMMM dd, yyyy"); });
+
+    QAction* dateFull =
+        insertDateMenu->addAction(tr("Weekday, Month DD, YYYY"));
+    connect(dateFull, &QAction::triggered, this,
+            [this]() { insertDateWithFormat("dddd, MMMM dd, yyyy"); });
+
     insertDateMenu->addSeparator();
     insertDateMenu->addAction(insertDateAction);  // Insert with last format
-    
+
     // Time submenu
     insertTimeMenu = insertMenu->addMenu(tr("Time"));
-    
+
     QAction* timeHM = insertTimeMenu->addAction(tr("HH:MM"));
-    connect(timeHM, &QAction::triggered, this, [this]() {
-        insertTimeWithFormat("HH:mm");
-    });
-    
+    connect(timeHM, &QAction::triggered, this,
+            [this]() { insertTimeWithFormat("HH:mm"); });
+
     QAction* timeHMS = insertTimeMenu->addAction(tr("HH:MM:SS"));
-    connect(timeHMS, &QAction::triggered, this, [this]() {
-        insertTimeWithFormat("HH:mm:ss");
-    });
-    
+    connect(timeHMS, &QAction::triggered, this,
+            [this]() { insertTimeWithFormat("HH:mm:ss"); });
+
     QAction* time12H = insertTimeMenu->addAction(tr("hh:mm AM/PM"));
-    connect(time12H, &QAction::triggered, this, [this]() {
-        insertTimeWithFormat("hh:mm AP");
-    });
-    
+    connect(time12H, &QAction::triggered, this,
+            [this]() { insertTimeWithFormat("hh:mm AP"); });
+
     QAction* time12HMS = insertTimeMenu->addAction(tr("hh:mm:ss AM/PM"));
-    connect(time12HMS, &QAction::triggered, this, [this]() {
-        insertTimeWithFormat("hh:mm:ss AP");
-    });
-    
+    connect(time12HMS, &QAction::triggered, this,
+            [this]() { insertTimeWithFormat("hh:mm:ss AP"); });
+
     insertTimeMenu->addSeparator();
     insertTimeMenu->addAction(insertTimeAction);  // Insert with last format
 
@@ -232,9 +224,10 @@ void MainWindow::createToolbar() {
     aiAssistButton->setDefaultAction(aiAssistAction);
     aiAssistButton->setPopupMode(QToolButton::MenuButtonPopup);
     aiAssistButton->setMenu(aiAssistMenu);
-    aiAssistButton->setToolTip(tr("AI Assist (click for custom, dropdown for presets)"));
+    aiAssistButton->setToolTip(
+        tr("AI Assist (click for custom, dropdown for presets)"));
     mainToolbar->addWidget(aiAssistButton);
-    
+
     mainToolbar->addAction(findAction);
     mainToolbar->addAction(quickOpenAction);
     mainToolbar->addSeparator();
@@ -282,8 +275,10 @@ void MainWindow::createLayout() {
     connect(treeView, &FileSystemTreeView::fileRenamed, this,
             &MainWindow::onFileRenamed);
 
-    leftTabWidget->addTab(treePanel, QIcon::fromTheme("folder", 
-        style()->standardIcon(QStyle::SP_DirIcon)), QString());
+    leftTabWidget->addTab(
+        treePanel,
+        QIcon::fromTheme("folder", style()->standardIcon(QStyle::SP_DirIcon)),
+        QString());
     leftTabWidget->setTabToolTip(0, tr("Files"));
 
     // Outline tab
@@ -294,8 +289,12 @@ void MainWindow::createLayout() {
     outlineView = new OutlinePanel(outlinePanel);
     outlineLayout->addWidget(outlineView);
 
-    leftTabWidget->addTab(outlinePanel, QIcon::fromTheme("view-list-tree",
-        style()->standardIcon(QStyle::SP_FileDialogDetailedView)), QString());
+    leftTabWidget->addTab(
+        outlinePanel,
+        QIcon::fromTheme(
+            "view-list-tree",
+            style()->standardIcon(QStyle::SP_FileDialogDetailedView)),
+        QString());
     leftTabWidget->setTabToolTip(1, tr("Outline"));
 
     // Backlinks tab
@@ -314,8 +313,11 @@ void MainWindow::createLayout() {
                 }
             });
 
-    leftTabWidget->addTab(backlinksPanel, QIcon::fromTheme("insert-link",
-        style()->standardIcon(QStyle::SP_ArrowBack)), QString());
+    leftTabWidget->addTab(
+        backlinksPanel,
+        QIcon::fromTheme("insert-link",
+                         style()->standardIcon(QStyle::SP_ArrowBack)),
+        QString());
     leftTabWidget->setTabToolTip(2, tr("Backlinks"));
 
     // History tab
@@ -334,8 +336,11 @@ void MainWindow::createLayout() {
                 }
             });
 
-    leftTabWidget->addTab(historyPanel, QIcon::fromTheme("document-open-recent",
-        style()->standardIcon(QStyle::SP_FileDialogBack)), QString());
+    leftTabWidget->addTab(
+        historyPanel,
+        QIcon::fromTheme("document-open-recent",
+                         style()->standardIcon(QStyle::SP_FileDialogBack)),
+        QString());
     leftTabWidget->setTabToolTip(3, tr("History"));
 
     // Tab widget for multiple editors
@@ -626,7 +631,7 @@ void MainWindow::applySettings() {
 
     // Reload system prompts
     SystemPrompts::instance()->loadFromSettings();
-    
+
     // Recreate AI Assistant menu to reflect changes in prompts order/visibility
     createAIAssistMenu();
 

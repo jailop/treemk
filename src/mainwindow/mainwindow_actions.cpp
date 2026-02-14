@@ -270,50 +270,53 @@ void MainWindow::createActions() {
 
     insertDateAction = new QAction(tr("Insert Date"), this);
     insertDateAction->setShortcut(QKeySequence(tr("Alt+D")));
-    insertDateAction->setStatusTip(tr("Insert current date with last used format"));
+    insertDateAction->setStatusTip(
+        tr("Insert current date with last used format"));
     insertDateAction->setToolTip(tr("Insert date (Alt+D)"));
     connect(insertDateAction, &QAction::triggered, this,
             &MainWindow::insertDate);
 
     insertTimeAction = new QAction(tr("Insert Time"), this);
     insertTimeAction->setShortcut(QKeySequence(tr("Alt+T")));
-    insertTimeAction->setStatusTip(tr("Insert current time with last used format"));
+    insertTimeAction->setStatusTip(
+        tr("Insert current time with last used format"));
     insertTimeAction->setToolTip(tr("Insert time (Alt+T)"));
     connect(insertTimeAction, &QAction::triggered, this,
             &MainWindow::insertTime);
 
     // Navigation actions
-    backAction = new QAction(
-        iconWithFallback("go-previous", QStyle::SP_FileDialogBack),
-        tr("&Back"), this);
+    backAction =
+        new QAction(iconWithFallback("go-previous", QStyle::SP_FileDialogBack),
+                    tr("&Back"), this);
     backAction->setShortcut(QKeySequence(tr("Alt+Left")));
     backAction->setStatusTip(tr("Go back to the previous file"));
     backAction->setToolTip(tr("Go back"));
     backAction->setEnabled(false);
     connect(backAction, &QAction::triggered, this, &MainWindow::navigateBack);
 
-    forwardAction = new QAction(
-        iconWithFallback("go-next", QStyle::SP_ArrowRight),
-        tr("&Forward"), this);
+    forwardAction =
+        new QAction(iconWithFallback("go-next", QStyle::SP_ArrowRight),
+                    tr("&Forward"), this);
     forwardAction->setShortcut(QKeySequence(tr("Alt+Right")));
     forwardAction->setStatusTip(tr("Go forward to the next file"));
     forwardAction->setToolTip(tr("Go forward"));
     forwardAction->setEnabled(false);
-    connect(forwardAction, &QAction::triggered, this, &MainWindow::navigateForward);
+    connect(forwardAction, &QAction::triggered, this,
+            &MainWindow::navigateForward);
 
-    const char *next_tab_label = "Switch to the next tab";
+    const char* next_tab_label = "Switch to the next tab";
     nextTabAction = new QAction(tr("&Next Tab"), this);
-    nextTabAction->setShortcuts({QKeySequence(tr("Ctrl+Tab")),
-            QKeySequence(tr("Ctrl+PageDown"))});
+    nextTabAction->setShortcuts(
+        {QKeySequence(tr("Ctrl+Tab")), QKeySequence(tr("Ctrl+PageDown"))});
     nextTabAction->setStatusTip(tr(next_tab_label));
     nextTabAction->setToolTip(tr(next_tab_label));
     connect(nextTabAction, &QAction::triggered, this,
             &MainWindow::switchToNextTab);
 
-    const char *previous_tab_label = "Switch to the previous tab";
+    const char* previous_tab_label = "Switch to the previous tab";
     previousTabAction = new QAction(tr("&Previous Tab"), this);
-    previousTabAction->setShortcuts({QKeySequence(tr("Ctrl+Shift+Tab")),
-            QKeySequence(tr("Ctrl+PageUp"))});
+    previousTabAction->setShortcuts(
+        {QKeySequence(tr("Ctrl+Shift+Tab")), QKeySequence(tr("Ctrl+PageUp"))});
     previousTabAction->setStatusTip(tr(previous_tab_label));
     previousTabAction->setToolTip(tr(previous_tab_label));
     connect(previousTabAction, &QAction::triggered, this,

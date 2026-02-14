@@ -1,7 +1,8 @@
+#include <QRegularExpression>
+#include <QTextBlock>
+
 #include "defs.h"
 #include "markdowneditor.h"
-#include <QTextBlock>
-#include <QRegularExpression>
 
 const char* LIST_ITEM_PATTERN = R"(^(\s*)([-*+]|[0-9]+\.)\s+)";
 // const QString LIST_ITEM_PATTERN("(^(\\s*)([-*+]|[0-9]+\\.)\\s+)");
@@ -38,4 +39,3 @@ void MarkdownEditor::moveListItemDown() {
     if (nextIndent < currentIndent) return;
     swapTextBlocks(currentBlock, nextBlock);
 }
-
