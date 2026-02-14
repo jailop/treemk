@@ -318,7 +318,7 @@ void MainWindow::readSettings() {
             tab->editor()->getHighlighter()->setRootPath(folderToOpen);
         }
 
-        linkParser->buildLinkIndex(folderToOpen);
+        buildLinkIndexAsync();
 
         statusBar()->showMessage(tr("Opened folder: %1").arg(folderToOpen));
     }

@@ -100,8 +100,9 @@ void MainWindow::onWikiLinkClicked(const QString &linkTarget) {
     return;
   }
 
+  int depth = getLinkSearchDepth();
   QString targetFile =
-      linkParser->resolveLinkTarget(linkTarget, currentFilePath);
+      linkParser->resolveLinkTarget(linkTarget, currentFilePath, depth);
 
   if (targetFile.isEmpty()) {
     statusBar()->showMessage(
@@ -137,15 +138,15 @@ void MainWindow::onOpenLinkInNewWindow(const QString &linkTarget) {
     return;
   }
   
-  // Strip wiki: or markdown: scheme prefix if present
   QString actualTarget = linkTarget;
   if (actualTarget.startsWith("wiki:")) {
-    actualTarget = actualTarget.mid(5); // Remove "wiki:" prefix
+    actualTarget = actualTarget.mid(5);
   } else if (actualTarget.startsWith("markdown:")) {
-    actualTarget = actualTarget.mid(9); // Remove "markdown:" prefix
+    actualTarget = actualTarget.mid(9);
   }
   
-  QString targetFile = linkParser->resolveLinkTarget(actualTarget, currentFilePath);
+  int depth = getLinkSearchDepth();
+  QString targetFile = linkParser->resolveLinkTarget(actualTarget, currentFilePath, depth);
   
   if (targetFile.isEmpty()) {
     statusBar()->showMessage(tr("Cannot resolve link: %1").arg(actualTarget), 3000);
@@ -154,7 +155,6 @@ void MainWindow::onOpenLinkInNewWindow(const QString &linkTarget) {
   
   QFileInfo info(targetFile);
   
-  // If file doesn't exist, create it
   if (!info.exists()) {
     if (!createFileFromLink(targetFile, actualTarget)) {
       return;
@@ -191,10 +191,13 @@ void MainWindow::updateBacklinks() {
   if (currentFilePath.isEmpty() || currentFolder.isEmpty()) {
     return;
   }
+  
+  QDir workspaceDir(currentFolder);
   QVector<QString> backlinks = linkParser->getBacklinks(currentFilePath);
+  
   for (const QString &backlink : backlinks) {
-    QListWidgetItem *item =
-        new QListWidgetItem(QFileInfo(backlink).fileName(), backlinksView);
+    QString relativePath = workspaceDir.relativeFilePath(backlink);
+    QListWidgetItem *item = new QListWidgetItem(relativePath, backlinksView);
     item->setData(Qt::UserRole, backlink);
   }
 }

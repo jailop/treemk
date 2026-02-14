@@ -133,6 +133,8 @@ class MainWindow : public QMainWindow {
     int findTabIndexByPath(const QString& filePath) const;
     bool createFileFromLink(const QString& targetFile,
                             const QString& linkTarget);
+    int getLinkSearchDepth() const;
+    void buildLinkIndexAsync();
 
     QMenu* fileMenu;
     QMenu* editMenu;

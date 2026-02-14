@@ -349,12 +349,10 @@ void MainWindow::onEditorFileRenameRequested(const QString& filePath) {
         }
     }
 
-    // Update any tabs with the old path
     onFileRenamed(filePath, newPath);
 
-    // Rebuild link index if we're in a workspace
     if (!currentFolder.isEmpty()) {
-        linkParser->buildLinkIndex(currentFolder);
+        buildLinkIndexAsync();
     }
 
     statusBar()->showMessage(tr("File renamed to: %1").arg(newName), 3000);
@@ -394,12 +392,10 @@ void MainWindow::onEditorFileDeleteRequested(const QString& filePath) {
         }
     }
 
-    // Close any tabs with this file
     onFileDeleted(filePath);
 
-    // Rebuild link index if we're in a workspace
     if (!currentFolder.isEmpty()) {
-        linkParser->buildLinkIndex(currentFolder);
+        buildLinkIndexAsync();
     }
 
     statusBar()->showMessage(tr("File deleted: %1").arg(fileName), 3000);

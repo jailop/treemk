@@ -8,6 +8,7 @@
 #include <QSettings>
 #include <QStatusBar>
 #include <QTimer>
+#include <QtConcurrent/QtConcurrent>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), fileMenu(nullptr), editMenu(nullptr),
@@ -39,7 +40,9 @@ MainWindow::MainWindow(QWidget *parent)
       userGuideAction(nullptr), aboutAction(nullptr), aboutQtAction(nullptr),
       keyboardShortcutsAction(nullptr), currentViewMode(ViewMode_Both) {
   settings = new QSettings(APP_LABEL, APP_LABEL, this);
-  linkParser = new LinkParser();
+  linkParser = new LinkParser(this);
+  connect(linkParser, &LinkParser::indexBuildCompleted, this, &MainWindow::updateBacklinks);
+  
   setWindowTitle("TreeMk - Markdown Editor");
   setWindowIcon(QIcon::fromTheme("text-editor"));
 
@@ -68,7 +71,7 @@ MainWindow::MainWindow(QWidget *parent)
    // Note: readSettings() is called after setStartupArguments() in main.cpp
 }
 
-MainWindow::~MainWindow() { delete linkParser; }
+MainWindow::~MainWindow() {}
 
 void MainWindow::setStartupArguments(const QString &path, const QString &file) {
   m_startupPath = path;
@@ -86,4 +89,16 @@ void MainWindow::closeEvent(QCloseEvent *event) {
   } else {
     event->ignore();
   }
+}
+
+int MainWindow::getLinkSearchDepth() const {
+  return settings->value("workspace/linkSearchDepth", DEFAULT_LINK_SEARCH_DEPTH).toInt();
+}
+
+void MainWindow::buildLinkIndexAsync() {
+  int depth = getLinkSearchDepth();
+  auto future = QtConcurrent::run([this, depth]() {
+    linkParser->buildLinkIndex(currentFolder, depth);
+  });
+  Q_UNUSED(future);
 }

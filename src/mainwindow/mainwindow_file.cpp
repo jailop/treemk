@@ -62,13 +62,12 @@ void MainWindow::openRecentFolder() {
     tab->editor()->getHighlighter()->setRootPath(folder);
   }
 
-  linkParser->buildLinkIndex(folder);
+  buildLinkIndexAsync();
 
   updateRecentFolders(folder);
 
   statusBar()->showMessage(tr("Opened folder: %1").arg(folder));
   
-  // Close tabs again after setting the new folder
   closeTabsFromOtherFolders();
 }
 
@@ -139,7 +138,7 @@ void MainWindow::saveAs() {
     if (tab->saveFileAs(fileName)) {
       currentFilePath = fileName;
       if (!currentFolder.isEmpty()) {
-        linkParser->buildLinkIndex(currentFolder);
+        buildLinkIndexAsync();
       }
       updateBacklinks();
       statusBar()->showMessage(

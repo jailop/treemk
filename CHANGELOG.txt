@@ -128,6 +128,7 @@ File Management:
 
 2026-02-13:
 
+- backlinks module functional
 - tab switching actions implemented
 - new main menu: Go
 - new feature: list items move up/down with Ctrl + Up/Down
@@ -141,3 +142,4 @@ File Management:
   removed. it is pasted as plain text.
 - rename/delete files from the Markdown Editor, when they are included
   in links.
+- export buttons removed from the toolbar

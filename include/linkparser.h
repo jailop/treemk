@@ -2,8 +2,12 @@
 #define LINKPARSER_H
 
 #include <QMap>
+#include <QMutex>
+#include <QObject>
 #include <QString>
 #include <QVector>
+
+class BacklinksManager;
 
 struct WikiLink {
   QString targetFile;
@@ -19,37 +23,39 @@ struct WikiLink {
         isInclusion(inclusion) {}
 };
 
-class LinkParser {
+class LinkParser : public QObject {
+  Q_OBJECT
+
 public:
-  LinkParser();
+  LinkParser(QObject *parent = nullptr);
+  ~LinkParser();
 
-  // Parse wiki links from markdown text
+  void setEnforceHomeBoundary(bool enforce);
   QVector<WikiLink> parseLinks(const QString &text);
-
-  // Extract links from a file
   QVector<QString> extractLinksFromFile(const QString &filePath);
-
-  // Build link index for a folder
-  void buildLinkIndex(const QString &rootPath);
-
-  // Get backlinks for a file
+  void buildLinkIndex(const QString &rootPath, int maxDepth);
   QVector<QString> getBacklinks(const QString &filePath) const;
-
-  // Resolve a link target to actual file path
   QString resolveLinkTarget(const QString &linkTarget,
-                            const QString &rootPath) const;
+                            const QString &currentFilePath, int maxDepth) const;
+
+signals:
+  void indexBuildStarted();
+  void indexBuildCompleted();
+  void indexBuildProgress(int current, int total);
 
 private:
-  // Map from file path to list of files it links to
   QMap<QString, QVector<QString>> forwardLinks;
-
-  // Map from file path to list of files that link to it
-  QMap<QString, QVector<QString>> backLinks;
-
+  BacklinksManager *backlinksManager;
   QString rootPath;
+  int maxDepth;
+  bool enforceHomeBoundary;
+  mutable QMutex mutex;
 
-  void scanDirectory(const QString &dirPath);
+  void scanDirectory(const QString &dirPath, int currentDepth);
   void processFile(const QString &filePath);
+  bool isWithinHomeDirectory(const QString &path) const;
+  void searchInDirectory(const QString &dirPath, const QString &targetBaseName,
+                         QString &result, int depth, int maxDepth) const;
 };
 
 #endif // LINKPARSER_H

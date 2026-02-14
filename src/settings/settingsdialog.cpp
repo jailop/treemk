@@ -240,6 +240,13 @@ void SettingsDialog::setupMainTab() {
   mainFileNote->setStyleSheet("color: gray; font-size: 9pt;");
   workspaceLayout->addRow(mainFileNote);
 
+  linkSearchDepthSpinBox = new QSpinBox();
+  linkSearchDepthSpinBox->setRange(MIN_LINK_SEARCH_DEPTH, MAX_LINK_SEARCH_DEPTH);
+  linkSearchDepthSpinBox->setValue(DEFAULT_LINK_SEARCH_DEPTH);
+  linkSearchDepthSpinBox->setToolTip(
+      tr("Maximum directory levels to search for linked files (up and down from current file)"));
+  workspaceLayout->addRow(tr("Link search depth:"), linkSearchDepthSpinBox);
+
   layout->addWidget(workspaceGroup);
 
   // Shortcuts group
@@ -319,6 +326,8 @@ void SettingsDialog::loadSettings() {
   // Workspace settings
   mainFileNameLineEdit->setText(
       settings.value("workspace/mainFileName", "main.md").toString());
+  linkSearchDepthSpinBox->setValue(
+      settings.value("workspace/linkSearchDepth", DEFAULT_LINK_SEARCH_DEPTH).toInt());
 
    // Appearance settings
    QString theme = settings.value("appearance/appTheme", "system").toString();
@@ -369,6 +378,7 @@ void SettingsDialog::saveSettings() {
                     restoreSessionCheckBox->isChecked());
 
   settings.setValue("workspace/mainFileName", mainFileNameLineEdit->text());
+  settings.setValue("workspace/linkSearchDepth", linkSearchDepthSpinBox->value());
 
    QString theme = themeComboBox->currentData().toString();
    settings.setValue("appearance/appTheme", theme);
@@ -428,7 +438,9 @@ QString SettingsDialog::getMainFileName() const {
   return fileName.isEmpty() ? "main.md" : fileName;
 }
 
-
+int SettingsDialog::getLinkSearchDepth() const {
+  return linkSearchDepthSpinBox->value();
+}
 
 void SettingsDialog::onConfigureShortcuts() {
   ShortcutsDialog *dialog = new ShortcutsDialog(this);
