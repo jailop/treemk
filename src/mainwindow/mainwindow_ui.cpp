@@ -156,13 +156,6 @@ void MainWindow::createToolbar() {
     mainToolbar->addAction(insertTableAction);
     mainToolbar->addSeparator();
 
-    // Export operations
-    mainToolbar->addAction(exportHtmlAction);
-    mainToolbar->addAction(exportPdfAction);
-    mainToolbar->addAction(exportDocxAction);
-    mainToolbar->addAction(exportPlainTextAction);
-    mainToolbar->addSeparator();
-
     // AI and Search
     mainToolbar->addAction(aiAssistAction);
     mainToolbar->addAction(findAction);
