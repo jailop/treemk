@@ -73,7 +73,7 @@ A clean editing environment with line numbers, syntax highlighting, auto-complet
 
 ### 🔍 Smart Navigation
 
-Full-text search across all files, document outline for quick heading navigation, backlinks panel, and quick-open dialog. Find what you need, when you need it.
+Full-text search across all files, document outline for quick heading navigation, backlinks panel to discover connections, navigation history with back/forward buttons, and quick-open dialog. Find what you need, when you need it.
 
 ## Getting Help
 

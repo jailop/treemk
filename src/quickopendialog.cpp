@@ -74,9 +74,16 @@ void QuickOpenDialog::updateFileList() {
   // Show recent files first if no search pattern
   if (pattern.isEmpty()) {
     for (const QString &recent : recentFiles) {
-      QFileInfo info(recent);
-      QListWidgetItem *item =
-          new QListWidgetItem(info.fileName() + " [Recent]");
+      // Show relative path if within rootPath
+      QString displayText;
+      if (!rootPath.isEmpty() && recent.startsWith(rootPath + "/")) {
+        displayText = recent.mid(rootPath.length() + 1) + " [Recent]";
+      } else {
+        QFileInfo info(recent);
+        displayText = info.fileName() + " [Recent]";
+      }
+      
+      QListWidgetItem *item = new QListWidgetItem(displayText);
       item->setData(Qt::UserRole, recent);
       item->setToolTip(recent);
       fileListWidget->addItem(item);
@@ -90,11 +97,17 @@ void QuickOpenDialog::updateFileList() {
       continue;
     }
 
-    QFileInfo info(filePath);
-    QString fileName = info.fileName();
+    // Show relative path if within rootPath
+    QString displayText;
+    if (!rootPath.isEmpty() && filePath.startsWith(rootPath + "/")) {
+      displayText = filePath.mid(rootPath.length() + 1);
+    } else {
+      QFileInfo info(filePath);
+      displayText = info.fileName();
+    }
 
-    if (pattern.isEmpty() || fuzzyMatch(pattern, fileName.toLower())) {
-      QListWidgetItem *item = new QListWidgetItem(fileName);
+    if (pattern.isEmpty() || fuzzyMatch(pattern, displayText.toLower())) {
+      QListWidgetItem *item = new QListWidgetItem(displayText);
       item->setData(Qt::UserRole, filePath);
       item->setToolTip(filePath);
       fileListWidget->addItem(item);

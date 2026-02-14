@@ -29,6 +29,7 @@ class SettingsDialog;
 class QuickOpenDialog;
 class OutlinePanel;
 class AIAssistDialog;
+class NavigationHistory;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -109,14 +110,19 @@ class MainWindow : public QMainWindow {
     void joinLines();
     void openAIAssist();
     void processAIWithPrompt(const QString& promptText);
+    void processAIWithSystemPrompt(const QString& promptId);
     void onEditorFileRenameRequested(const QString& filePath);
     void onEditorFileDeleteRequested(const QString& filePath);
+    void navigateBack();
+    void navigateForward();
+    void updateNavigationActions();
 
    private:
     void createActions();
     void createMenus();
     void createToolbar();
     void createLayout();
+    void createAIAssistMenu();
     void readSettings();
     void writeSettings();
     void updateRecentFolders(const QString& folder);
@@ -143,6 +149,7 @@ class MainWindow : public QMainWindow {
     QMenu* goMenu;
     QMenu* helpMenu;
     QMenu* recentFoldersMenu;
+    QMenu* aiAssistMenu;
 
     QAction* newAction;
     QAction* openFolderAction;
@@ -199,6 +206,8 @@ class MainWindow : public QMainWindow {
     QAction* aboutQtAction;
     QAction* keyboardShortcutsAction;
     QAction* aiAssistAction;
+    QAction* backAction;
+    QAction* forwardAction;
 
     QToolBar* mainToolbar;
     QProgressBar* progressBar;
@@ -210,11 +219,14 @@ class MainWindow : public QMainWindow {
     QWidget* editorPanel;
     QTabWidget* tabWidget;
     QWidget* backlinksPanel;
+    QWidget* historyPanel;
 
     FileSystemTreeView* treeView;
     OutlinePanel* outlineView;
     QListWidget* backlinksView;
+    QListWidget* historyView;
     LinkParser* linkParser;
+    NavigationHistory* navigationHistory;
 
     QStringList recentFiles;
     QStringList recentFolders;

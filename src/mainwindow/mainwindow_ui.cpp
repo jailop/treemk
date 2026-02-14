@@ -109,6 +109,9 @@ void MainWindow::createMenus() {
     */
 
     goMenu = menuBar()->addMenu(tr("&Go"));
+    goMenu->addAction(backAction);
+    goMenu->addAction(forwardAction);
+    goMenu->addSeparator();
     goMenu->addAction(quickOpenAction);
     goMenu->addSeparator();
     goMenu->addAction(nextTabAction);
@@ -136,6 +139,11 @@ void MainWindow::createToolbar() {
     mainToolbar->addAction(newAction);
     mainToolbar->addAction(openFolderAction);
     mainToolbar->addAction(saveAction);
+    mainToolbar->addSeparator();
+
+    // Navigation
+    mainToolbar->addAction(backAction);
+    mainToolbar->addAction(forwardAction);
     mainToolbar->addSeparator();
 
     // Edit operations
@@ -233,6 +241,24 @@ void MainWindow::createLayout() {
             });
 
     leftTabWidget->addTab(backlinksPanel, tr("Backlinks"));
+
+    // History tab
+    historyPanel = new QWidget(this);
+    QVBoxLayout* historyLayout = new QVBoxLayout(historyPanel);
+    historyLayout->setContentsMargins(0, 0, 0, 0);
+
+    historyView = new QListWidget(historyPanel);
+    historyLayout->addWidget(historyView);
+
+    connect(historyView, &QListWidget::itemDoubleClicked,
+            [this](QListWidgetItem* item) {
+                QString filePath = item->data(Qt::UserRole).toString();
+                if (!filePath.isEmpty()) {
+                    loadFile(filePath);
+                }
+            });
+
+    leftTabWidget->addTab(historyPanel, tr("History"));
 
     // Tab widget for multiple editors
     tabWidget = new QTabWidget(this);

@@ -59,6 +59,8 @@ Complete list of keyboard shortcuts available in TreeMk.
 
 | Action | Shortcut |
 |--------|----------|
+| Back | Alt+Left |
+| Forward | Alt+Right |
 | Quick Open | Ctrl+P |
 | Next Tab | Ctrl+Tab |
 | Previous Tab | Ctrl+Shift+Tab |

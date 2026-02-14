@@ -5,6 +5,7 @@
 #include "aiassistdialog.h"
 #include "tabeditor.h"
 #include "logic/aiprovider.h"
+#include "logic/systemprompts.h"
 #include <QApplication>
 #include <QInputDialog>
 #include <QLineEdit>
@@ -237,4 +238,13 @@ void MainWindow::processAIWithPrompt(const QString &promptText) {
       statusBar()->clearMessage();
     }
   );
+}
+
+void MainWindow::processAIWithSystemPrompt(const QString &promptId) {
+  SystemPrompt prompt = SystemPrompts::instance()->getPromptById(promptId);
+  if (prompt.id.isEmpty()) {
+    return;
+  }
+  
+  processAIWithPrompt(prompt.prompt);
 }

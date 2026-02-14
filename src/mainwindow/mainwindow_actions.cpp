@@ -268,6 +268,25 @@ void MainWindow::createActions() {
     connect(insertTableAction, &QAction::triggered, this,
             &MainWindow::insertTable);
 
+    // Navigation actions
+    backAction = new QAction(
+        iconWithFallback("go-previous", QStyle::SP_FileDialogBack),
+        tr("&Back"), this);
+    backAction->setShortcut(QKeySequence(tr("Alt+Left")));
+    backAction->setStatusTip(tr("Go back to the previous file"));
+    backAction->setToolTip(tr("Go back"));
+    backAction->setEnabled(false);
+    connect(backAction, &QAction::triggered, this, &MainWindow::navigateBack);
+
+    forwardAction = new QAction(
+        iconWithFallback("go-next", QStyle::SP_ArrowRight),
+        tr("&Forward"), this);
+    forwardAction->setShortcut(QKeySequence(tr("Alt+Right")));
+    forwardAction->setStatusTip(tr("Go forward to the next file"));
+    forwardAction->setToolTip(tr("Go forward"));
+    forwardAction->setEnabled(false);
+    connect(forwardAction, &QAction::triggered, this, &MainWindow::navigateForward);
+
     const char *next_tab_label = "Switch to the next tab";
     nextTabAction = new QAction(tr("&Next Tab"), this);
     nextTabAction->setShortcuts({QKeySequence(tr("Ctrl+Tab")),

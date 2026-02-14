@@ -129,8 +129,10 @@ File Management:
 2026-02-13:
 
 - backlinks module functional
+- history module implemented
 - tab switching actions implemented
 - new main menu: Go
+- Action dialog now shows relative paths
 - new feature: list items move up/down with Ctrl + Up/Down
 - issue: in a list, when `[` was typed, the program was assuming that it
   was a task item. That was incorret because the bracket can also be the

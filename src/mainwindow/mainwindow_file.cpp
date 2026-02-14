@@ -4,6 +4,7 @@
 #include "mainwindow.h"
 #include "markdowneditor.h"
 #include "markdownhighlighter.h"
+#include "navigationhistory.h"
 #include "tabeditor.h"
 #include "logic/mainfilelocator.h"
 #include "managers/windowmanager.h"
@@ -306,6 +307,7 @@ bool MainWindow::loadFile(const QString &filePath) {
   if (tab) {
     int index = tabWidget->indexOf(tab);
     tabWidget->setCurrentIndex(index);
+    navigationHistory->addFile(filePath);
     return true;
   }
 
@@ -323,6 +325,7 @@ bool MainWindow::loadFile(const QString &filePath) {
 
   if (tab->loadFile(filePath)) {
     currentFilePath = filePath;
+    navigationHistory->addFile(filePath);
 
     if (!recentFiles.contains(filePath)) {
       recentFiles.prepend(filePath);
