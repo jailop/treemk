@@ -53,6 +53,10 @@ makepkg -si
 ### Reference
 - **[Keyboard Shortcuts](keyboard-shortcuts.md)** - Complete reference of shortcuts
 - **[Settings Reference](settings.md)** - Every configuration option explained
+<<<<<<< HEAD
+=======
+- **[FAQ](faq.md)** - Frequently asked questions
+>>>>>>> devel
 - **[Contributing](contributing.md)** - Help improve TreeMk (web only)
 - **[License](license.md)** - License information (web only)
 
@@ -86,7 +90,7 @@ Full-text search across all files, document outline for quick heading navigation
 - Use the **search box** above to find topics
 - Browse the guides in the navigation panel
 - Press **F1** for keyboard shortcuts reference
-- Visit our [GitHub repository](https://github.com/datainquiry/treemk) for support
+- Visit the [GitHub repository](https://github.com/datainquiry/treemk) for support
 
 ## Philosophy
 
