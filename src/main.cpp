@@ -69,6 +69,11 @@ int main(int argc, char* argv[]) {
     QString appTheme =
         settings.value("appearance/appTheme", "system").toString();
     ThemeManager::instance()->setAppTheme(appTheme);
+    
+    // Set editor color scheme from settings
+    QString editorScheme =
+        settings.value("appearance/editorColorScheme", "auto").toString();
+    ThemeManager::instance()->setEditorColorScheme(editorScheme);
 
     // Initialize AI providers
     QString ollamaHost = qEnvironmentVariable("OLLAMA_HOST");

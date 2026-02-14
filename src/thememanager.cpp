@@ -1,4 +1,5 @@
 #include "thememanager.h"
+#include "colorpalette.h"
 
 #include <QApplication>
 #include <QColor>
@@ -110,74 +111,77 @@ void ThemeManager::applyAppTheme() {
 }
 
 void ThemeManager::applyLightTheme() {
+    const auto& colors = ColorPalette::getLightTheme();
     QPalette palette;
-    // Light theme colors
-    palette.setColor(QPalette::Window, QColor(240, 240, 240));
-    palette.setColor(QPalette::WindowText, QColor(0, 0, 0));
-    palette.setColor(QPalette::Base, QColor(255, 255, 255));
-    palette.setColor(QPalette::AlternateBase, QColor(245, 245, 245));
-    palette.setColor(QPalette::ToolTipBase, QColor(255, 255, 220));
-    palette.setColor(QPalette::ToolTipText, QColor(0, 0, 0));
-    palette.setColor(QPalette::Text, QColor(0, 0, 0));
-    palette.setColor(QPalette::Button, QColor(240, 240, 240));
-    palette.setColor(QPalette::ButtonText, QColor(0, 0, 0));
+    palette.setColor(QPalette::Window, colors.uiWindow);
+    palette.setColor(QPalette::WindowText, colors.uiWindowText);
+    palette.setColor(QPalette::Base, colors.uiBase);
+    palette.setColor(QPalette::AlternateBase, colors.uiAlternateBase);
+    palette.setColor(QPalette::ToolTipBase, colors.uiToolTipBase);
+    palette.setColor(QPalette::ToolTipText, colors.uiToolTipText);
+    palette.setColor(QPalette::Text, colors.text);
+    palette.setColor(QPalette::Button, colors.uiButton);
+    palette.setColor(QPalette::ButtonText, colors.uiButtonText);
     palette.setColor(QPalette::BrightText, Qt::red);
-    palette.setColor(QPalette::Link, QColor(42, 130, 218));
-    palette.setColor(QPalette::Highlight, QColor(42, 130, 218));
-    palette.setColor(QPalette::HighlightedText, Qt::white);
+    palette.setColor(QPalette::Link, colors.link);
+    palette.setColor(QPalette::Highlight, colors.uiHighlight);
+    palette.setColor(QPalette::HighlightedText, colors.uiHighlightedText);
     qApp->setPalette(palette);
     qApp->setStyleSheet("");
 }
 
 void ThemeManager::applyDarkTheme() {
+    const auto& colors = ColorPalette::getDarkTheme();
     QPalette palette;
-    // Dark theme colors
-    palette.setColor(QPalette::Window, QColor(53, 53, 53));
-    palette.setColor(QPalette::WindowText, QColor(220, 220, 220));
-    palette.setColor(QPalette::Base, QColor(35, 35, 35));
-    palette.setColor(QPalette::AlternateBase, QColor(53, 53, 53));
-    palette.setColor(QPalette::ToolTipBase, QColor(25, 25, 25));
-    palette.setColor(QPalette::ToolTipText, QColor(220, 220, 220));
-    palette.setColor(QPalette::Text, QColor(220, 220, 220));
-    palette.setColor(QPalette::Button, QColor(53, 53, 53));
-    palette.setColor(QPalette::ButtonText, QColor(220, 220, 220));
+    palette.setColor(QPalette::Window, colors.uiWindow);
+    palette.setColor(QPalette::WindowText, colors.uiWindowText);
+    palette.setColor(QPalette::Base, colors.uiBase);
+    palette.setColor(QPalette::AlternateBase, colors.uiAlternateBase);
+    palette.setColor(QPalette::ToolTipBase, colors.uiToolTipBase);
+    palette.setColor(QPalette::ToolTipText, colors.uiToolTipText);
+    palette.setColor(QPalette::Text, colors.text);
+    palette.setColor(QPalette::Button, colors.uiButton);
+    palette.setColor(QPalette::ButtonText, colors.uiButtonText);
     palette.setColor(QPalette::BrightText, Qt::red);
-    palette.setColor(QPalette::Link, QColor(42, 130, 218));
-    palette.setColor(QPalette::Highlight, QColor(42, 130, 218));
-    palette.setColor(QPalette::HighlightedText, Qt::white);
-    palette.setColor(QPalette::Disabled, QPalette::WindowText,
-                     QColor(127, 127, 127));
-    palette.setColor(QPalette::Disabled, QPalette::Text, QColor(127, 127, 127));
-    palette.setColor(QPalette::Disabled, QPalette::ButtonText,
-                     QColor(127, 127, 127));
+    palette.setColor(QPalette::Link, colors.link);
+    palette.setColor(QPalette::Highlight, colors.uiHighlight);
+    palette.setColor(QPalette::HighlightedText, colors.uiHighlightedText);
+    palette.setColor(QPalette::Disabled, QPalette::WindowText, colors.uiButtonTextDisabled);
+    palette.setColor(QPalette::Disabled, QPalette::Text, colors.uiButtonTextDisabled);
+    palette.setColor(QPalette::Disabled, QPalette::ButtonText, colors.uiButtonTextDisabled);
     qApp->setPalette(palette);
-    // Additional stylesheet for dark theme widgets
-    QString styleSheet = R"(
+    
+    QString styleSheet = QString(R"(
         QToolTip {
-            color: #dcdcdc;
-            background-color: #191919;
-            border: 1px solid #767676;
+            color: %1;
+            background-color: %2;
+            border: 1px solid %3;
         }
         QMenuBar {
-            background-color: #353535;
-            color: #dcdcdc;
+            background-color: %4;
+            color: %1;
         }
         QMenuBar::item:selected {
-            background-color: #2a82da;
+            background-color: %5;
         }
         QMenu {
-            background-color: #353535;
-            color: #dcdcdc;
-            border: 1px solid #555555;
+            background-color: %4;
+            color: %1;
+            border: 1px solid %6;
         }
         QMenu::item:selected {
-            background-color: #2a82da;
+            background-color: %5;
         }
         QToolBar {
-            background-color: #353535;
+            background-color: %4;
             border: none;
         }
-    )";
+    )").arg(ColorPalette::toHexString(colors.uiWindowText))
+       .arg(ColorPalette::toHexString(colors.uiToolTipBase))
+       .arg(ColorPalette::toHexString(colors.border))
+       .arg(ColorPalette::toHexString(colors.uiWindow))
+       .arg(ColorPalette::toHexString(colors.uiHighlight))
+       .arg(ColorPalette::toHexString(colors.borderTable));
 
     qApp->setStyleSheet(styleSheet);
 }
@@ -185,7 +189,6 @@ void ThemeManager::applyDarkTheme() {
 QPalette ThemeManager::getEditorPalette() const {
     QPalette palette;
     EditorColorScheme effectiveScheme = m_currentEditorScheme;
-    // If Auto, determine scheme based on app theme
     if (effectiveScheme == EditorColorScheme::Auto) {
         bool isDark = false;
         if (m_currentAppTheme == AppTheme::System) {
@@ -200,20 +203,26 @@ QPalette ThemeManager::getEditorPalette() const {
         case EditorColorScheme::Auto:
             break;
         case EditorColorScheme::Light:
-            palette.setColor(QPalette::Base, QColor(255, 255, 255));
-            palette.setColor(QPalette::Text, QColor(0, 0, 0));
+            {
+                const auto& colors = ColorPalette::getLightTheme();
+                palette.setColor(QPalette::Base, colors.background);
+                palette.setColor(QPalette::Text, colors.text);
+            }
             break;
         case EditorColorScheme::Dark:
-            palette.setColor(QPalette::Base, QColor(30, 30, 30));
-            palette.setColor(QPalette::Text, QColor(220, 220, 220));
+            {
+                const auto& colors = ColorPalette::getDarkTheme();
+                palette.setColor(QPalette::Base, colors.background);
+                palette.setColor(QPalette::Text, colors.text);
+            }
             break;
         case EditorColorScheme::SolarizedLight:
-            palette.setColor(QPalette::Base, QColor(253, 246, 227));  // #fdf6e3
-            palette.setColor(QPalette::Text, QColor(101, 123, 131));  // #657b83
+            palette.setColor(QPalette::Base, QColor(253, 246, 227));
+            palette.setColor(QPalette::Text, QColor(101, 123, 131));
             break;
         case EditorColorScheme::SolarizedDark:
-            palette.setColor(QPalette::Base, QColor(0, 43, 54));      // #002b36
-            palette.setColor(QPalette::Text, QColor(131, 148, 150));  // #839496
+            palette.setColor(QPalette::Base, QColor(0, 43, 54));
+            palette.setColor(QPalette::Text, QColor(131, 148, 150));
             break;
     }
     return palette;
@@ -222,7 +231,6 @@ QPalette ThemeManager::getEditorPalette() const {
 QString ThemeManager::getEditorStyleSheet() const {
     QString styleSheet;
     EditorColorScheme effectiveScheme = m_currentEditorScheme;
-    // If Auto, determine scheme based on app theme
     if (effectiveScheme == EditorColorScheme::Auto) {
         bool isDark = false;
         if (m_currentAppTheme == AppTheme::System) {
@@ -235,27 +243,38 @@ QString ThemeManager::getEditorStyleSheet() const {
     }
     switch (effectiveScheme) {
         case EditorColorScheme::Auto:
-            // Should not reach here
             break;
         case EditorColorScheme::Light:
-            styleSheet = R"(
-            QPlainTextEdit {
-                background-color: #ffffff;
-                color: #000000;
-                selection-background-color: #add6ff;
-                selection-color: #000000;
+            {
+                const auto& colors = ColorPalette::getLightTheme();
+                styleSheet = QString(R"(
+                    QPlainTextEdit {
+                        background-color: %1;
+                        color: %2;
+                        selection-background-color: %3;
+                        selection-color: %4;
+                    }
+                )").arg(ColorPalette::toHexString(colors.background))
+                   .arg(ColorPalette::toHexString(colors.text))
+                   .arg(ColorPalette::toHexString(colors.backgroundSelection))
+                   .arg(ColorPalette::toHexString(colors.textSelection));
             }
-        )";
             break;
         case EditorColorScheme::Dark:
-            styleSheet = R"(
-            QPlainTextEdit {
-                background-color: #1e1e1e;
-                color: #dcdcdc;
-                selection-background-color: #264f78;
-                selection-color: #ffffff;
+            {
+                const auto& colors = ColorPalette::getDarkTheme();
+                styleSheet = QString(R"(
+                    QPlainTextEdit {
+                        background-color: %1;
+                        color: %2;
+                        selection-background-color: %3;
+                        selection-color: %4;
+                    }
+                )").arg(ColorPalette::toHexString(colors.background))
+                   .arg(ColorPalette::toHexString(colors.text))
+                   .arg(ColorPalette::toHexString(colors.backgroundSelection))
+                   .arg(ColorPalette::toHexString(colors.textSelection));
             }
-        )";
             break;
         case EditorColorScheme::SolarizedLight:
             styleSheet = R"(

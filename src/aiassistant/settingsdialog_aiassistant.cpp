@@ -13,6 +13,7 @@
 #include <QVBoxLayout>
 #include <QWidget>
 
+#include "colorpalette.h"
 #include "defs.h"
 #include "logic/ollamaprovider.h"
 #include "logic/openaiprovider.h"
@@ -23,6 +24,15 @@
 const int timeOutDefault = 60;
 const QString ollamaDefaultUrl = "http://localhost:11434";
 const QString openAiDefaultUrl = "https://api.openai.com/v1";
+
+static QString getStatusColor(const QString& type, bool isDark) {
+    const auto& colors = isDark ? ColorPalette::getDarkTheme() : ColorPalette::getLightTheme();
+    if (type == "info") return ColorPalette::toHexString(colors.statusInfo);
+    if (type == "success") return ColorPalette::toHexString(colors.statusSuccess);
+    if (type == "error") return ColorPalette::toHexString(colors.statusError);
+    if (type == "warning") return ColorPalette::toHexString(colors.statusWarning);
+    return ColorPalette::toHexString(colors.textSecondary);
+}
 
 void SettingsDialog::detectAIProviders() {
     QString ollamaHost = qEnvironmentVariable("OLLAMA_HOST");
@@ -122,7 +132,8 @@ void SettingsDialog::onTestOpenAIConnection() {
     testConnectionButton->setEnabled(false);
     testConnectionButton->setText(tr("Testing..."));
     connectionStatusLabel->setText(tr("Connecting..."));
-    connectionStatusLabel->setStyleSheet("color: blue;");
+    bool isDark = palette().color(QPalette::Window).lightness() < 128;
+    connectionStatusLabel->setStyleSheet(QString("color: %1;").arg(getStatusColor("info", isDark)));
 
     OpenAIProvider provider;
     provider.setEndpoint(openaiEndpointLineEdit->text());
@@ -138,10 +149,10 @@ void SettingsDialog::onTestOpenAIConnection() {
 
     if (success) {
         connectionStatusLabel->setText(tr("Connected"));
-        connectionStatusLabel->setStyleSheet("color: green;");
+        connectionStatusLabel->setStyleSheet(QString("color: %1;").arg(getStatusColor("success", isDark)));
     } else {
         connectionStatusLabel->setText(tr("%1").arg(error));
-        connectionStatusLabel->setStyleSheet("color: red;");
+        connectionStatusLabel->setStyleSheet(QString("color: %1;").arg(getStatusColor("error", isDark)));
     }
 
     testConnectionButton->setEnabled(true);
