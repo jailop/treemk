@@ -150,3 +150,29 @@ File Management:
 0.7.0 - 2026-02-14
 
 - Moving to version 0.7.0
+
+2026-02-15
+
+Settings Enforcement:
+
+- Word prediction setting now properly enforced across all open documents
+- Word prediction now uses directory-wide vocabulary from all .md and .markdown files
+- AI assistance can be completely disabled via preferences
+- When AI disabled, all UI elements are hidden/disabled (toolbar button, menu items, context menu)
+- Settings apply immediately without restart
+
+File Management Enhancements:
+
+- Pasted images now save to shared ./images directory instead of per-file directories
+- "Open in New Window" context menu now works for directories in file panel
+- "Open" and "Open With..." options added for non-markdown files
+- "Open With" integrates with desktop environment (KDE, GNOME, Windows, macOS)
+- Drag and drop file operations enabled within file panel (move/copy files)
+- Dragging files to editor still creates wiki-links (dual drag-drop support)
+
+Documentation:
+
+- Contributing guide updated with TreeMk's integration philosophy
+- Help documentation updated for word prediction and AI assistance features
+- Clear explanation of what's in scope vs delegated to specialized tools
+

@@ -154,6 +154,7 @@ class MainWindow : public QMainWindow {
     QMenu* helpMenu;
     QMenu* recentFoldersMenu;
     QMenu* aiAssistMenu;
+    QMenu* aiAssistEditSubmenu;
     QMenu* insertDateMenu;
     QMenu* insertTimeMenu;
 

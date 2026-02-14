@@ -1,53 +1,140 @@
-# Navigation Features
+# Finding Your Way Through Your Notes
 
-TreeMk provides powerful navigation features to help you organize and explore your notes efficiently.
+Information without navigation is just noise. TreeMk gives you multiple ways to move through your notes—not just finding files, but discovering connections, retracing your steps, and jumping to exactly what you need. Let's explore how to navigate like a pro.
 
-## Wiki-Style Links
+## The Web of Wiki Links
 
-### Creating Links
+Traditional note apps force you into folders and hierarchies. But your thoughts don't work that way. Ideas connect in networks, not trees. TreeMk embraces this with wiki-style links.
 
-Create links between your notes using double brackets:
-
-```markdown
-[[note-name]]
-```
-
-### Following Links
-
-- **Ctrl+Click** on a link to open the target note
-- If the file doesn't exist, TreeMk will ask if you want to create it
-- Links automatically adapt to your folder structure
-
-### Link Syntax Variations
+Type `[[note-name]]` anywhere in your text, and you've created a link. **Ctrl+Click** it, and TreeMk opens that note. The file might be in the same folder, in a subfolder, anywhere in your workspace—TreeMk finds it.
 
 ```markdown
-[[simple-link]]                    # Links to simple-link.md
-[[folder/note]]                    # Links to file in subfolder
-[[note#section]]                   # Links to specific heading
-[[custom text|actual-file-name]]   # Display text different from filename
+I'm learning about [[quantum mechanics]].
+See also: [[wave-particle duality]]
 ```
 
-## File Tree Navigation
+Click on `[[quantum mechanics]]` and TreeMk searches for `quantum mechanics.md` or `quantum-mechanics.md` or any variation. Found it? You're there. Doesn't exist? TreeMk offers to create it for you right now.
 
-### File Explorer
+### Link Variations
+
+Sometimes you want the link text to differ from the filename:
+
+```markdown
+I read [[feynman-lectures|Feynman's amazing lectures]].
+```
+
+The part before the pipe (`|`) is the filename. The part after is what displays. Clean, flexible.
+
+Want to link to a specific section?
+
+```markdown
+See [[quantum mechanics#uncertainty-principle]]
+```
+
+TreeMk opens the note and scrolls to that heading. Perfect for big documents.
+
+Need to link to a file in a subfolder?
+
+```markdown
+My [[projects/treemk-docs/architecture|architecture notes]] explain the design.
+```
+
+## Discovering Connections: Backlinks
+
+Here's where things get interesting. Every time you create a link like `[[quantum mechanics]]`, TreeMk tracks it. Now when you open `quantum-mechanics.md`, look at the **Backlinks** tab in the left sidebar.
+
+You'll see every note that links to this one. Every reference, every mention, every connection. You didn't have to build this map—TreeMk did it automatically as you wrote.
+
+This is powerful. You're reading about quantum mechanics and discover that five other notes reference it. You follow one, then another, discovering threads through your knowledge base you didn't know existed. Your notes become a network, not a filing cabinet.
+
+## Navigating the File Tree
+
+The left sidebar's **Files** tab shows your actual folder structure—the same one you see in your file manager. This isn't a database representation. It's the real thing.
+
+**Right-click** anywhere to create new files or folders. **Rename** files with **F2**. **Delete** with the Delete key (TreeMk asks for confirmation—we're dealing with real files here). **Refresh** with **F5** if something changed outside TreeMk.
+
+Here's a neat trick: **drag a file from the tree and drop it in the editor**. TreeMk inserts a `[[wiki-link]]` to that file. Instant connection.
 
 ![File Explorer](images/filepanel.png)
 
+## Quick Open: The Fastest Way
 
-The left panel shows your folder structure:
+You have 50 notes. You need the one about neural networks. You could hunt through folders. Or you could press **Ctrl+P**.
 
-- Browse folders and files
-- Right-click for context menu (New, Rename, Delete)
-- Drag files to the editor to create links
-- **F5** to refresh the tree
+The Quick Open dialog appears. Start typing: `neur...`
 
-### Quick Operations
+TreeMk instantly filters your files using fuzzy matching. Type `netw` and it still finds "neural-networks.md". Press Enter, and you're there. The whole operation takes a second.
 
-- **F2**: Rename selected file
-- **Delete**: Delete selected file (with confirmation)
-- **Double-click**: Open file in editor
-- **Right-click**: Access full context menu
-- **Drag & Drop**: Drag files from tree to editor to create `[[wiki-links]]`
+This might become your favorite feature. Once you've used it, navigating with your mouse feels quaint.
+
+## Search Everything
+
+Your notes are a second brain. But brains aren't organized by filename—they're organized by content. Press **Ctrl+Shift+F** to search across all your notes.
+
+Type "quantum entanglement" and TreeMk shows you every file mentioning it, with context. Click any result to jump straight there. It's like Ctrl+F, but for your entire knowledge base.
+
+## Following the Thread: History
+
+You're reading about quantum mechanics. You follow a link to wave functions. From there, to eigenvalues. Then matrix mechanics. Four notes deep, and you want to go back.
+
+Press **Alt+Left**. You're back to eigenvalues. **Alt+Left** again—wave functions. TreeMk tracks every file you open, maintaining a history just like your web browser.
+
+Look at the **History** tab in the left sidebar. Your entire navigation path is there, most recent at the top. Double-click any file to jump straight to it.
+
+TreeMk remembers up to 2,048 entries, persisting across sessions. You can retrace your research from yesterday, or last week, following your own trail of breadcrumbs.
+
+## The Document Outline
+
+Long documents need structure. When you're writing a technical guide or a research paper with dozens of sections, you need to jump around efficiently.
+
+Look at the **Outline** tab in the left sidebar. It shows every heading in your current document—a live table of contents. Click any heading to jump there instantly.
+
+As you write and reorganize, the outline updates automatically. It's a map of your document, always current, always clickable.
+
+## Tab Management
+
+You're writing in one note while referencing three others. TreeMk handles this with tabs at the top of the editor.
+
+- **Ctrl+Tab**: Next tab (like a browser)
+- **Ctrl+Shift+Tab**: Previous tab  
+- **Ctrl+W**: Close current tab
+- **Ctrl+Shift+T**: Reopen the tab you just closed (saved your bacon, didn't it?)
+
+Work with as many tabs as you need. TreeMk remembers which were open when you quit, reopening them next time.
+
+## Smart Clipboard: Images Just Work
+
+You're writing documentation and need to include a screenshot. Take the screenshot (it's in your clipboard). Go to TreeMk. Press **Ctrl+V**.
+
+TreeMk saves the image to the `./images` subdirectory (creating it if needed), prompts you for a filename, and inserts the Markdown syntax: `![image](images/screenshot.png)`. One keystroke.
+
+This works with any image on your clipboard—screenshots, copied images from websites, diagrams from drawing tools. TreeMk handles it. All markdown files in the same directory share the same `./images` folder, keeping your workspace organized.
+
+## Workspace Switching
+
+You keep work notes in one folder, personal journal in another, and a writing project in a third. Each is a separate workspace.
+
+Access **File → Recent Folders** to see workspaces you've opened recently. Click one, and TreeMk switches to it, closing tabs from the old workspace and remembering where you were.
+
+## Navigation Patterns
+
+Here's how these features work together in practice:
+
+**Research Mode**: Start with **Ctrl+Shift+F** to find all notes about a topic. Open several in tabs. Use **Alt+Left/Right** to move between them. Notice the Backlinks—discover more related notes. Use **Ctrl+P** to jump to specific files people mentioned.
+
+**Writing Mode**: Keep reference notes open in tabs. Use **Ctrl+K** to create links as you write. **Ctrl+V** to paste screenshots. Use the Outline tab to jump between sections you're editing.
+
+**Review Mode**: Open the History tab. See what you were researching yesterday. Click through your path. Notice patterns in how your ideas connect.
+
+## Where To Go Next
+
+You've learned to navigate TreeMk's interface. Now dive deeper:
+
+- **[Preview Features](preview.md)**: See how math, diagrams, and code come alive  
+- **[Keyboard Shortcuts](keyboard-shortcuts.md)**: Master the fastest ways to work
+- **[Writing with TreeMk's Editor](editor.md)**: Return to explore more editor features
+
+Your notes are a network. Navigate them that way.
 
 ### Clipboard Support
 

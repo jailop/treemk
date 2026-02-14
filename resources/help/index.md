@@ -44,9 +44,15 @@ makepkg -si
 - **[Code Blocks](code-blocks.md)** - Syntax highlighting for code
 - **[Mermaid Diagrams](diagrams.md)** - Creating flowcharts and diagrams
 - **[AI Assistant](ai-assistant.md)** - AI-powered writing help
-- **[Keyboard Shortcuts](keyboard-shortcuts.md)** - Complete reference of shortcuts
+- **[Themes and Appearance](themes-and-appearance.md)** - Customize TreeMk's look
+- **[Exporting Your Notes](exporting.md)** - Share as HTML, PDF, or DOCX
+
+### Workflows
+- **[Real-World Use Cases](workflows.md)** - Research, documentation, journaling, and Zettelkasten
 
 ### Reference
+- **[Keyboard Shortcuts](keyboard-shortcuts.md)** - Complete reference of shortcuts
+- **[Settings Reference](settings.md)** - Every configuration option explained
 - **[Contributing](contributing.md)** - Help improve TreeMk (web only)
 - **[License](license.md)** - License information (web only)
 

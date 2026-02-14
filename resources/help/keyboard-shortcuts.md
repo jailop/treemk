@@ -119,9 +119,16 @@ Complete list of keyboard shortcuts available in TreeMk.
 
 ## Task Lists
 
-| Action | Shortcut |
-|--------|----------|
-| Toggle Task Checkbox | Click on checkbox |
+Task lists use checkbox syntax: `- [ ]` for uncompleted, `- [x]` for completed.
+
+| Action | Method |
+|--------|--------|
+| Toggle Task Checkbox | Click on checkbox in preview panel |
+| Create Task List | Type `- [ ]` followed by text |
+| Mark as Complete | Click checkbox or change `[ ]` to `[x]` in editor |
+| Mark as Incomplete | Click checkbox or change `[x]` to `[ ]` in editor |
+
+**Tip:** Task checkboxes in the preview are clickable and update the editor automatically.
 
 ## AI Assistant
 
@@ -132,7 +139,22 @@ Complete list of keyboard shortcuts available in TreeMk.
 
 ## Customization
 
-You can customize keyboard shortcuts via **Edit → Preferences → Shortcuts**.
+You can customize keyboard shortcuts to match your workflow:
+
+1. Open **Edit → Preferences → Shortcuts**
+2. Find the action you want to remap
+3. Click on the current shortcut
+4. Press your desired key combination
+5. Conflicts are highlighted automatically
+6. Click **OK** to apply changes
+
+**Common Customizations:**
+- Map **Ctrl+Enter** to insert links
+- Change AI Assistant to **Ctrl+Space**
+- Use Vim-style navigation keys
+- Map function keys (F1-F12) to frequent actions
+
+**Export/Import:** Save your shortcuts to a file to reuse on other machines or share with your team.
 
 ## Platform Notes
 

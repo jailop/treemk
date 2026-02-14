@@ -17,17 +17,12 @@ QString MarkdownEditor::saveImageFromClipboard(const QImage& image) {
         return QString();
     }
 
-    // Get the directory and base name of the current file
+    // Get the directory of the current file
     QFileInfo fileInfo(m_currentFilePath);
     QDir fileDir = fileInfo.absoluteDir();
-    QString baseName = fileInfo.baseName();
 
-    // Sanitize the base name for safe folder creation (Unix and Windows)
-    QString imagesDirName = baseName;
-    imagesDirName.replace(QRegularExpression("[<>:\"/\\\\|?*]"), "_");
-    if (imagesDirName.isEmpty()) {
-        imagesDirName = "images";
-    }
+    // Use a single 'images' directory for all files
+    QString imagesDirName = "images";
     QString imagesDirPath = fileDir.filePath(imagesDirName);
     QDir imagesDir(imagesDirPath);
 

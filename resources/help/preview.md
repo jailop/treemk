@@ -1,11 +1,13 @@
-# Preview Features
+# Seeing Your Words Come Alive
 
-TreeMk's preview panel shows your Markdown rendered in real-time with support for advanced features.
+Markdown is plain text, but it's meant to be beautiful. TreeMk's preview panel transforms your text into formatted documents, complete with styled headings, colorful code blocks, rendered equations, and interactive diagrams. It's not just a feature—it's your second screen, updating instantly as you write.
 
-**Detailed Guides:**
-- **[Math Formulas](formulas.md)** - Complete LaTeX syntax and examples
-- **[Code Blocks](code-blocks.md)** - Syntax highlighting reference  
-- **[Mermaid Diagrams](diagrams.md)** - Creating flowcharts and diagrams
+Let's explore what the preview can do.
+
+**Deep Dives Available:**
+- **[Math Formulas](formulas.md)** - LaTeX equations and scientific notation
+- **[Code Blocks](code-blocks.md)** - Syntax highlighting for every language  
+- **[Mermaid Diagrams](diagrams.md)** - Flowcharts, sequences, and more
 
 ## Live Preview
 

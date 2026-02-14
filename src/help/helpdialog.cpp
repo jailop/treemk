@@ -67,6 +67,14 @@ void HelpDialog::initializeTopics() {
         {"diagrams", tr("Mermaid Diagrams"),
          tr("Creating diagrams with Mermaid")},
         {"ai-assistant", tr("AI Assistant"), tr("AI-powered writing help")},
+        {"themes-and-appearance", tr("Themes & Appearance"),
+         tr("Customize TreeMk's look and feel")},
+        {"exporting", tr("Exporting Notes"), 
+         tr("Export to PDF, HTML, and DOCX")},
+        {"workflows", tr("Workflows"),
+         tr("Real-world use cases and patterns")},
+        {"settings", tr("Settings Reference"),
+         tr("Complete settings documentation")},
         {"keyboard-shortcuts", tr("Keyboard Shortcuts"),
          tr("Complete shortcuts reference")}};
 }

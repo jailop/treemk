@@ -19,6 +19,8 @@ public:
   int lineNumberAreaWidth();
 
   void setLineNumbersVisible(bool visible);
+  void setPredictionEnabled(bool enabled);
+  void setAIAssistEnabled(bool enabled);
 
   bool isModified() const;
   void setModified(bool modified);
@@ -67,6 +69,7 @@ private:
   void setupEditor();
   QString saveImageFromClipboard(const QImage &image);
   void updateWordFrequency();
+  void updateDirectoryWordFrequency();
   QString predictWord(const QString &prefix) const;
   QString predictWordUnigram(const QString &prefix) const;
   QString predictWordBigram(const QString &previousWord,
@@ -103,6 +106,7 @@ private:
     QMap<QPair<QString, QString>, int> m_bigramFrequency; // Bigram model
     QString m_currentPrediction;
     bool m_predictionEnabled;
+    bool m_aiAssistEnabled;
     bool m_lineNumbersVisible;
 };
 

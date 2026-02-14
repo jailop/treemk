@@ -11,6 +11,7 @@
 #include <QMenu>
 #include <QMessageBox>
 #include <QMouseEvent>
+#include <QProcess>
 #include <QUrl>
 
 #include "fileutils.h"
@@ -63,11 +64,16 @@ void FileSystemTreeView::setupView() {
     setSelectionBehavior(QAbstractItemView::SelectRows);
     setEditTriggers(QAbstractItemView::EditKeyPressed);
 
-    // Drag and drop enabled to support the auto creation of
-    // wiki-links in the editor when dragging files from the
-    // file explorer to the editor.
+    // Drag and drop enabled to support:
+    // 1. Dragging files from file explorer to editor (creates wiki-links)
+    // 2. Dragging files within file explorer (move/copy file operations)
     setDragEnabled(true);
-    setDragDropMode(QAbstractItemView::DragOnly);
+    setAcceptDrops(true);
+    setDropIndicatorShown(true);
+    setDragDropMode(QAbstractItemView::DragDrop);
+    // InternalMove means drag-drop within the tree view will move files
+    // But dragging to external widgets (like the editor) still works
+    setDefaultDropAction(Qt::MoveAction);
 
     connect(selectionModel(), &QItemSelectionModel::currentChanged, this,
             &FileSystemTreeView::onSelectionChanged);
@@ -113,9 +119,17 @@ void FileSystemTreeView::createContextMenu() {
     openInNewWindowAction = new QAction(tr("Open in New Window"), this);
     connect(openInNewWindowAction, &QAction::triggered, this,
             &FileSystemTreeView::openInNewWindow);
+    openAction = new QAction(tr("Open"), this);
+    connect(openAction, &QAction::triggered, this,
+            &FileSystemTreeView::openFile);
+    openWithAction = new QAction(tr("Open With..."), this);
+    connect(openWithAction, &QAction::triggered, this,
+            &FileSystemTreeView::openFileWith);
     contextMenu->addAction(newFileAction);
     contextMenu->addAction(newFolderAction);
     contextMenu->addSeparator();
+    contextMenu->addAction(openAction);
+    contextMenu->addAction(openWithAction);
     contextMenu->addAction(openInNewWindowAction);
     contextMenu->addSeparator();
     contextMenu->addAction(renameAction);
@@ -273,6 +287,7 @@ void FileSystemTreeView::contextMenuEvent(QContextMenuEvent* event) {
     bool hasSelection = index.isValid();
     bool isDirectory = false;
     bool isMarkdownFile = false;
+    bool isNonMarkdownFile = false;
     if (hasSelection) {
         QString filePath = fileSystemModel->filePath(index);
         QFileInfo fileInfo(filePath);
@@ -282,6 +297,7 @@ void FileSystemTreeView::contextMenuEvent(QContextMenuEvent* event) {
             QString suffix = fileInfo.suffix().toLower();
             isMarkdownFile =
                 (suffix == "md" || suffix == "markdown" || suffix == "txt");
+            isNonMarkdownFile = !isMarkdownFile;
         }
     }
 
@@ -292,8 +308,12 @@ void FileSystemTreeView::contextMenuEvent(QContextMenuEvent* event) {
     cutAction->setEnabled(hasSelection);
     copyAction->setEnabled(hasSelection);
 
-    // Open in new window - only for md/txt files
-    openInNewWindowAction->setEnabled(hasSelection && isMarkdownFile);
+    // Open and Open With - only for non-markdown files
+    openAction->setEnabled(hasSelection && isNonMarkdownFile);
+    openWithAction->setEnabled(hasSelection && isNonMarkdownFile);
+
+    // Open in new window - for md/txt files and directories
+    openInNewWindowAction->setEnabled(hasSelection && (isMarkdownFile || isDirectory));
 
     // Folder navigation actions - only for directories
     setCurrentFolderAction->setEnabled(hasSelection && isDirectory);
@@ -607,6 +627,78 @@ void FileSystemTreeView::openInNewWindow() {
 
     QString path = fileSystemModel->filePath(index);
     emit openInNewWindowRequested(path);
+}
+
+void FileSystemTreeView::openFile() {
+    QModelIndex index = currentIndex();
+    if (!index.isValid()) {
+        return;
+    }
+
+    QString filePath = fileSystemModel->filePath(index);
+    QFileInfo fileInfo(filePath);
+    
+    if (fileInfo.isFile()) {
+        QDesktopServices::openUrl(QUrl::fromLocalFile(filePath));
+    }
+}
+
+void FileSystemTreeView::openFileWith() {
+    QModelIndex index = currentIndex();
+    if (!index.isValid()) {
+        return;
+    }
+
+    QString filePath = fileSystemModel->filePath(index);
+    QFileInfo fileInfo(filePath);
+    
+    if (fileInfo.isFile()) {
+        // Delegate to the desktop environment's "Open With" functionality
+#ifdef Q_OS_LINUX
+        // Try different desktop environments in order of preference
+        QString desktopEnv = qgetenv("XDG_CURRENT_DESKTOP");
+        
+        // KDE Plasma - use kioclient5
+        if (desktopEnv.contains("KDE", Qt::CaseInsensitive)) {
+            if (QProcess::execute("which", QStringList() << "kioclient5") == 0) {
+                QProcess::startDetached("kioclient5", QStringList() << "openProperties" << filePath);
+                return;
+            }
+        }
+        
+        // GNOME/GTK environments - use gio
+        if (QProcess::execute("which", QStringList() << "gio") == 0) {
+            QProcess::startDetached("gio", QStringList() << "open" << "--ask" << filePath);
+            return;
+        }
+        
+        // Fallback: open with default and inform user
+        QDesktopServices::openUrl(QUrl::fromLocalFile(filePath));
+        QMessageBox::information(this, tr("Open With"),
+            tr("'Open With' dialog not available on this system.\n"
+               "File opened with default application.\n\n"
+               "To enable 'Open With':\n"
+               "• GNOME/GTK: Install 'gio' (usually in 'glib2' package)\n"
+               "• KDE: Install 'kioclient5' (usually in 'kio' package)"));
+        
+#elif defined(Q_OS_WIN)
+        // On Windows, use the "Open With" dialog
+        QProcess::startDetached("rundll32.exe", 
+            QStringList() << "shell32.dll,OpenAs_RunDLL" << QDir::toNativeSeparators(filePath));
+            
+#elif defined(Q_OS_MAC)
+        // On macOS, there's no direct "Open With" command line option
+        // Open with default and show a message
+        QDesktopServices::openUrl(QUrl::fromLocalFile(filePath));
+        QMessageBox::information(this, tr("Open With"),
+            tr("To choose a different application, right-click the file in Finder\n"
+               "and select 'Open With'."));
+               
+#else
+        // Generic fallback: just open with default application
+        QDesktopServices::openUrl(QUrl::fromLocalFile(filePath));
+#endif
+    }
 }
 
 void FileSystemTreeView::selectFile(const QString& filePath) {

@@ -5,9 +5,11 @@ set -e
 
 RESOURCES_DIR="resources/js"
 CSS_DIR="resources/css"
+FONTS_DIR="resources/fonts"
 
 mkdir -p "$RESOURCES_DIR"
 mkdir -p "$CSS_DIR"
+mkdir -p "$FONTS_DIR"
 
 echo "Downloading KaTeX..."
 curl -L "https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" -o "$RESOURCES_DIR/katex.min.js"
@@ -22,8 +24,20 @@ curl -L "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/githu
 echo "Downloading Mermaid..."
 curl -L "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js" -o "$RESOURCES_DIR/mermaid.min.js"
 
+echo "Copying KaTeX fonts from node_modules..."
+if [ -d "node_modules/katex/dist/fonts" ]; then
+    rsync -av node_modules/katex/dist/fonts/ "$FONTS_DIR/"
+    echo "✓ KaTeX fonts copied successfully!"
+else
+    echo "⚠ Warning: node_modules/katex/dist/fonts not found. Run 'npm install' or 'bun install' first."
+fi
+
 echo "All libraries downloaded successfully!"
 echo ""
 echo "Files created:"
 ls -lh "$RESOURCES_DIR"
 ls -lh "$CSS_DIR"
+echo ""
+echo "Fonts:"
+ls -lh "$FONTS_DIR" | head -10
+
