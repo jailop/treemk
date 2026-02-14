@@ -98,8 +98,8 @@ nav:
   - Reference:
     - Keyboard Shortcuts: keyboard-shortcuts.md
     - Settings Reference: settings.md
-    - FAQ: faq.md
   - About:
+    - FAQ: faq.md
     - License: license.md
     - Contributing: contributing.md
 
