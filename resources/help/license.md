@@ -19,16 +19,16 @@ GNU General Public License for more details.
 ## What This Means
 
 ### You Can:
-- ✅ Use TreeMk for any purpose
-- ✅ Modify the source code
-- ✅ Distribute copies
-- ✅ Distribute modified versions
+- Use TreeMk for any purpose
+- Modify the source code
+- Distribute copies
+- Distribute modified versions
 
 ### You Must:
-- 📋 Include the license and copyright notice
-- 📋 State changes made to the code
-- 📋 Make source code available if distributing
-- 📋 License your modifications under GPL-3.0
+- Include the license and copyright notice
+- State changes made to the code
+- Make source code available if distributing
+- License your modifications under GPL-3.0
 
 ## Third-Party Libraries
 

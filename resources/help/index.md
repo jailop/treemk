@@ -53,10 +53,7 @@ makepkg -si
 ### Reference
 - **[Keyboard Shortcuts](keyboard-shortcuts.md)** - Complete reference of shortcuts
 - **[Settings Reference](settings.md)** - Every configuration option explained
-<<<<<<< HEAD
-=======
 - **[FAQ](faq.md)** - Frequently asked questions
->>>>>>> devel
 - **[Contributing](contributing.md)** - Help improve TreeMk (web only)
 - **[License](license.md)** - License information (web only)
 
