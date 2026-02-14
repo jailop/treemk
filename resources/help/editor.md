@@ -5,6 +5,7 @@ TreeMk's editor is designed for efficient Markdown writing with smart features t
 ## Core Features
 
 ### Multi-Tab Editing
+
 - Open multiple notes simultaneously
 - Switch between tabs with **Ctrl+Tab** / **Ctrl+Shift+Tab**
 - Close tab with **Ctrl+W**
@@ -17,7 +18,9 @@ TreeMk's editor is designed for efficient Markdown writing with smart features t
 When you press Enter, TreeMk automatically maintains the indentation level of the previous line.
 
 #### Auto-Close Brackets
+
 Type `(`, `[`, `{`, or `` ` `` and TreeMk automatically adds the closing character.
+
 - `(` becomes `()`
 - `[` becomes `[]`
 - `{` becomes `{}`
@@ -25,7 +28,9 @@ Type `(`, `[`, `{`, or `` ` `` and TreeMk automatically adds the closing charact
 - Cursor is placed between the brackets for easy typing
 
 #### List Continuation
+
 When editing lists, pressing Enter automatically continues the list:
+
 - Bullet lists: `- `, `* `, `+ `
 - Numbered lists: `1. `, `2. `, etc.
 - Task lists: `- [ ]`, `- [x]`
@@ -33,7 +38,9 @@ When editing lists, pressing Enter automatically continues the list:
 Press Enter on an empty list item to exit list mode.
 
 #### Word Prediction
-TreeMk learns words from your documents and suggests completions:
+
+As you write, TreeMk learns words from your document and suggests completions. As you begin a new word, TreeMK uses the registry to try predicting what the next word will be.
+
 - Type the beginning of a word
 - Press **Tab** to accept the suggestion
 - Uses unigram and bigram models for context-aware predictions
@@ -56,6 +63,7 @@ TreeMk provides special operations for working with Markdown lists:
 - **Dedent List Item**: **Shift+Tab** - Decreases indentation (moves item out)
 
 **Notes:**
+
 - List items can only be swapped with adjacent items at the same indentation level
 - Parent and child items at different indentation levels cannot be swapped
 - Works with bullet lists (`-`, `*`, `+`), numbered lists, and task lists
@@ -63,6 +71,7 @@ TreeMk provides special operations for working with Markdown lists:
 ### Text Formatting
 
 Insert formatting shortcuts:
+
 - **Bold**: **Ctrl+B** - Wraps selection with `**`
 - **Italic**: **Ctrl+I** - Wraps selection with `*`
 - **Code**: **Ctrl+`** - Wraps selection with backticks
@@ -71,13 +80,16 @@ Insert formatting shortcuts:
 ### Headers
 
 Insert headers quickly:
+
 - **Ctrl+1** through **Ctrl+6** - Insert H1 through H6
 - Automatically adds `#` symbols at the beginning of the line
 
 ### Insert Operations
 
 #### Images
+
 1. **From File**: **Ctrl+Shift+I** to select and insert an image
+1. 
 2. **From Clipboard**: **Ctrl+V** to paste images directly
    - Automatically saves to the document's folder
    - Generates unique filename
@@ -108,6 +120,7 @@ Insert headers quickly:
 ## Customization
 
 Access **Edit → Preferences** to customize:
+
 - Editor font and size
 - Tab width
 - Auto-indent behavior
@@ -118,7 +131,9 @@ Access **Edit → Preferences** to customize:
 ## Advanced Features
 
 ### Session Management
+
 TreeMk remembers:
+
 - Open tabs
 - Last opened folder
 - Cursor positions
@@ -127,25 +142,31 @@ TreeMk remembers:
 Enable in **Settings → General → Restore session on startup**
 
 ### Auto-Save
+
 Automatically saves your work at regular intervals:
+
 - Enable in **Settings → General → Auto-save**
 - Configure interval (default: 1 minute)
 
 ### AI Assistance
+
 TreeMk integrates with AI providers for intelligent writing help:
 
 **Supported Providers:**
+
 - **Ollama** - Run local AI models (llama2, mistral, etc.)
 - **OpenAI** - Use GPT models via API
 - **Compatible APIs** - Any OpenAI-compatible endpoint
 
 **How to Use:**
+
 1. Configure in **Edit → Preferences → AI Assistant**
 2. Add API endpoint and key (if required)
 3. Select your preferred model
 4. Use **Ctrl+Shift+A** or right-click → AI Assist
 
 **What AI Can Help With:**
+
 - Improve writing clarity
 - Expand ideas
 - Summarize text
@@ -160,4 +181,3 @@ TreeMk integrates with AI providers for intelligent writing help:
 - Learn about **[Navigation](navigation.md)** features
 - Explore **[Preview Features](preview.md)**
 - See **[Keyboard Shortcuts](keyboard-shortcuts.md)** reference
-

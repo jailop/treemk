@@ -273,8 +273,12 @@ void MarkdownEditor::applyDeferredFormatting() {
   // Store the current modified state
   bool wasModified = document()->isModified();
   
-  // Block signals to prevent triggering textChanged and modificationChanged
-  document()->blockSignals(true);
+  // Create a single cursor to batch all format changes
+  QTextCursor batchCursor(document());
+  
+  // Use beginEditBlock/endEditBlock to group all formatting as one undo action
+  // Then we'll clear it from the undo stack
+  batchCursor.beginEditBlock();
   
   QTextBlock block = document()->firstBlock();
   while (block.isValid()) {
@@ -282,8 +286,11 @@ void MarkdownEditor::applyDeferredFormatting() {
     block = block.next();
   }
   
-  // Restore signals
-  document()->blockSignals(false);
+  batchCursor.endEditBlock();
+  
+  // Now undo this formatting block to remove it from the stack
+  // but keep the visual formatting (it's already applied)
+  document()->undo();
   
   // Restore the modified state (formatting shouldn't count as modification)
   document()->setModified(wasModified);
