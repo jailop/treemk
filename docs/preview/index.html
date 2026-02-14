@@ -1485,11 +1485,13 @@
 </ul>
 <h2 id="markdown-rendering">Markdown Rendering<a class="headerlink" href="#markdown-rendering" title="Permanent link">&para;</a></h2>
 <h3 id="basic-formatting">Basic Formatting<a class="headerlink" href="#basic-formatting" title="Permanent link">&para;</a></h3>
-<p>All standard Markdown is supported:
-- <strong>Bold</strong> with <code>**text**</code> or <code>__text__</code>
-- <em>Italic</em> with <code>*text*</code> or <code>_text_</code>
-- <code>Code</code> with backticks
-- ~~Strikethrough~~ with <code>~~text~~</code></p>
+<p>All standard Markdown is supported:</p>
+<ul>
+<li><strong>Bold</strong> with <code>**text**</code> or <code>__text__</code></li>
+<li><em>Italic</em> with <code>*text*</code> or <code>_text_</code></li>
+<li><code>Code</code> with backticks</li>
+<li>~~Strikethrough~~ with <code>~~text~~</code></li>
+</ul>
 <h3 id="headings">Headings<a class="headerlink" href="#headings" title="Permanent link">&para;</a></h3>
 <div class="language-markdown highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gh"># Heading 1</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="gu">## Heading 2</span>
@@ -1520,35 +1522,35 @@
 <h3 id="latex-support">LaTeX Support<a class="headerlink" href="#latex-support" title="Permanent link">&para;</a></h3>
 <p>TreeMk renders LaTeX formulas using KaTeX or MathJax.</p>
 <h4 id="inline-formulas">Inline Formulas<a class="headerlink" href="#inline-formulas" title="Permanent link">&para;</a></h4>
-<p>Use single dollar signs for inline math:
+<p>Use single dollar signs for inline math:</p>
 <div class="language-markdown highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>The formula $E = mc^2$ is Einstein&#39;s famous equation.
-</span></code></pre></div></p>
+</span></code></pre></div>
 <p>Result: The formula <span class="arithmatex">\(E = mc^2\)</span> is Einstein's famous equation.</p>
 <h4 id="block-formulas">Block Formulas<a class="headerlink" href="#block-formulas" title="Permanent link">&para;</a></h4>
-<p>Use double dollar signs for display math:
+<p>Use double dollar signs for display math:</p>
 <div class="language-markdown highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>$$
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>\int_{-\infty}^{\infty} e^{-x^2} dx = \sqrt{\pi}
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>$$
-</span></code></pre></div></p>
-<p>Result:
-$$
+</span></code></pre></div>
+<p>Result:</p>
+<div class="arithmatex">\[
 \int_{-\infty}^{\infty} e^{-x^2} dx = \sqrt{\pi}
-$$</p>
+\]</div>
 <h3 id="common-formula-examples">Common Formula Examples<a class="headerlink" href="#common-formula-examples" title="Permanent link">&para;</a></h3>
-<p><strong>Quadratic Formula:</strong>
+<p><strong>Quadratic Formula:</strong></p>
 <div class="language-markdown highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>$$x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$$
-</span></code></pre></div></p>
-<p><strong>Matrix:</strong>
+</span></code></pre></div>
+<p><strong>Matrix:</strong></p>
 <div class="language-markdown highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>$$
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>\begin{bmatrix}
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>a &amp; b \\
 </span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>c &amp; d
 </span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>\end{bmatrix}
 </span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>$$
-</span></code></pre></div></p>
-<p><strong>Sum Notation:</strong>
+</span></code></pre></div>
+<p><strong>Sum Notation:</strong></p>
 <div class="language-markdown highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>$$\sum_{i=1}^{n} i = \frac{n(n+1)}{2}$$
-</span></code></pre></div></p>
+</span></code></pre></div>
 <h2 id="code-blocks">Code Blocks<a class="headerlink" href="#code-blocks" title="Permanent link">&para;</a></h2>
 <h3 id="syntax-highlighting">Syntax Highlighting<a class="headerlink" href="#syntax-highlighting" title="Permanent link">&para;</a></h3>
 <p>Code blocks support syntax highlighting for many languages:</p>
@@ -1569,15 +1571,6 @@ function greet(name) {
     return 0;
 }
 ```</p>
-<h3 id="supported-languages">Supported Languages<a class="headerlink" href="#supported-languages" title="Permanent link">&para;</a></h3>
-<ul>
-<li>Python, JavaScript, TypeScript</li>
-<li>C, C++, C#, Java</li>
-<li>Rust, Go, Ruby, PHP</li>
-<li>HTML, CSS, SQL</li>
-<li>Markdown, JSON, YAML</li>
-<li>And many more...</li>
-</ul>
 <h2 id="tables">Tables<a class="headerlink" href="#tables" title="Permanent link">&para;</a></h2>
 <h3 id="markdown-tables">Markdown Tables<a class="headerlink" href="#markdown-tables" title="Permanent link">&para;</a></h3>
 <p>Create tables with pipes and hyphens:</p>
@@ -1600,18 +1593,18 @@ function greet(name) {
 </span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="ge">&gt; &gt; Nested blockquotes are also supported.</span>
 </span></code></pre></div>
 <h3 id="callouts-with-custom-css">Callouts (with custom CSS)<a class="headerlink" href="#callouts-with-custom-css" title="Permanent link">&para;</a></h3>
-<p>Use blockquotes with special formatting for callouts:
+<p>Use blockquotes with special formatting for callouts:</p>
 <div class="language-markdown highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="k">&gt; </span><span class="ge">**Note:** This is an informational callout.</span>
 </span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>
 </span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="k">&gt; </span><span class="ge">**Warning:** This is a warning message.</span>
 </span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>
 </span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="k">&gt; </span><span class="ge">**Tip:** This is a helpful tip.</span>
-</span></code></pre></div></p>
+</span></code></pre></div>
 <h2 id="file-inclusion">File Inclusion<a class="headerlink" href="#file-inclusion" title="Permanent link">&para;</a></h2>
 <h3 id="embedding-content">Embedding Content<a class="headerlink" href="#embedding-content" title="Permanent link">&para;</a></h3>
-<p>Include content from other files:
+<p>Include content from other files:</p>
 <div class="language-markdown highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>[[!filename]]
-</span></code></pre></div></p>
+</span></code></pre></div>
 <p>When the preview renders, it will embed the content of that file inline.</p>
 <h3 id="use-cases">Use Cases<a class="headerlink" href="#use-cases" title="Permanent link">&para;</a></h3>
 <ul>
@@ -1620,45 +1613,43 @@ function greet(name) {
 <li>Modular documentation</li>
 <li>Shared content blocks</li>
 </ul>
-<h2 id="theme-support">Theme Support<a class="headerlink" href="#theme-support" title="Permanent link">&para;</a></h2>
-<h3 id="preview-themes">Preview Themes<a class="headerlink" href="#preview-themes" title="Permanent link">&para;</a></h3>
-<p>Choose from multiple preview themes:
-- <strong>Light</strong>: Clean, bright theme for daytime use
-- <strong>Dark</strong>: Easy on the eyes for night work
-- <strong>Sepia</strong>: Warm, paper-like reading experience</p>
-<h3 id="changing-themes">Changing Themes<a class="headerlink" href="#changing-themes" title="Permanent link">&para;</a></h3>
-<ul>
-<li><strong>View → Preview Theme</strong> menu</li>
-<li>Theme persists across sessions</li>
-<li>Synchronized with editor theme (optional)</li>
-</ul>
 <h2 id="custom-styling">Custom Styling<a class="headerlink" href="#custom-styling" title="Permanent link">&para;</a></h2>
 <h3 id="custom-css">Custom CSS<a class="headerlink" href="#custom-css" title="Permanent link">&para;</a></h3>
-<p>Load a custom CSS file to style your preview:
-1. Go to <strong>Edit → Preferences</strong>
-2. Navigate to <strong>Preview</strong> section
-3. Browse for your custom CSS file
-4. CSS applies immediately</p>
+<p>Load a custom CSS file to style your preview:</p>
+<ol>
+<li>Go to <strong>Edit → Preferences</strong></li>
+<li>Navigate to <strong>Preview</strong> section</li>
+<li>Browse for your custom CSS file</li>
+<li>CSS applies immediately</li>
+</ol>
 <h3 id="css-file-location">CSS File Location<a class="headerlink" href="#css-file-location" title="Permanent link">&para;</a></h3>
-<p>Place custom CSS anywhere, but consider:
-- Project-specific: in your workspace folder
-- Global: in a dedicated styles folder
-- Version control: include with your notes</p>
+<p>Place custom CSS anywhere, but consider:</p>
+<ul>
+<li>Project-specific: in your workspace folder</li>
+<li>Global: in a dedicated styles folder</li>
+<li>Version control: include with your notes</li>
+</ul>
 <h2 id="preview-settings">Preview Settings<a class="headerlink" href="#preview-settings" title="Permanent link">&para;</a></h2>
 <h3 id="configurable-options">Configurable Options<a class="headerlink" href="#configurable-options" title="Permanent link">&para;</a></h3>
 <p>Access via <strong>Edit → Preferences</strong>:</p>
-<p><strong>Refresh Rate:</strong>
-- 100-2000 milliseconds
-- Lower = more responsive
-- Higher = less CPU usage</p>
-<p><strong>Font Size:</strong>
-- 8-72 points
-- Independent from editor font
-- Zoom with Ctrl+Plus/Minus</p>
-<p><strong>Custom CSS:</strong>
-- Optional styling override
-- Applies on top of theme
-- Full CSS3 support</p>
+<p><strong>Refresh Rate:</strong></p>
+<ul>
+<li>100-2000 milliseconds</li>
+<li>Lower = more responsive</li>
+<li>Higher = less CPU usage</li>
+</ul>
+<p><strong>Font Size:</strong></p>
+<ul>
+<li>8-72 points</li>
+<li>Independent from editor font</li>
+<li>Zoom with Ctrl+Plus/Minus</li>
+</ul>
+<p><strong>Custom CSS:</strong></p>
+<ul>
+<li>Optional styling override</li>
+<li>Applies on top of theme</li>
+<li>Full CSS3 support</li>
+</ul>
 <h2 id="tips-for-better-previews">Tips for Better Previews<a class="headerlink" href="#tips-for-better-previews" title="Permanent link">&para;</a></h2>
 <ol>
 <li><strong>Use Semantic Headings</strong>: Structure improves readability</li>
@@ -1688,27 +1679,35 @@ function greet(name) {
 <li>Consider document size</li>
 </ul>
 <h2 id="export-features">Export Features<a class="headerlink" href="#export-features" title="Permanent link">&para;</a></h2>
-<p>TreeMk can export your notes to multiple formats using Pandoc.</p>
+<p>TreeMk can export your notes to multiple formats using <a href="https://pandoc.org/">Pandoc</a>.</p>
 <h3 id="supported-formats">Supported Formats<a class="headerlink" href="#supported-formats" title="Permanent link">&para;</a></h3>
-<p><strong>HTML Export</strong>
-- Self-contained HTML file
-- Includes CSS styling
-- Preserves syntax highlighting
-- Mermaid diagrams (with mermaid-filter)</p>
-<p><strong>PDF Export</strong>
-- Professional document layout
-- Code syntax highlighting
-- LaTeX formula rendering
-- Requires Pandoc with PDF support</p>
-<p><strong>DOCX Export</strong>
-- Microsoft Word format
-- Preserves formatting
-- Tables and lists
-- Code blocks</p>
-<p><strong>Plain Text</strong>
-- Simple text export
-- No formatting
-- Quick and lightweight</p>
+<p><strong>HTML Export</strong></p>
+<ul>
+<li>Self-contained HTML file</li>
+<li>Includes CSS styling</li>
+<li>Preserves syntax highlighting</li>
+<li>Mermaid diagrams (with mermaid-filter)</li>
+</ul>
+<p><strong>PDF Export</strong></p>
+<ul>
+<li>Professional document layout</li>
+<li>Code syntax highlighting</li>
+<li>LaTeX formula rendering</li>
+<li>Requires Pandoc with PDF support</li>
+</ul>
+<p><strong>DOCX Export</strong></p>
+<ul>
+<li>Microsoft Word format</li>
+<li>Preserves formatting</li>
+<li>Tables and lists</li>
+<li>Code blocks</li>
+</ul>
+<p><strong>Plain Text</strong></p>
+<ul>
+<li>Simple text export</li>
+<li>No formatting</li>
+<li>Quick and lightweight</li>
+</ul>
 <h3 id="how-to-export">How to Export<a class="headerlink" href="#how-to-export" title="Permanent link">&para;</a></h3>
 <ol>
 <li>Open the document you want to export</li>
@@ -1734,11 +1733,13 @@ function greet(name) {
 </span></code></pre></div>
 <p>If <code>mermaid-filter</code> is in your PATH, TreeMk will automatically use it during export to render Mermaid diagrams. Otherwise, they'll export as code blocks.</p>
 <h3 id="export-options">Export Options<a class="headerlink" href="#export-options" title="Permanent link">&para;</a></h3>
-<p>Access <strong>Edit → Preferences → Export</strong> to configure:
-- Default export format
-- PDF engine (pdflatex, xelatex, etc.)
-- Custom Pandoc options
-- Template selection</p>
+<p>Access <strong>Edit → Preferences → Export</strong> to configure:</p>
+<ul>
+<li>Default export format</li>
+<li>PDF engine (pdflatex, xelatex, etc.)</li>
+<li>Custom Pandoc options</li>
+<li>Template selection</li>
+</ul>
 <h3 id="tips-for-better-exports">Tips for Better Exports<a class="headerlink" href="#tips-for-better-exports" title="Permanent link">&para;</a></h3>
 <ol>
 <li><strong>Use Semantic Headings</strong>: Structure with H1, H2, H3 for better formatting</li>
@@ -1747,12 +1748,6 @@ function greet(name) {
 <li><strong>Check Formulas</strong>: Ensure LaTeX renders correctly in preview</li>
 <li><strong>Code Language</strong>: Specify language in code blocks for syntax highlighting</li>
 </ol>
-<h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
-<ul>
-<li>Explore <strong><a href="../editor/">Editor Features</a></strong> for editing</li>
-<li>Learn <strong><a href="../navigation/">Navigation</a></strong> techniques</li>
-<li>Return to <strong><a href="../">User Guide</a></strong> home</li>
-</ul>
 
 
 
@@ -1775,7 +1770,7 @@ function greet(name) {
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="February 12, 2026 19:00:59 UTC">February 12, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="February 13, 2026 02:26:12 UTC">February 13, 2026</span>
   </span>
 
     

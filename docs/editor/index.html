@@ -736,6 +736,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#list-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        List Operations
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#text-formatting" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -796,6 +807,17 @@
     <span class="md-ellipsis">
       
         Formulas
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#date-and-time" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Date and Time
       
     </span>
   </a>
@@ -1418,6 +1440,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#list-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        List Operations
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#text-formatting" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1478,6 +1511,17 @@
     <span class="md-ellipsis">
       
         Formulas
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#date-and-time" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Date and Time
       
     </span>
   </a>
@@ -1622,39 +1666,73 @@
 <h4 id="auto-indent">Auto-Indent<a class="headerlink" href="#auto-indent" title="Permanent link">&para;</a></h4>
 <p>When you press Enter, TreeMk automatically maintains the indentation level of the previous line.</p>
 <h4 id="auto-close-brackets">Auto-Close Brackets<a class="headerlink" href="#auto-close-brackets" title="Permanent link">&para;</a></h4>
-<p>Type <code>(</code>, <code>[</code>, <code>{</code>, <code>"</code>, or <code>'</code> and TreeMk automatically adds the closing character.</p>
+<p>Type <code>(</code>, <code>[</code>, <code>{</code>, or <code>`</code> and TreeMk automatically adds the closing character.</p>
+<ul>
+<li><code>(</code> becomes <code>()</code></li>
+<li><code>[</code> becomes <code>[]</code></li>
+<li><code>{</code> becomes <code>{}</code></li>
+<li><code>`</code> becomes <code></code> ``</li>
+<li>Cursor is placed between the brackets for easy typing</li>
+</ul>
 <h4 id="list-continuation">List Continuation<a class="headerlink" href="#list-continuation" title="Permanent link">&para;</a></h4>
-<p>When editing lists, pressing Enter automatically continues the list:
-- Bullet lists: <code>-</code>, <code>*</code>, <code>+</code>
-- Numbered lists: <code>1.</code>, <code>2.</code>, etc.
-- Task lists: <code>- [ ]</code>, <code>- [x]</code></p>
+<p>When editing lists, pressing Enter automatically continues the list:</p>
+<ul>
+<li>Bullet lists: <code>-</code>, <code>*</code>, <code>+</code></li>
+<li>Numbered lists: <code>1.</code>, <code>2.</code>, etc.</li>
+<li>Task lists: <code>- [ ]</code>, <code>- [x]</code></li>
+</ul>
+<p>Press Enter on an empty list item to exit list mode.</p>
 <h4 id="word-prediction">Word Prediction<a class="headerlink" href="#word-prediction" title="Permanent link">&para;</a></h4>
-<p>TreeMk learns words from your documents and suggests completions:
-- Type the beginning of a word
-- Press <strong>Tab</strong> to accept the suggestion
-- Uses unigram and bigram models for context-aware predictions</p>
+<p>As you write, TreeMk learns words from your document and suggests completions. As you begin a new word, TreeMK uses the registry to try predicting what the next word will be.</p>
+<ul>
+<li>Type the beginning of a word</li>
+<li>Press <strong>Tab</strong> to accept the suggestion</li>
+<li>Uses unigram and bigram models for context-aware predictions</li>
+</ul>
 <h3 id="line-operations">Line Operations<a class="headerlink" href="#line-operations" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Join Lines</strong>: <strong>Ctrl+J</strong> - Merges current line with the next</li>
+<li><strong>Break Lines</strong>: <strong>Ctrl+Shift+B</strong> - Breaks long lines at configured column width (default: 80)</li>
+<li><strong>Join Lines (Advanced)</strong>: <strong>Ctrl+Shift+J</strong> - Joins selected lines with spaces, or joins paragraph lines in whole document</li>
 <li><strong>Duplicate Line</strong>: <strong>Ctrl+D</strong> - Duplicates the current line</li>
 <li><strong>Delete Line</strong>: <strong>Ctrl+Shift+K</strong> - Deletes the current line</li>
 <li><strong>Move Line Up</strong>: <strong>Alt+Up</strong> - Moves line up</li>
 <li><strong>Move Line Down</strong>: <strong>Alt+Down</strong> - Moves line down</li>
 </ul>
+<p><strong>Note:</strong> Break Lines only works when line breaking is enabled in <strong>Settings → Editor → Line break columns</strong>. It intelligently breaks at word boundaries when possible.</p>
+<h3 id="list-operations">List Operations<a class="headerlink" href="#list-operations" title="Permanent link">&para;</a></h3>
+<p>TreeMk provides special operations for working with Markdown lists:</p>
+<ul>
+<li><strong>Move List Item Up</strong>: <strong>Ctrl+Up</strong> - Swaps current list item with the one above</li>
+<li><strong>Move List Item Down</strong>: <strong>Ctrl+Down</strong> - Swaps current list item with the one below</li>
+<li><strong>Indent List Item</strong>: <strong>Tab</strong> - Increases indentation (creates nested list)</li>
+<li><strong>Dedent List Item</strong>: <strong>Shift+Tab</strong> - Decreases indentation (moves item out)</li>
+</ul>
+<p><strong>Notes:</strong></p>
+<ul>
+<li>List items can only be swapped with adjacent items at the same indentation level</li>
+<li>Parent and child items at different indentation levels cannot be swapped</li>
+<li>Works with bullet lists (<code>-</code>, <code>*</code>, <code>+</code>), numbered lists, and task lists</li>
+</ul>
 <h3 id="text-formatting">Text Formatting<a class="headerlink" href="#text-formatting" title="Permanent link">&para;</a></h3>
-<p>Insert formatting shortcuts:
-- <strong>Bold</strong>: <strong>Ctrl+B</strong> - Wraps selection with <code>**</code>
-- <strong>Italic</strong>: <strong>Ctrl+I</strong> - Wraps selection with <code>*</code>
-- <strong>Code</strong>: **Ctrl+<code>** - Wraps selection with backticks
-- **Strikethrough**: **Ctrl+Shift+X** - Wraps selection with</code>~~`</p>
+<p>Insert formatting shortcuts:</p>
+<ul>
+<li><strong>Bold</strong>: <strong>Ctrl+B</strong> - Wraps selection with <code>**</code></li>
+<li><strong>Italic</strong>: <strong>Ctrl+I</strong> - Wraps selection with <code>*</code></li>
+<li><strong>Code</strong>: <strong>Ctrl+`</strong> - Wraps selection with backticks</li>
+<li><strong>Strikethrough</strong>: <strong>Ctrl+Shift+X</strong> - Wraps selection with <code>~~</code></li>
+</ul>
 <h3 id="headers">Headers<a class="headerlink" href="#headers" title="Permanent link">&para;</a></h3>
-<p>Insert headers quickly:
-- <strong>Ctrl+1</strong> through <strong>Ctrl+6</strong> - Insert H1 through H6
-- Automatically adds <code>#</code> symbols at the beginning of the line</p>
+<p>Insert headers quickly:</p>
+<ul>
+<li><strong>Ctrl+1</strong> through <strong>Ctrl+6</strong> - Insert H1 through H6</li>
+<li>Automatically adds <code>#</code> symbols at the beginning of the line</li>
+</ul>
 <h3 id="insert-operations">Insert Operations<a class="headerlink" href="#insert-operations" title="Permanent link">&para;</a></h3>
 <h4 id="images">Images<a class="headerlink" href="#images" title="Permanent link">&para;</a></h4>
 <ol>
 <li><strong>From File</strong>: <strong>Ctrl+Shift+I</strong> to select and insert an image</li>
+<li></li>
 <li><strong>From Clipboard</strong>: <strong>Ctrl+V</strong> to paste images directly</li>
 <li>Automatically saves to the document's folder</li>
 <li>Generates unique filename</li>
@@ -1671,6 +1749,21 @@
 <li>Insert inline formulas: <code>$x = y$</code></li>
 <li>Insert block formulas: <code>$$x = y$$</code></li>
 </ul>
+<h4 id="date-and-time">Date and Time<a class="headerlink" href="#date-and-time" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Insert Date</strong>: <strong>Alt+D</strong> - Insert current date with format options</li>
+<li>YYYY-MM-DD (e.g., 2026-02-14)</li>
+<li>DD/MM/YYYY (e.g., 14/02/2026)</li>
+<li>MM/DD/YYYY (e.g., 02/14/2026)</li>
+<li>Month DD, YYYY (e.g., February 14, 2026)</li>
+<li>Weekday, Month DD, YYYY (e.g., Friday, February 14, 2026)</li>
+<li><strong>Insert Time</strong>: <strong>Alt+T</strong> - Insert current time with format options</li>
+<li>HH:MM (e.g., 14:30)</li>
+<li>HH:MM:SS (e.g., 14:30:45)</li>
+<li>hh:mm AM/PM (e.g., 02:30 PM)</li>
+<li>hh:mm:ss AM/PM (e.g., 02:30:45 PM)</li>
+<li>The last selected format is remembered for quick insertion</li>
+</ul>
 <h3 id="line-numbers-and-display">Line Numbers and Display<a class="headerlink" href="#line-numbers-and-display" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Toggle line numbers from <strong>Settings → Editor</strong></li>
@@ -1685,43 +1778,55 @@
 <li><strong>Find in Files</strong>: <strong>Ctrl+Shift+F</strong> - Search across all documents</li>
 </ul>
 <h2 id="customization">Customization<a class="headerlink" href="#customization" title="Permanent link">&para;</a></h2>
-<p>Access <strong>Edit → Preferences</strong> to customize:
-- Editor font and size
-- Tab width
-- Auto-indent behavior
-- Auto-close brackets
-- Word prediction
-- Line breaking at column width</p>
+<p>Access <strong>Edit → Preferences</strong> to customize:</p>
+<ul>
+<li>Editor font and size</li>
+<li>Tab width</li>
+<li>Auto-indent behavior</li>
+<li>Auto-close brackets</li>
+<li>Word prediction</li>
+<li>Line breaking at column width</li>
+</ul>
 <h2 id="advanced-features">Advanced Features<a class="headerlink" href="#advanced-features" title="Permanent link">&para;</a></h2>
 <h3 id="session-management">Session Management<a class="headerlink" href="#session-management" title="Permanent link">&para;</a></h3>
-<p>TreeMk remembers:
-- Open tabs
-- Last opened folder
-- Cursor positions
-- Window layout</p>
+<p>TreeMk remembers:</p>
+<ul>
+<li>Open tabs</li>
+<li>Last opened folder</li>
+<li>Cursor positions</li>
+<li>Window layout</li>
+</ul>
 <p>Enable in <strong>Settings → General → Restore session on startup</strong></p>
 <h3 id="auto-save">Auto-Save<a class="headerlink" href="#auto-save" title="Permanent link">&para;</a></h3>
-<p>Automatically saves your work at regular intervals:
-- Enable in <strong>Settings → General → Auto-save</strong>
-- Configure interval (default: 1 minute)</p>
+<p>Automatically saves your work at regular intervals:</p>
+<ul>
+<li>Enable in <strong>Settings → General → Auto-save</strong></li>
+<li>Configure interval (default: 1 minute)</li>
+</ul>
 <h3 id="ai-assistance">AI Assistance<a class="headerlink" href="#ai-assistance" title="Permanent link">&para;</a></h3>
 <p>TreeMk integrates with AI providers for intelligent writing help:</p>
-<p><strong>Supported Providers:</strong>
-- <strong>Ollama</strong> - Run local AI models (llama2, mistral, etc.)
-- <strong>OpenAI</strong> - Use GPT models via API
-- <strong>Compatible APIs</strong> - Any OpenAI-compatible endpoint</p>
-<p><strong>How to Use:</strong>
-1. Configure in <strong>Edit → Preferences → AI Assistant</strong>
-2. Add API endpoint and key (if required)
-3. Select your preferred model
-4. Use <strong>Ctrl+Shift+A</strong> or right-click → AI Assist</p>
-<p><strong>What AI Can Help With:</strong>
-- Improve writing clarity
-- Expand ideas
-- Summarize text
-- Fix grammar and spelling
-- Translate content
-- Generate outlines</p>
+<p><strong>Supported Providers:</strong></p>
+<ul>
+<li><strong>Ollama</strong> - Run local AI models (llama2, mistral, etc.)</li>
+<li><strong>OpenAI</strong> - Use GPT models via API</li>
+<li><strong>Compatible APIs</strong> - Any OpenAI-compatible endpoint</li>
+</ul>
+<p><strong>How to Use:</strong></p>
+<ol>
+<li>Configure in <strong>Edit → Preferences → AI Assistant</strong></li>
+<li>Add API endpoint and key (if required)</li>
+<li>Select your preferred model</li>
+<li>Use <strong>Ctrl+Shift+A</strong> or right-click → AI Assist</li>
+</ol>
+<p><strong>What AI Can Help With:</strong></p>
+<ul>
+<li>Improve writing clarity</li>
+<li>Expand ideas</li>
+<li>Summarize text</li>
+<li>Fix grammar and spelling</li>
+<li>Translate content</li>
+<li>Generate outlines</li>
+</ul>
 <p><strong>Privacy Note:</strong> When using cloud AI services, your text is sent to external servers. For privacy-sensitive content, consider using local models with Ollama.</p>
 <h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
 <ul>
@@ -1751,7 +1856,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="February 12, 2026 19:00:59 UTC">February 12, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="February 14, 2026 06:00:27 UTC">February 14, 2026</span>
   </span>
 
     

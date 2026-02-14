@@ -146,6 +146,51 @@ File Management:
   in links.
 - export buttons removed from the toolbar
 - AI prompt sorting fixed.
-- Join/Break lines feature fixed
-- Go the parent directory was blocking. Fixed.
-- Insert Date/Time features included
+
+2026-02-14:
+
+Navigation History:
+- Back/Forward navigation with Alt+Left/Right keyboard shortcuts
+- Browser-like navigation: opening new file clears forward history
+- History panel in sidebar showing recently visited files
+- Circular buffer with 2048 max entries to prevent memory issues
+- Relative paths displayed in history panel from current workspace
+- Prevents duplicate consecutive entries for cleaner history
+- History persists across sessions
+
+AI Assistant Enhancements:
+- Converted AI Assistant toolbar button to dropdown menu
+- 10 predefined prompts: Rephrase, Fix Grammar, Make Shorter, Make Longer,
+  Simplify Language, Professional Tone, Casual Tone, Summarize, 
+  Translate to Spanish, Add Examples
+- AI Assist submenu in Edit menu with all predefined prompts
+- System Prompts dialog: Move Up/Down now properly updates selection
+- Custom prompts can be added, edited, and reordered
+- Quick access to common AI tasks without opening dialog
+
+Editor Features:
+- Join Lines feature fixed (Ctrl+J) - now handles Qt paragraph separators
+- Break Lines feature fixed (Ctrl+Shift+B) - properly breaks at word boundaries
+- Insert Date feature (Alt+D) with 5 format options
+- Insert Time feature (Alt+T) with 4 format options
+- Date/Time format memory: remembers last selected format per feature
+
+UI Improvements:
+- Sidebar tabs converted to icon-only with tooltips
+- Consistent 20x20 icon sizing across sidebar tabs
+- Files, Outline, Backlinks, and History tabs with clear icons
+- Cleaner interface with more editing space
+
+Bug Fixes:
+- Fixed segfault with KDE platform theme (uninitialized aiAssistMenu pointer)
+- Fixed blocking file panel actions (Set as Current Folder, Go to Parent Folder)
+- Removed recursive directory watching that caused UI freezing with large trees
+- File tree now responds instantly without scanning subdirectories
+
+Documentation:
+- Updated keyboard-shortcuts.md with new shortcuts
+- Updated editor.md with Date/Time insertion details
+- Updated ai-assistant.md with predefined prompts workflow
+- Updated getting-started.md with History tab and navigation tips
+- Updated navigation.md with complete history documentation
+- Updated index.md with history panel mention
