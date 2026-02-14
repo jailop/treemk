@@ -17,7 +17,7 @@
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), fileMenu(nullptr), editMenu(nullptr),
       insertMenu(nullptr), viewMenu(nullptr), helpMenu(nullptr),
-      recentFoldersMenu(nullptr), newAction(nullptr), openFolderAction(nullptr),
+      recentFoldersMenu(nullptr), aiAssistMenu(nullptr), newAction(nullptr), openFolderAction(nullptr),
       saveAction(nullptr), saveAsAction(nullptr), exportHtmlAction(nullptr),
       exportPdfAction(nullptr), exportDocxAction(nullptr),
       exportPlainTextAction(nullptr), insertImageAction(nullptr),

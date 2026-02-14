@@ -191,6 +191,7 @@ void MainWindow::createLayout() {
     leftTabWidget = new QTabWidget(this);
     leftTabWidget->setTabPosition(QTabWidget::South);
     leftTabWidget->setMinimumWidth(150);
+    leftTabWidget->setIconSize(QSize(20, 20));
 
     // File tree tab
     treePanel = new QWidget(this);
@@ -223,7 +224,9 @@ void MainWindow::createLayout() {
     connect(treeView, &FileSystemTreeView::fileRenamed, this,
             &MainWindow::onFileRenamed);
 
-    leftTabWidget->addTab(treePanel, tr("Files"));
+    leftTabWidget->addTab(treePanel, QIcon::fromTheme("folder", 
+        style()->standardIcon(QStyle::SP_DirIcon)), QString());
+    leftTabWidget->setTabToolTip(0, tr("Files"));
 
     // Outline tab
     outlinePanel = new QWidget(this);
@@ -233,7 +236,9 @@ void MainWindow::createLayout() {
     outlineView = new OutlinePanel(outlinePanel);
     outlineLayout->addWidget(outlineView);
 
-    leftTabWidget->addTab(outlinePanel, tr("Outline"));
+    leftTabWidget->addTab(outlinePanel, QIcon::fromTheme("view-list-tree",
+        style()->standardIcon(QStyle::SP_FileDialogDetailedView)), QString());
+    leftTabWidget->setTabToolTip(1, tr("Outline"));
 
     // Backlinks tab
     backlinksPanel = new QWidget(this);
@@ -251,7 +256,9 @@ void MainWindow::createLayout() {
                 }
             });
 
-    leftTabWidget->addTab(backlinksPanel, tr("Backlinks"));
+    leftTabWidget->addTab(backlinksPanel, QIcon::fromTheme("insert-link",
+        style()->standardIcon(QStyle::SP_ArrowBack)), QString());
+    leftTabWidget->setTabToolTip(2, tr("Backlinks"));
 
     // History tab
     historyPanel = new QWidget(this);
@@ -269,7 +276,9 @@ void MainWindow::createLayout() {
                 }
             });
 
-    leftTabWidget->addTab(historyPanel, tr("History"));
+    leftTabWidget->addTab(historyPanel, QIcon::fromTheme("document-open-recent",
+        style()->standardIcon(QStyle::SP_FileDialogBack)), QString());
+    leftTabWidget->setTabToolTip(3, tr("History"));
 
     // Tab widget for multiple editors
     tabWidget = new QTabWidget(this);
