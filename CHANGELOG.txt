@@ -130,3 +130,9 @@ File Management:
 
 - tab switching actions implemented
 - new main menu: Go
+- new feature: list items move up/down with Ctrl + Up/Down
+- issue: in a list, when `[` was typed, the program was assuming that it
+  was a task item. That was incorret because the bracket can also be the
+  beginning of a wiki-link or url. removed.
+- issue: hanging marging after list. it was remaining when the list
+  ended and a new normal paragraph started. fixed.

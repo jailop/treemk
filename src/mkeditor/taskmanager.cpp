@@ -240,17 +240,27 @@ void MarkdownEditor::applyListHangingIndent(const QTextBlock &block) {
   QString text = block.text();
   QRegularExpression listPattern("^(\\s*)([-*+]|[0-9]+\\.)\\s+");
   QRegularExpressionMatch match = listPattern.match(text);
+  
+  QTextCursor cursor(document());
+  cursor.setPosition(block.position());
+  QTextBlockFormat blockFormat = cursor.blockFormat();
+  
   if (!match.hasMatch()) {
-    return; // Not a list item
+    // Not a list item - reset margins if they were set
+    if (blockFormat.leftMargin() != 0 || blockFormat.textIndent() != 0) {
+      blockFormat.setLeftMargin(0);
+      blockFormat.setTextIndent(0);
+      cursor.setBlockFormat(blockFormat);
+    }
+    return;
   }
+  
+  // Is a list item - apply hanging indent
   QFont font = this->font();
   QFontMetrics fm(font);
   QString indent = match.captured(1); // Leading whitespace
   QString bullet = match.captured(2); // Bullet marker (-, *, +, or number.)
   int bulletWidth = fm.horizontalAdvance(indent + bullet + " ");
-  QTextCursor cursor(document());
-  cursor.setPosition(block.position());
-  QTextBlockFormat blockFormat = cursor.blockFormat();
   blockFormat.setLeftMargin(bulletWidth);     // Total left margin
   blockFormat.setTextIndent(-bulletWidth);    // Negative indent for hanging effect
   cursor.setBlockFormat(blockFormat);

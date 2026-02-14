@@ -13,16 +13,24 @@ TreeMk's editor is designed for efficient Markdown writing with smart features t
 ### Smart Editing
 
 #### Auto-Indent
+
 When you press Enter, TreeMk automatically maintains the indentation level of the previous line.
 
 #### Auto-Close Brackets
-Type `(`, `[`, `{`, `"`, or `'` and TreeMk automatically adds the closing character.
+Type `(`, `[`, `{`, or `` ` `` and TreeMk automatically adds the closing character.
+- `(` becomes `()`
+- `[` becomes `[]`
+- `{` becomes `{}`
+- `` ` `` becomes `` `` ``
+- Cursor is placed between the brackets for easy typing
 
 #### List Continuation
 When editing lists, pressing Enter automatically continues the list:
 - Bullet lists: `- `, `* `, `+ `
 - Numbered lists: `1. `, `2. `, etc.
 - Task lists: `- [ ]`, `- [x]`
+
+Press Enter on an empty list item to exit list mode.
 
 #### Word Prediction
 TreeMk learns words from your documents and suggests completions:
@@ -37,6 +45,20 @@ TreeMk learns words from your documents and suggests completions:
 - **Delete Line**: **Ctrl+Shift+K** - Deletes the current line
 - **Move Line Up**: **Alt+Up** - Moves line up
 - **Move Line Down**: **Alt+Down** - Moves line down
+
+### List Operations
+
+TreeMk provides special operations for working with Markdown lists:
+
+- **Move List Item Up**: **Ctrl+Up** - Swaps current list item with the one above
+- **Move List Item Down**: **Ctrl+Down** - Swaps current list item with the one below
+- **Indent List Item**: **Tab** - Increases indentation (creates nested list)
+- **Dedent List Item**: **Shift+Tab** - Decreases indentation (moves item out)
+
+**Notes:**
+- List items can only be swapped with adjacent items at the same indentation level
+- Parent and child items at different indentation levels cannot be swapped
+- Works with bullet lists (`-`, `*`, `+`), numbered lists, and task lists
 
 ### Text Formatting
 

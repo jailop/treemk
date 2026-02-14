@@ -102,6 +102,15 @@ Complete list of keyboard shortcuts available in TreeMk.
 | Delete | Delete |
 | Refresh | F5 |
 
+## Lists
+
+| Action | Shortcut |
+|--------|----------|
+| Move List Item Up | Ctrl+Up |
+| Move List Item Down | Ctrl+Down |
+| Indent List Item | Tab |
+| Dedent List Item | Shift+Tab |
+
 ## Task Lists
 
 | Action | Shortcut |
