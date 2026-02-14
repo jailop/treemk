@@ -27,6 +27,8 @@ Complete list of keyboard shortcuts available in TreeMk.
 | Duplicate Line | Ctrl+D |
 | Delete Line | Ctrl+Shift+K |
 | Join Lines | Ctrl+J |
+| Break Lines | Ctrl+Shift+B |
+| Join Lines (Advanced) | Ctrl+Shift+J |
 | Move Line Up | Alt+Up |
 | Move Line Down | Alt+Down |
 
@@ -53,12 +55,16 @@ Complete list of keyboard shortcuts available in TreeMk.
 | Insert Wiki Link | Ctrl+K |
 | Insert Markdown Link | Ctrl+Shift+K |
 | Insert Formula | Ctrl+Shift+M |
+| Insert Date | Alt+D |
+| Insert Time | Alt+T |
 | Paste Image from Clipboard | Ctrl+V |
 
 ## Navigation
 
 | Action | Shortcut |
 |--------|----------|
+| Back | Alt+Left |
+| Forward | Alt+Right |
 | Quick Open | Ctrl+P |
 | Next Tab | Ctrl+Tab |
 | Previous Tab | Ctrl+Shift+Tab |
@@ -101,6 +107,15 @@ Complete list of keyboard shortcuts available in TreeMk.
 | Rename | F2 |
 | Delete | Delete |
 | Refresh | F5 |
+
+## Lists
+
+| Action | Shortcut |
+|--------|----------|
+| Move List Item Up | Ctrl+Up |
+| Move List Item Down | Ctrl+Down |
+| Indent List Item | Tab |
+| Dedent List Item | Shift+Tab |
 
 ## Task Lists
 

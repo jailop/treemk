@@ -25,6 +25,7 @@ public:
   QString getDefaultTheme() const;
   QString getAppTheme() const;
   QString getMainFileName() const;
+  int getLinkSearchDepth() const;
 
 signals:
   void settingsChanged();
@@ -86,6 +87,7 @@ private:
   QCheckBox *restoreSessionCheckBox;
 
   // Workspace settings
+  QSpinBox *linkSearchDepthSpinBox;
 
    // Appearance settings
   QLineEdit *mainFileNameLineEdit;

@@ -22,6 +22,8 @@ public:
     MoveToNextParagraph,
     MoveUpOnePage,
     MoveDownOnePage,
+    MoveListItemUp,
+    MoveListItemDown,
 
     // Selection + Navigation
     SelectToStartOfLine,
@@ -39,7 +41,13 @@ public:
     DeleteWordLeft,
     DeleteWordRight,
     DeleteToStartOfLine,
-    DeleteToEndOfLine
+    DeleteToEndOfLine,
+
+    // Tabs
+    SwitchToNextTab,
+    SwitchToPreviousTab,
+    CloseCurrentTab,
+    CloseAllTabs
   };
   Q_ENUM(Action)
 

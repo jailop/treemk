@@ -5,6 +5,7 @@ TreeMk's editor is designed for efficient Markdown writing with smart features t
 ## Core Features
 
 ### Multi-Tab Editing
+
 - Open multiple notes simultaneously
 - Switch between tabs with **Ctrl+Tab** / **Ctrl+Shift+Tab**
 - Close tab with **Ctrl+W**
@@ -13,19 +14,33 @@ TreeMk's editor is designed for efficient Markdown writing with smart features t
 ### Smart Editing
 
 #### Auto-Indent
+
 When you press Enter, TreeMk automatically maintains the indentation level of the previous line.
 
 #### Auto-Close Brackets
-Type `(`, `[`, `{`, `"`, or `'` and TreeMk automatically adds the closing character.
+
+Type `(`, `[`, `{`, or `` ` `` and TreeMk automatically adds the closing character.
+
+- `(` becomes `()`
+- `[` becomes `[]`
+- `{` becomes `{}`
+- `` ` `` becomes `` `` ``
+- Cursor is placed between the brackets for easy typing
 
 #### List Continuation
+
 When editing lists, pressing Enter automatically continues the list:
+
 - Bullet lists: `- `, `* `, `+ `
 - Numbered lists: `1. `, `2. `, etc.
 - Task lists: `- [ ]`, `- [x]`
 
+Press Enter on an empty list item to exit list mode.
+
 #### Word Prediction
-TreeMk learns words from your documents and suggests completions:
+
+As you write, TreeMk learns words from your document and suggests completions. As you begin a new word, TreeMK uses the registry to try predicting what the next word will be.
+
 - Type the beginning of a word
 - Press **Tab** to accept the suggestion
 - Uses unigram and bigram models for context-aware predictions
@@ -33,14 +48,34 @@ TreeMk learns words from your documents and suggests completions:
 ### Line Operations
 
 - **Join Lines**: **Ctrl+J** - Merges current line with the next
+- **Break Lines**: **Ctrl+Shift+B** - Breaks long lines at configured column width (default: 80)
+- **Join Lines (Advanced)**: **Ctrl+Shift+J** - Joins selected lines with spaces, or joins paragraph lines in whole document
 - **Duplicate Line**: **Ctrl+D** - Duplicates the current line
 - **Delete Line**: **Ctrl+Shift+K** - Deletes the current line
 - **Move Line Up**: **Alt+Up** - Moves line up
 - **Move Line Down**: **Alt+Down** - Moves line down
 
+**Note:** Break Lines only works when line breaking is enabled in **Settings → Editor → Line break columns**. It intelligently breaks at word boundaries when possible.
+
+### List Operations
+
+TreeMk provides special operations for working with Markdown lists:
+
+- **Move List Item Up**: **Ctrl+Up** - Swaps current list item with the one above
+- **Move List Item Down**: **Ctrl+Down** - Swaps current list item with the one below
+- **Indent List Item**: **Tab** - Increases indentation (creates nested list)
+- **Dedent List Item**: **Shift+Tab** - Decreases indentation (moves item out)
+
+**Notes:**
+
+- List items can only be swapped with adjacent items at the same indentation level
+- Parent and child items at different indentation levels cannot be swapped
+- Works with bullet lists (`-`, `*`, `+`), numbered lists, and task lists
+
 ### Text Formatting
 
 Insert formatting shortcuts:
+
 - **Bold**: **Ctrl+B** - Wraps selection with `**`
 - **Italic**: **Ctrl+I** - Wraps selection with `*`
 - **Code**: **Ctrl+`** - Wraps selection with backticks
@@ -49,13 +84,16 @@ Insert formatting shortcuts:
 ### Headers
 
 Insert headers quickly:
+
 - **Ctrl+1** through **Ctrl+6** - Insert H1 through H6
 - Automatically adds `#` symbols at the beginning of the line
 
 ### Insert Operations
 
 #### Images
+
 1. **From File**: **Ctrl+Shift+I** to select and insert an image
+1. 
 2. **From Clipboard**: **Ctrl+V** to paste images directly
    - Automatically saves to the document's folder
    - Generates unique filename
@@ -69,6 +107,20 @@ Insert headers quickly:
 - **Ctrl+Shift+M** - Opens formula dialog
 - Insert inline formulas: `$x = y$`
 - Insert block formulas: `$$x = y$$`
+
+#### Date and Time
+- **Insert Date**: **Alt+D** - Insert current date with format options
+  - YYYY-MM-DD (e.g., 2026-02-14)
+  - DD/MM/YYYY (e.g., 14/02/2026)
+  - MM/DD/YYYY (e.g., 02/14/2026)
+  - Month DD, YYYY (e.g., February 14, 2026)
+  - Weekday, Month DD, YYYY (e.g., Friday, February 14, 2026)
+- **Insert Time**: **Alt+T** - Insert current time with format options
+  - HH:MM (e.g., 14:30)
+  - HH:MM:SS (e.g., 14:30:45)
+  - hh:mm AM/PM (e.g., 02:30 PM)
+  - hh:mm:ss AM/PM (e.g., 02:30:45 PM)
+- The last selected format is remembered for quick insertion
 
 ### Line Numbers and Display
 
@@ -86,6 +138,7 @@ Insert headers quickly:
 ## Customization
 
 Access **Edit → Preferences** to customize:
+
 - Editor font and size
 - Tab width
 - Auto-indent behavior
@@ -96,7 +149,9 @@ Access **Edit → Preferences** to customize:
 ## Advanced Features
 
 ### Session Management
+
 TreeMk remembers:
+
 - Open tabs
 - Last opened folder
 - Cursor positions
@@ -105,25 +160,31 @@ TreeMk remembers:
 Enable in **Settings → General → Restore session on startup**
 
 ### Auto-Save
+
 Automatically saves your work at regular intervals:
+
 - Enable in **Settings → General → Auto-save**
 - Configure interval (default: 1 minute)
 
 ### AI Assistance
+
 TreeMk integrates with AI providers for intelligent writing help:
 
 **Supported Providers:**
+
 - **Ollama** - Run local AI models (llama2, mistral, etc.)
 - **OpenAI** - Use GPT models via API
 - **Compatible APIs** - Any OpenAI-compatible endpoint
 
 **How to Use:**
+
 1. Configure in **Edit → Preferences → AI Assistant**
 2. Add API endpoint and key (if required)
 3. Select your preferred model
 4. Use **Ctrl+Shift+A** or right-click → AI Assist
 
 **What AI Can Help With:**
+
 - Improve writing clarity
 - Expand ideas
 - Summarize text
@@ -138,4 +199,3 @@ TreeMk integrates with AI providers for intelligent writing help:
 - Learn about **[Navigation](navigation.md)** features
 - Explore **[Preview Features](preview.md)**
 - See **[Keyboard Shortcuts](keyboard-shortcuts.md)** reference
-

@@ -31,11 +31,14 @@ When you **Ctrl+Click** on the link, TreeMk opens that note. If the file doesn't
 
 ## Understanding the Interface
 
-### Left Panel (Files & Outline)
+### Left Panel (Sidebar Tabs)
 
-- **Files Tab**: Browse your folder structure
-- **Outline Tab**: Navigate headings in the current document
-- **Backlinks Tab**: See which notes link to the current one
+The left sidebar contains icon-only tabs (hover for tooltips):
+
+- **Files Tab** (folder icon): Browse your folder structure
+- **Outline Tab** (list icon): Navigate headings in the current document
+- **Backlinks Tab** (link icon): See which notes link to the current one
+- **History Tab** (clock icon): View and navigate your browsing history
 
 ### Center Panel (Editor)
 
@@ -97,3 +100,5 @@ print("Hello, World!")
 - Use **Ctrl+Shift+F** to search across all files
 - Press **F1** to see all keyboard shortcuts
 - Paste images directly from clipboard (**Ctrl+V**)
+- Use **Alt+Left/Right** to navigate back and forward through files
+- Insert current date with **Alt+D**, time with **Alt+T**

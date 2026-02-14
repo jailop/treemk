@@ -1,4 +1,5 @@
 #include "fileutils.h"
+
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
@@ -6,13 +7,13 @@
 
 namespace FileUtils {
 
-bool ensureDirectoryExists(const QString &dirPath) {
+bool ensureDirectoryExists(const QString& dirPath) {
     QDir dir;
     return dir.mkpath(dirPath);
 }
 
-FileCreationResult createFileWithDirectories(const QString &filePath,
-        const QString &initialContent) {
+FileCreationResult createFileWithDirectories(const QString& filePath,
+                                             const QString& initialContent) {
     FileCreationResult result;
     result.success = false;
 
@@ -20,15 +21,15 @@ FileCreationResult createFileWithDirectories(const QString &filePath,
     QString dirPath = fileInfo.absolutePath();
 
     if (!ensureDirectoryExists(dirPath)) {
-        result.errorMessage = QObject::tr("Failed to create directory: %1")
-            .arg(dirPath);
+        result.errorMessage =
+            QObject::tr("Failed to create directory: %1").arg(dirPath);
         return result;
     }
 
     QFile file(filePath);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        result.errorMessage = QObject::tr("Failed to create file: %1")
-            .arg(filePath);
+        result.errorMessage =
+            QObject::tr("Failed to create file: %1").arg(filePath);
         return result;
     }
 
@@ -43,4 +44,4 @@ FileCreationResult createFileWithDirectories(const QString &filePath,
     return result;
 }
 
-} // namespace FileUtils
+}  // namespace FileUtils

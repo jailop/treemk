@@ -41,6 +41,8 @@ signals:
   void openLinkInNewWindowRequested(const QString &linkTarget);
   void aiAssistRequested();
   void aiAssistWithPromptRequested(const QString &promptText);
+  void fileDeleteRequested(const QString &filePath);
+  void fileRenameRequested(const QString &filePath);
 
 protected:
   void resizeEvent(QResizeEvent *event) override;
@@ -80,6 +82,12 @@ private:
     QVector<QTextBlock> findChildBlocks(const QTextBlock &block);
     int getIndentLevel(const QTextBlock &block);
     void applyListHangingIndent(const QTextBlock &block);
+    void applyListHangingIndentToCurrentBlock();
+
+    bool isCurrentLineListItem() const;
+    void moveListItemUp();
+    void moveListItemDown();
+    void swapTextBlocks(QTextBlock &block1, QTextBlock &block2);
 
   private slots:
     void applyDeferredFormatting();

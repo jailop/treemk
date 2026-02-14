@@ -125,3 +125,28 @@ File Management:
 0.6.0 - 2026-02-12
 
 - bump to new version
+
+2026-02-13:
+
+- backlinks module functional
+- history module implemented
+- tab switching actions implemented
+- new main menu: Go
+- Action dialog now shows relative paths
+- new feature: list items move up/down with Ctrl + Up/Down
+- issue: in a list, when `[` was typed, the program was assuming that it
+  was a task item. That was incorret because the bracket can also be the
+  beginning of a wiki-link or url. removed.
+- issue: hanging marging after list. it was remaining when the list
+  ended and a new normal paragraph started. fixed.
+- issue: undo/redo where not working, they are now. fixed.
+- issue fixed: pasted copy from a different application gets format
+  removed. it is pasted as plain text.
+- rename/delete files from the Markdown Editor, when they are included
+  in links.
+- export buttons removed from the toolbar
+- AI prompt sorting fixed.
+
+0.7.0 - 2026-02-14
+
+- Moving to version 0.7.0

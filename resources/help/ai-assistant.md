@@ -43,22 +43,40 @@ Go to **Edit → Preferences → AI Assistant**
 
 ### 2. Using the AI Assistant
 
-**Method 1: Keyboard Shortcut**
+**Method 1: Predefined Prompts (Quick Access)**
+
+1. Select text in your document
+2. Click the **AI Assist** toolbar button dropdown (or go to **Edit → AI Assist** menu)
+3. Choose from predefined prompts:
+   - **Rephrase** - Rewrite text with different wording
+   - **Fix Grammar** - Correct grammar and spelling errors
+   - **Make Shorter** - Condense text while keeping key points
+   - **Make Longer** - Expand and elaborate on ideas
+   - **Simplify Language** - Make text easier to understand
+   - **Professional Tone** - Convert to formal business style
+   - **Casual Tone** - Make text more conversational
+   - **Summarize** - Create a brief summary
+   - **Translate to Spanish** - Translate selected text
+   - **Add Examples** - Include relevant examples
+4. The AI processes immediately with the selected prompt
+
+**Method 2: Custom Prompt (Keyboard Shortcut)**
 
 1. Select text in your document
 2. Press **Ctrl+Shift+A**
-3. The AI assistant dialog opens
+3. The AI assistant dialog opens for custom instructions
 
-**Method 2: Context Menu**
+**Method 3: Custom Prompt (Toolbar)**
+
+1. Select text
+2. Click the main part of the **AI Assist** toolbar button (not the dropdown)
+3. Enter your custom prompt in the dialog
+
+**Method 4: Context Menu**
 
 1. Right-click selected text
 2. Choose **AI Assist**
 3. The AI assistant dialog opens
-
-**Method 3: Menu**
-
-1. Select text
-2. Go to **Edit → AI Assist**
 
 ## Features
 
@@ -102,7 +120,38 @@ Ask the AI to:
 
 ## AI Assistant Dialog
 
-When you invoke the AI assistant, a dialog appears with:
+### Predefined Prompts
+
+TreeMk includes 10 predefined prompts for common tasks, accessible from:
+- The **AI Assist** toolbar button dropdown
+- The **Edit → AI Assist** submenu
+
+These prompts work immediately on selected text without opening a dialog:
+
+1. **Rephrase** - Rewrite with different wording while preserving meaning
+2. **Fix Grammar** - Correct grammar, spelling, and punctuation
+3. **Make Shorter** - Condense text, remove redundancy
+4. **Make Longer** - Expand ideas with more detail and explanation
+5. **Simplify Language** - Use simpler words and shorter sentences
+6. **Professional Tone** - Convert to formal, business-appropriate style
+7. **Casual Tone** - Make more conversational and friendly
+8. **Summarize** - Create a concise summary of key points
+9. **Translate to Spanish** - Translate selected text to Spanish
+10. **Add Examples** - Include relevant examples to illustrate points
+
+### Managing Prompts
+
+Access **Tools → System Prompts** to customize:
+
+- **Edit** existing prompts
+- **Add** new predefined prompts
+- **Delete** prompts you don't use
+- **Reorder** prompts with Move Up/Down buttons
+- Your custom prompts appear in both toolbar and menu
+
+### Custom Prompt Dialog
+
+When you invoke the AI assistant with **Ctrl+Shift+A** or click the main toolbar button, a dialog appears with:
 
 **Input Area:**
 
@@ -124,6 +173,19 @@ When you invoke the AI assistant, a dialog appears with:
 - **Close** - Close the dialog
 
 ## Example Prompts
+
+### Using Predefined Prompts
+
+The quickest way to use AI assistance:
+
+1. Select text you want to improve
+2. Click **AI Assist** dropdown on toolbar
+3. Choose a predefined action (e.g., "Fix Grammar")
+4. AI processes and replaces your text automatically
+
+### Custom Prompt Examples
+
+For more specific requests, use the custom dialog (**Ctrl+Shift+A**):
 
 ### Writing Improvement
 ```
@@ -244,9 +306,11 @@ Access **Edit → Preferences → AI Assistant**:
 
 ## Keyboard Shortcuts
 
-- **Ctrl+Shift+A** - Open AI Assistant
+- **Ctrl+Shift+A** - Open AI Assistant dialog for custom prompt
 - **Ctrl+Enter** (in dialog) - Send request
 - **Esc** (in dialog) - Close without changes
+
+Use the toolbar dropdown or **Edit → AI Assist** menu for quick access to predefined prompts.
 
 ## Advanced Usage
 
@@ -259,14 +323,23 @@ Access **Edit → Preferences → AI Assistant**:
 
 ### Custom Prompts
 
-Save frequently used prompts:
+Create reusable prompts via **Tools → System Prompts**:
 
-- Create text snippets for common tasks
-- Use macros for repeated workflows
-- Build prompt templates
+- Add prompts for your specific workflows
+- Edit existing prompts to match your style
+- Reorder to put most-used prompts at the top
+- Prompts appear in both toolbar dropdown and Edit menu
+- Build a library of task-specific prompts
 
 ### Integration with Workflow
 
+**Quick Improvements:**
+- Select text, click dropdown, choose prompt
+- No dialog interruption for common tasks
+- Fast iterations with predefined actions
+
+**Custom Refinements:**
+- Use **Ctrl+Shift+A** for specific instructions
 - Draft with AI, refine manually
 - Use for quick summaries
 - Generate structure, fill details yourself

@@ -75,31 +75,73 @@ TreeMk recognizes all Markdown heading levels:
 - `### H3` - Subsections
 - And so on...
 
+## Navigation History
+
+### Back and Forward Navigation
+
+TreeMk tracks your navigation history, allowing you to move backward and forward through recently opened files—just like a web browser.
+
+### Using History Navigation
+
+- **Alt+Left** or click the **Back** button: Go to previous file
+- **Alt+Right** or click the **Forward** button: Go to next file
+- Menu: **Go → Back** and **Go → Forward**
+- Toolbar: Back and Forward buttons (arrow icons)
+
+### History Panel
+
+The **History** tab in the left sidebar shows your complete navigation history:
+
+- Most recent files appear at the top
+- Double-click any file to jump directly to it
+- History persists across sessions
+- Maximum of 2048 entries (oldest are automatically removed)
+
+### How History Works
+
+- Each time you open a file, it's added to your history
+- Navigate back and forward without re-adding to history
+- Opening a new file while in the middle of history clears forward entries
+- Prevents duplicate consecutive entries for cleaner history
+
+### Use Cases
+
+1. **Return to Context**: Go back to where you were before following a link
+2. **Compare Notes**: Quickly switch between related documents
+3. **Retrace Steps**: Review your research path through multiple documents
+4. **Resume Work**: See what you were working on in previous sessions
+
 ## Backlinks
 
 ### What Are Backlinks?
 
-Backlinks show all notes that link to the current document.
+Backlinks show all notes that link to the current document. This powerful feature helps you discover connections in your knowledge base by revealing which documents reference the one you're currently viewing.
 
 ### Using Backlinks
 
 1. Open any note
-2. Switch to the **Backlinks** tab
-3. See all notes that reference this one
+2. Switch to the **Backlinks** tab in the left sidebar
+3. See all notes that reference this one with `[[wiki-links]]`
 4. Click any backlink to open that note
+5. Backlinks update automatically as you create or remove links
 
 ### Benefits
 
 - Discover connections between notes
 - Find all references to a topic
-- Navigate your knowledge graph
+- Navigate your knowledge graph bidirectionally
 - Build a networked note system
+- Track how ideas are interconnected
+
+### How Backlinks Work
+
+When you create a wiki-link like `[[note-name]]` in one document, that document will appear in the Backlinks panel of the target note. This creates a two-way connection: you can navigate forward through links you create, and backward through links others create to you.
 
 ## Quick Open
 
 ### Fast File Access
 
-Press **Ctrl+P** to open the Quick Open dialog:
+Press **Ctrl+P** (menu: Go + Quick Open) to open the Quick Open dialog:
 
 - Start typing a filename
 - Fuzzy search matches parts of names
@@ -138,10 +180,12 @@ Press **Ctrl+Shift+F** to search across all files:
 
 Work with multiple notes simultaneously:
 
-- **Ctrl+Tab**: Next tab
-- **Ctrl+Shift+Tab**: Previous tab
-- **Ctrl+W**: Close current tab
-- **Ctrl+Shift+T**: Reopen closed tab
+- `Ctrl+Tab`: Next tab
+- `Ctrl+Shift+Tab`: Previous tab
+- `Ctrl+w`: Close current tab
+- `Ctrl+Shift+t`: Reopen closed tab
+
+These options are also available in the main menu under option `Go`
 
 ### Tab Management
 
@@ -164,11 +208,13 @@ Access recently opened folders:
 ## Tips for Efficient Navigation
 
 1. **Use Wiki Links**: Create a web of interconnected notes
-2. **Leverage Backlinks**: Discover unexpected connections
-3. **Quick Open**: Fastest way to jump between files
-4. **Outline Panel**: Navigate long documents quickly
-5. **Tab Groups**: Keep related notes open together
-6. **Search**: Find anything across your entire workspace
+2. **Leverage Backlinks**: Discover unexpected connections and reverse relationships
+3. **Navigation History**: Use Back/Forward to retrace your steps through documents
+4. **History Panel**: Review and jump to recently visited files
+5. **Quick Open**: Fastest way to jump between files (Ctrl+P)
+6. **Outline Panel**: Navigate long documents quickly
+7. **Tab Groups**: Keep related notes open together
+8. **Search**: Find anything across your entire workspace
 
 ## Keyboard Shortcuts
 
