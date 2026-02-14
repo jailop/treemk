@@ -48,10 +48,14 @@ As you write, TreeMk learns words from your document and suggests completions. A
 ### Line Operations
 
 - **Join Lines**: **Ctrl+J** - Merges current line with the next
+- **Break Lines**: **Ctrl+Shift+B** - Breaks long lines at configured column width (default: 80)
+- **Join Lines (Advanced)**: **Ctrl+Shift+J** - Joins selected lines with spaces, or joins paragraph lines in whole document
 - **Duplicate Line**: **Ctrl+D** - Duplicates the current line
 - **Delete Line**: **Ctrl+Shift+K** - Deletes the current line
 - **Move Line Up**: **Alt+Up** - Moves line up
 - **Move Line Down**: **Alt+Down** - Moves line down
+
+**Note:** Break Lines only works when line breaking is enabled in **Settings → Editor → Line break columns**. It intelligently breaks at word boundaries when possible.
 
 ### List Operations
 

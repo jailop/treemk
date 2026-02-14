@@ -9,6 +9,7 @@
 #include <QTabWidget>
 #include <QTimer>
 #include <QToolBar>
+#include <QToolButton>
 #include <QVBoxLayout>
 
 #include "filesystemtreeview.h"
@@ -66,7 +67,10 @@ void MainWindow::createMenus() {
     editMenu->addAction(findReplaceAction);
     editMenu->addAction(searchInFilesAction);
     editMenu->addSeparator();
-    editMenu->addAction(aiAssistAction);
+    // Create AI Assistant submenu
+    createAIAssistMenu();
+    QMenu* aiAssistSubmenu = editMenu->addMenu(tr("AI &Assistant"));
+    aiAssistSubmenu->addActions(aiAssistMenu->actions());
     editMenu->addSeparator();
     editMenu->addAction(breakLinesAction);
     editMenu->addAction(joinLinesAction);
@@ -165,7 +169,14 @@ void MainWindow::createToolbar() {
     mainToolbar->addSeparator();
 
     // AI and Search
-    mainToolbar->addAction(aiAssistAction);
+    // Create AI Assistant dropdown button
+    QToolButton* aiAssistButton = new QToolButton(this);
+    aiAssistButton->setDefaultAction(aiAssistAction);
+    aiAssistButton->setPopupMode(QToolButton::MenuButtonPopup);
+    aiAssistButton->setMenu(aiAssistMenu);
+    aiAssistButton->setToolTip(tr("AI Assist (click for custom, dropdown for presets)"));
+    mainToolbar->addWidget(aiAssistButton);
+    
     mainToolbar->addAction(findAction);
     mainToolbar->addAction(quickOpenAction);
     mainToolbar->addSeparator();
@@ -548,6 +559,9 @@ void MainWindow::applySettings() {
 
     // Reload system prompts
     SystemPrompts::instance()->loadFromSettings();
+    
+    // Recreate AI Assistant menu to reflect changes in prompts order/visibility
+    createAIAssistMenu();
 
     // Apply preview color scheme
     QString previewScheme =

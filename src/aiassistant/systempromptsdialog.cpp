@@ -211,9 +211,9 @@ void SystemPromptsDialog::movePromptUp() {
   
   currentPrompts.swapItemsAt(selectedRow, selectedRow - 1);
   SystemPrompts::instance()->reorderPrompts(currentPrompts);
-  selectedRow--;
+  int newRow = selectedRow - 1;
   loadPrompts();
-  ui->promptsList->setCurrentRow(selectedRow);
+  ui->promptsList->setCurrentRow(newRow);
 }
 
 void SystemPromptsDialog::movePromptDown() {
@@ -221,9 +221,9 @@ void SystemPromptsDialog::movePromptDown() {
   
   currentPrompts.swapItemsAt(selectedRow, selectedRow + 1);
   SystemPrompts::instance()->reorderPrompts(currentPrompts);
-  selectedRow++;
+  int newRow = selectedRow + 1;
   loadPrompts();
-  ui->promptsList->setCurrentRow(selectedRow);
+  ui->promptsList->setCurrentRow(newRow);
 }
 
 void SystemPromptsDialog::resetToDefaults() {

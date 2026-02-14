@@ -1,6 +1,7 @@
 #include "logic/systemprompts.h"
 #include <QSettings>
 #include <QUuid>
+#include <algorithm>
 
 SystemPrompts* SystemPrompts::m_instance = nullptr;
 
@@ -188,12 +189,21 @@ void SystemPrompts::reorderPrompts(const QList<SystemPrompt> &newOrder) {
 void SystemPrompts::loadFromSettings() {
   QSettings settings;
   
+  // Load enabled state for built-in prompts
   for (SystemPrompt &p : prompts) {
     QString key = QString("ai/prompts/%1/enabled").arg(p.id);
     p.enabled = settings.value(key, true).toBool();
+    
+    // Load order for built-in prompts
+    QString orderKey = QString("ai/prompts/%1/order").arg(p.id);
+    if (settings.contains(orderKey)) {
+      p.order = settings.value(orderKey, p.order).toInt();
+    }
   }
   
+  // Load custom prompts
   int customCount = settings.beginReadArray("ai/custom_prompts");
+  QList<SystemPrompt> customPrompts;
   for (int i = 0; i < customCount; ++i) {
     settings.setArrayIndex(i);
     
@@ -203,25 +213,38 @@ void SystemPrompts::loadFromSettings() {
     p.prompt = settings.value("prompt").toString();
     p.enabled = settings.value("enabled", true).toBool();
     p.isCustom = true;
-    p.order = prompts.size() + i;
+    p.order = settings.value("order", prompts.size() + i).toInt();
     
     if (!p.id.isEmpty() && !p.name.isEmpty() && !p.prompt.isEmpty()) {
-      prompts.append(p);
+      customPrompts.append(p);
     }
   }
   settings.endArray();
+  
+  // Append custom prompts
+  prompts.append(customPrompts);
+  
+  // Sort all prompts by order field
+  std::sort(prompts.begin(), prompts.end(), [](const SystemPrompt &a, const SystemPrompt &b) {
+    return a.order < b.order;
+  });
 }
 
 void SystemPrompts::saveToSettings() {
   QSettings settings;
   
+  // Save built-in prompts (enabled state and order)
   for (const SystemPrompt &p : prompts) {
     if (!p.isCustom) {
-      QString key = QString("ai/prompts/%1/enabled").arg(p.id);
-      settings.setValue(key, p.enabled);
+      QString enabledKey = QString("ai/prompts/%1/enabled").arg(p.id);
+      settings.setValue(enabledKey, p.enabled);
+      
+      QString orderKey = QString("ai/prompts/%1/order").arg(p.id);
+      settings.setValue(orderKey, p.order);
     }
   }
   
+  // Save custom prompts
   QList<SystemPrompt> customPrompts;
   for (const SystemPrompt &p : prompts) {
     if (p.isCustom) {
@@ -236,6 +259,7 @@ void SystemPrompts::saveToSettings() {
     settings.setValue("name", customPrompts[i].name);
     settings.setValue("prompt", customPrompts[i].prompt);
     settings.setValue("enabled", customPrompts[i].enabled);
+    settings.setValue("order", customPrompts[i].order);
   }
   settings.endArray();
 }

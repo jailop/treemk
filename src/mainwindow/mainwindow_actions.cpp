@@ -541,6 +541,7 @@ void MainWindow::breakLines() {
     cursor.setPosition(start);
     cursor.setPosition(end, QTextCursor::KeepAnchor);
     QString text = cursor.selectedText();
+    text.replace(QChar(0x2029), '\n');
 
     QStringList lines = text.split('\n');
 
@@ -588,6 +589,7 @@ void MainWindow::joinLines() {
         cursor.setPosition(start);
         cursor.setPosition(end, QTextCursor::KeepAnchor);
         text = cursor.selectedText();
+        text.replace(QChar(0x2029), '\n');
         // For selected text, join all lines with spaces
         text.replace("\n", " ");
     } else {

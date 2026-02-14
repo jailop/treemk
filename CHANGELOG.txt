@@ -145,3 +145,5 @@ File Management:
 - rename/delete files from the Markdown Editor, when they are included
   in links.
 - export buttons removed from the toolbar
+- AI prompt sorting fixed.
+- Join/Break lines feature fixed

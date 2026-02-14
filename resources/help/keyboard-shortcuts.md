@@ -27,6 +27,8 @@ Complete list of keyboard shortcuts available in TreeMk.
 | Duplicate Line | Ctrl+D |
 | Delete Line | Ctrl+Shift+K |
 | Join Lines | Ctrl+J |
+| Break Lines | Ctrl+Shift+B |
+| Join Lines (Advanced) | Ctrl+Shift+J |
 | Move Line Up | Alt+Up |
 | Move Line Down | Alt+Down |
 

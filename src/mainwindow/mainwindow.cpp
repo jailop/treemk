@@ -99,6 +99,7 @@ MainWindow::MainWindow(QWidget *parent)
    // Create UI components in order
    createLayout();
    createActions();
+   createAIAssistMenu();
    createMenus();
    createToolbar();
    // Note: readSettings() is called after setStartupArguments() in main.cpp
