@@ -7,6 +7,8 @@
 #include <QNetworkReply>
 #include <QString>
 
+const QString openAILabel = "OpenAI";
+
 class OpenAIProvider : public QObject, public AIProvider {
   Q_OBJECT
 
@@ -20,7 +22,7 @@ public:
                std::function<void(const QString&)> onError) override;
   
   bool isAvailable() const override;
-  QString name() const override { return "OpenAI"; }
+  QString name() const override { return openAILabel; }
   
   void setModel(const QString &model);
   void setEndpoint(const QString &url);
@@ -41,8 +43,6 @@ private:
   QString endpoint;
   QString apiKey;
   int timeoutSeconds;
-  
-  QString buildSystemPrompt() const;
 };
 
-#endif // OPENAIPROVIDER_H
+#endif

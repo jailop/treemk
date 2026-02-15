@@ -25,13 +25,6 @@ void OpenAIProvider::setApiKey(const QString& key) { apiKey = key; }
 
 void OpenAIProvider::setTimeout(int seconds) { timeoutSeconds = seconds; }
 
-QString OpenAIProvider::buildSystemPrompt() const {
-    return "You are a helpful writing assistant. "
-           "Respond with only the modified text. "
-           "Do not include explanations or commentary unless specifically "
-           "requested.";
-}
-
 void OpenAIProvider::process(const QString& prompt, const QString& content,
                              std::function<void(const QString&)> onSuccess,
                              std::function<void(const QString&)> onError) {
@@ -97,8 +90,9 @@ void OpenAIProvider::process(const QString& prompt, const QString& content,
             if (!choices.isEmpty()) {
                 QJsonObject firstChoice = choices[0].toObject();
                 QJsonObject message = firstChoice["message"].toObject();
-                QString result = message["content"].toString().trimmed();
-
+                QString rawResponse = message["content"].toString().trimmed();
+                QString result = extractResultFromMarkdown(rawResponse);
+                
                 if (!result.isEmpty()) {
                     onSuccess(result);
                 } else {

@@ -26,11 +26,16 @@ const QString ollamaDefaultUrl = "http://localhost:11434";
 const QString openAiDefaultUrl = "https://api.openai.com/v1";
 
 static QString getStatusColor(const QString& type, bool isDark) {
-    const auto& colors = isDark ? ColorPalette::getDarkTheme() : ColorPalette::getLightTheme();
-    if (type == "info") return ColorPalette::toHexString(colors.statusInfo);
-    if (type == "success") return ColorPalette::toHexString(colors.statusSuccess);
-    if (type == "error") return ColorPalette::toHexString(colors.statusError);
-    if (type == "warning") return ColorPalette::toHexString(colors.statusWarning);
+    const auto& colors = isDark ? ColorPalette::getDarkTheme() : 
+        ColorPalette::getLightTheme();
+    if (type == "info")
+        return ColorPalette::toHexString(colors.statusInfo);
+    if (type == "success")
+        return ColorPalette::toHexString(colors.statusSuccess);
+    if (type == "error")
+        return ColorPalette::toHexString(colors.statusError);
+    if (type == "warning")
+        return ColorPalette::toHexString(colors.statusWarning);
     return ColorPalette::toHexString(colors.textSecondary);
 }
 
@@ -72,7 +77,7 @@ void SettingsDialog::loadAISettings() {
     }
 
     QString endpoint =
-        settings.value("ai/ollama/endpoint", "http://localhost:11434")
+        settings.value("ai/ollama/endpoint", ollamaDefaultUrl)
             .toString();
     ollamaEndpointLineEdit->setText(endpoint);
 
@@ -88,7 +93,7 @@ void SettingsDialog::loadAISettings() {
         settings.value("ai/ollama/timeout", timeOutDefault).toInt());
 
     QString openaiEndpoint =
-        settings.value("ai/openai/endpoint", "https://api.openai.com/v1")
+        settings.value("ai/openai/endpoint", openAiDefaultUrl)
             .toString();
     openaiEndpointLineEdit->setText(openaiEndpoint);
 
@@ -133,7 +138,8 @@ void SettingsDialog::onTestOpenAIConnection() {
     testConnectionButton->setText(tr("Testing..."));
     connectionStatusLabel->setText(tr("Connecting..."));
     bool isDark = palette().color(QPalette::Window).lightness() < 128;
-    connectionStatusLabel->setStyleSheet(QString("color: %1;").arg(getStatusColor("info", isDark)));
+    connectionStatusLabel->setStyleSheet(QString("color: %1;")
+            .arg(getStatusColor("info", isDark)));
 
     OpenAIProvider provider;
     provider.setEndpoint(openaiEndpointLineEdit->text());
@@ -148,11 +154,13 @@ void SettingsDialog::onTestOpenAIConnection() {
     bool success = provider.testConnection(error);
 
     if (success) {
-        connectionStatusLabel->setText(tr("Connected"));
-        connectionStatusLabel->setStyleSheet(QString("color: %1;").arg(getStatusColor("success", isDark)));
+        connectionStatusLabel->setText(tr("✓ Connected"));
+        connectionStatusLabel->setStyleSheet(QString("color: %1;")
+                .arg(getStatusColor("success", isDark)));
     } else {
-        connectionStatusLabel->setText(tr("%1").arg(error));
-        connectionStatusLabel->setStyleSheet(QString("color: %1;").arg(getStatusColor("error", isDark)));
+        connectionStatusLabel->setText(error);
+        connectionStatusLabel->setStyleSheet(QString("color: %1;")
+                .arg(getStatusColor("error", isDark)));
     }
 
     testConnectionButton->setEnabled(true);
@@ -163,12 +171,13 @@ void SettingsDialog::onRefreshOpenAIModels() {
     refreshOpenAIModelsButton->setEnabled(false);
     refreshOpenAIModelsButton->setText(tr("Loading..."));
     connectionStatusLabel->setText(tr("Fetching models..."));
-    connectionStatusLabel->setStyleSheet("color: blue;");
+    bool isDark = palette().color(QPalette::Window).lightness() < 128;
+    connectionStatusLabel->setStyleSheet(QString("color: %1;")
+            .arg(getStatusColor("info", isDark)));
 
     OpenAIProvider provider;
     provider.setEndpoint(openaiEndpointLineEdit->text());
 
-    // Get API key from field or environment
     QString apiKey = openaiApiKeyLineEdit->text();
     if (apiKey.isEmpty()) {
         apiKey = qEnvironmentVariable("OPENAI_API_KEY");
@@ -178,7 +187,6 @@ void SettingsDialog::onRefreshOpenAIModels() {
     QString error;
     QStringList models = provider.listModels(error);
 
-    // Ensure we always have at least default models
     if (models.isEmpty()) {
         models << "gpt-4o" << "gpt-4o-mini" << "gpt-4-turbo" << "gpt-3.5-turbo";
         if (error.isEmpty()) {
@@ -187,37 +195,34 @@ void SettingsDialog::onRefreshOpenAIModels() {
     }
 
     if (!error.isEmpty()) {
-        connectionStatusLabel->setText(
-            tr("Warning: %1 (showing defaults)").arg(error));
-        connectionStatusLabel->setStyleSheet("color: orange;");
+        connectionStatusLabel->setText(tr("Warning: %1").arg(error));
+        connectionStatusLabel->setStyleSheet(QString("color: %1;")
+                .arg(getStatusColor("warning", isDark)));
     } else {
-        connectionStatusLabel->setText(
-            tr("✓ %1 models loaded").arg(models.size()));
-        connectionStatusLabel->setStyleSheet("color: green;");
+        connectionStatusLabel->setText(tr("✓ %1 models loaded")
+                .arg(models.size()));
+        connectionStatusLabel->setStyleSheet(QString("color: %1;")
+                .arg(getStatusColor("success", isDark)));
     }
 
-    // Save current selection
     QString currentModel = openaiModelComboBox->currentText();
 
-    // Update combo box
     openaiModelComboBox->clear();
     for (const QString& model : models) {
         openaiModelComboBox->addItem(model);
     }
 
-    // Restore previous selection if it exists in new list
     if (!currentModel.isEmpty()) {
         int index = openaiModelComboBox->findText(currentModel);
         if (index >= 0) {
             openaiModelComboBox->setCurrentIndex(index);
         } else {
-            // If previous model not in list, set it as editable text
             openaiModelComboBox->setEditText(currentModel);
         }
     }
 
     refreshOpenAIModelsButton->setEnabled(true);
-    refreshOpenAIModelsButton->setText(tr("Refresh Models"));
+    refreshOpenAIModelsButton->setText(tr("Refresh"));
 }
 
 void SettingsDialog::onProviderChanged(int index) {
@@ -251,24 +256,14 @@ void SettingsDialog::onAIEnabledChanged(int state) {
 
 void SettingsDialog::setupAITab() {
     QWidget* aiTab = new QWidget();
-    QScrollArea* scrollArea = new QScrollArea();
-    QWidget* scrollWidget = new QWidget();
-    QVBoxLayout* mainLayout = new QVBoxLayout(scrollWidget);
-
-    // AI Feature Enable/Disable
-    QGroupBox* featureGroup = new QGroupBox(tr("AI Assistance Feature"));
-    QVBoxLayout* featureLayout = new QVBoxLayout();
+    QVBoxLayout* mainLayout = new QVBoxLayout(aiTab);
 
     aiEnabledCheckBox = new QCheckBox(tr("Enable AI Assistance"));
     connect(aiEnabledCheckBox, &QCheckBox::stateChanged, this,
             &SettingsDialog::onAIEnabledChanged);
-    featureLayout->addWidget(aiEnabledCheckBox);
+    mainLayout->addWidget(aiEnabledCheckBox);
 
-    featureGroup->setLayout(featureLayout);
-    mainLayout->addWidget(featureGroup);
-
-    // Provider Selection
-    QGroupBox* providerGroup = new QGroupBox(tr("AI Provider"));
+    QGroupBox* providerGroup = new QGroupBox(tr("Provider Configuration"));
     QFormLayout* providerLayout = new QFormLayout();
 
     aiProviderComboBox = new QComboBox();
@@ -277,76 +272,51 @@ void SettingsDialog::setupAITab() {
     connect(aiProviderComboBox,
             QOverload<int>::of(&QComboBox::currentIndexChanged), this,
             &SettingsDialog::onProviderChanged);
-    providerLayout->addRow(tr("Active Provider:"), aiProviderComboBox);
+    providerLayout->addRow(tr("Provider:"), aiProviderComboBox);
 
     providerGroup->setLayout(providerLayout);
     mainLayout->addWidget(providerGroup);
 
-    // Ollama Settings
-    ollamaGroup = new QGroupBox(tr("Ollama Settings"));
+    ollamaGroup = new QGroupBox(tr("Ollama"));
     QFormLayout* ollamaLayout = new QFormLayout();
 
     ollamaEndpointLineEdit = new QLineEdit();
-    ollamaEndpointLineEdit->setPlaceholderText("http://localhost:11434");
+    ollamaEndpointLineEdit->setPlaceholderText(ollamaDefaultUrl);
     ollamaLayout->addRow(tr("Endpoint:"), ollamaEndpointLineEdit);
 
-    QLabel* endpointHint = new QLabel(tr("(auto-detected from OLLAMA_HOST)"));
-    QFont hintFont = endpointHint->font();
-    hintFont.setItalic(true);
-    endpointHint->setFont(hintFont);
-    endpointHint->setStyleSheet("color: gray;");
-    ollamaLayout->addRow("", endpointHint);
-
-    QHBoxLayout* modelLayout = new QHBoxLayout();
+    QHBoxLayout* ollamaModelLayout = new QHBoxLayout();
     ollamaModelComboBox = new QComboBox();
     ollamaModelComboBox->setEditable(true);
     ollamaModelComboBox->addItem("llama3.2");
-    modelLayout->addWidget(ollamaModelComboBox, 1);
+    ollamaModelLayout->addWidget(ollamaModelComboBox, 1);
 
-    refreshModelsButton = new QPushButton(tr("Refresh Models"));
+    refreshModelsButton = new QPushButton(tr("Refresh"));
     connect(refreshModelsButton, &QPushButton::clicked, this,
             &SettingsDialog::onRefreshOllamaModels);
-    modelLayout->addWidget(refreshModelsButton);
+    ollamaModelLayout->addWidget(refreshModelsButton);
 
-    ollamaLayout->addRow(tr("Model:"), modelLayout);
+    ollamaLayout->addRow(tr("Model:"), ollamaModelLayout);
 
     ollamaTimeoutSpinBox = new QSpinBox();
     ollamaTimeoutSpinBox->setRange(10, 300);
     ollamaTimeoutSpinBox->setValue(60);
-    ollamaTimeoutSpinBox->setSuffix(" seconds");
+    ollamaTimeoutSpinBox->setSuffix(" s");
     ollamaLayout->addRow(tr("Timeout:"), ollamaTimeoutSpinBox);
 
     ollamaGroup->setLayout(ollamaLayout);
     mainLayout->addWidget(ollamaGroup);
 
-    // OpenAI Settings
-    openaiGroup = new QGroupBox(tr("OpenAI Settings"));
+    openaiGroup = new QGroupBox(tr("OpenAI"));
     QFormLayout* openaiLayout = new QFormLayout();
 
     openaiEndpointLineEdit = new QLineEdit();
-    openaiEndpointLineEdit->setPlaceholderText("https://api.openai.com/v1");
+    openaiEndpointLineEdit->setPlaceholderText(openAiDefaultUrl);
     openaiLayout->addRow(tr("Endpoint:"), openaiEndpointLineEdit);
-
-    QLabel* openaiEndpointHint =
-        new QLabel(tr("(auto-detected from OPENAI_API_BASE or use default)"));
-    QFont openaiHintFont = openaiEndpointHint->font();
-    openaiHintFont.setItalic(true);
-    openaiEndpointHint->setFont(openaiHintFont);
-    openaiEndpointHint->setStyleSheet("color: gray;");
-    openaiLayout->addRow("", openaiEndpointHint);
 
     openaiApiKeyLineEdit = new QLineEdit();
     openaiApiKeyLineEdit->setEchoMode(QLineEdit::Password);
     openaiApiKeyLineEdit->setPlaceholderText("sk-...");
     openaiLayout->addRow(tr("API Key:"), openaiApiKeyLineEdit);
-
-    QLabel* apiKeyHint = new QLabel(
-        tr("(auto-detected from OPENAI_API_KEY environment variable)"));
-    QFont apiKeyHintFont = apiKeyHint->font();
-    apiKeyHintFont.setItalic(true);
-    apiKeyHint->setFont(apiKeyHintFont);
-    apiKeyHint->setStyleSheet("color: gray;");
-    openaiLayout->addRow("", apiKeyHint);
 
     QHBoxLayout* openaiModelLayout = new QHBoxLayout();
     openaiModelComboBox = new QComboBox();
@@ -357,7 +327,7 @@ void SettingsDialog::setupAITab() {
     openaiModelComboBox->addItem("gpt-3.5-turbo");
     openaiModelLayout->addWidget(openaiModelComboBox, 1);
 
-    refreshOpenAIModelsButton = new QPushButton(tr("Refresh Models"));
+    refreshOpenAIModelsButton = new QPushButton(tr("Refresh"));
     connect(refreshOpenAIModelsButton, &QPushButton::clicked, this,
             &SettingsDialog::onRefreshOpenAIModels);
     openaiModelLayout->addWidget(refreshOpenAIModelsButton);
@@ -367,18 +337,15 @@ void SettingsDialog::setupAITab() {
     openaiTimeoutSpinBox = new QSpinBox();
     openaiTimeoutSpinBox->setRange(10, 300);
     openaiTimeoutSpinBox->setValue(60);
-    openaiTimeoutSpinBox->setSuffix(" seconds");
+    openaiTimeoutSpinBox->setSuffix(" s");
     openaiLayout->addRow(tr("Timeout:"), openaiTimeoutSpinBox);
 
     openaiGroup->setLayout(openaiLayout);
     mainLayout->addWidget(openaiGroup);
 
-    // Connection Testing (shared for all providers)
-    QGroupBox* testGroup = new QGroupBox(tr("Connection Test"));
-    QFormLayout* testLayout = new QFormLayout();
-
-    connectionStatusLabel = new QLabel(tr("Status: Not tested"));
-    testLayout->addRow(tr("Status:"), connectionStatusLabel);
+    QHBoxLayout* testLayout = new QHBoxLayout();
+    connectionStatusLabel = new QLabel(tr("Not tested"));
+    testLayout->addWidget(connectionStatusLabel, 1);
 
     testConnectionButton = new QPushButton(tr("Test Connection"));
     connect(testConnectionButton, &QPushButton::clicked, this, [this]() {
@@ -389,19 +356,17 @@ void SettingsDialog::setupAITab() {
             onTestOpenAIConnection();
         }
     });
-    testLayout->addRow("", testConnectionButton);
+    testLayout->addWidget(testConnectionButton);
 
-    testGroup->setLayout(testLayout);
-    mainLayout->addWidget(testGroup);
+    mainLayout->addLayout(testLayout);
 
-    // System Prompts
     QGroupBox* promptsGroup = new QGroupBox(tr("System Prompts"));
-    QVBoxLayout* promptsLayout = new QVBoxLayout();
+    QHBoxLayout* promptsLayout = new QHBoxLayout();
 
     promptsInfoLabel = new QLabel();
-    promptsLayout->addWidget(promptsInfoLabel);
+    promptsLayout->addWidget(promptsInfoLabel, 1);
 
-    managePromptsButton = new QPushButton(tr("Manage System Prompts..."));
+    managePromptsButton = new QPushButton(tr("Manage..."));
     connect(managePromptsButton, &QPushButton::clicked, this,
             &SettingsDialog::onManageSystemPrompts);
     promptsLayout->addWidget(managePromptsButton);
@@ -411,17 +376,8 @@ void SettingsDialog::setupAITab() {
 
     mainLayout->addStretch();
 
-    scrollWidget->setLayout(mainLayout);
-    scrollArea->setWidget(scrollWidget);
-    scrollArea->setWidgetResizable(true);
-
-    QVBoxLayout* tabLayout = new QVBoxLayout(aiTab);
-    tabLayout->addWidget(scrollArea);
-    tabLayout->setContentsMargins(0, 0, 0, 0);
-
     tabWidget->addTab(aiTab, tr("AI Providers"));
 
-    // Initialize
     detectAIProviders();
     updatePromptsInfo();
 }
@@ -452,6 +408,10 @@ void SettingsDialog::onManageSystemPrompts() {
 void SettingsDialog::onRefreshOllamaModels() {
     refreshModelsButton->setEnabled(false);
     refreshModelsButton->setText(tr("Loading..."));
+    bool isDark = palette().color(QPalette::Window).lightness() < 128;
+    connectionStatusLabel->setText(tr("Fetching models..."));
+    connectionStatusLabel->setStyleSheet(QString("color: %1;")
+            .arg(getStatusColor("info", isDark)));
 
     OllamaProvider provider;
     provider.setEndpoint(ollamaEndpointLineEdit->text());
@@ -460,27 +420,31 @@ void SettingsDialog::onRefreshOllamaModels() {
     QStringList models = provider.listModels(error);
 
     if (!error.isEmpty()) {
-        connectionStatusLabel->setText(tr("Error: %1").arg(error));
-        connectionStatusLabel->setStyleSheet("color: red;");
+        connectionStatusLabel->setText(error);
+        connectionStatusLabel->setStyleSheet(QString("color: %1;")
+                .arg(getStatusColor("error", isDark)));
     } else {
         ollamaModelComboBox->clear();
         for (const QString& model : models) {
             ollamaModelComboBox->addItem(model);
         }
-        connectionStatusLabel->setText(
-            tr("✓ %1 models found").arg(models.size()));
-        connectionStatusLabel->setStyleSheet("color: green;");
+        connectionStatusLabel->setText(tr("✓ %1 models found")
+                .arg(models.size()));
+        connectionStatusLabel->setStyleSheet(QString("color: %1;")
+                .arg(getStatusColor("success", isDark)));
     }
 
     refreshModelsButton->setEnabled(true);
-    refreshModelsButton->setText(tr("Refresh Models"));
+    refreshModelsButton->setText(tr("Refresh"));
 }
 
 void SettingsDialog::onTestOllamaConnection() {
     testConnectionButton->setEnabled(false);
     testConnectionButton->setText(tr("Testing..."));
     connectionStatusLabel->setText(tr("Connecting..."));
-    connectionStatusLabel->setStyleSheet("color: blue;");
+    bool isDark = palette().color(QPalette::Window).lightness() < 128;
+    connectionStatusLabel->setStyleSheet(QString("color: %1;")
+            .arg(getStatusColor("info", isDark)));
 
     OllamaProvider provider;
     provider.setEndpoint(ollamaEndpointLineEdit->text());
@@ -490,10 +454,12 @@ void SettingsDialog::onTestOllamaConnection() {
 
     if (success) {
         connectionStatusLabel->setText(tr("✓ Connected"));
-        connectionStatusLabel->setStyleSheet("color: green;");
+        connectionStatusLabel->setStyleSheet(QString("color: %1;")
+                .arg(getStatusColor("success", isDark)));
     } else {
-        connectionStatusLabel->setText(tr("✗ %1").arg(error));
-        connectionStatusLabel->setStyleSheet("color: red;");
+        connectionStatusLabel->setText(error);
+        connectionStatusLabel->setStyleSheet(QString("color: %1;")
+                .arg(getStatusColor("error", isDark)));
     }
 
     testConnectionButton->setEnabled(true);

@@ -7,6 +7,8 @@
 #include <QNetworkReply>
 #include <QString>
 
+const QString ollamaLabel = "Ollama";
+
 class OllamaProvider : public QObject, public AIProvider {
   Q_OBJECT
 
@@ -20,7 +22,7 @@ public:
                std::function<void(const QString&)> onError) override;
   
   bool isAvailable() const override;
-  QString name() const override { return "Ollama"; }
+  QString name() const override { return ollamaLabel; }
   
   void setModel(const QString &model);
   void setEndpoint(const QString &url);
@@ -38,8 +40,6 @@ private:
   QString modelName;
   QString endpoint;
   int timeoutSeconds;
-  
-  QString buildSystemPrompt() const;
 };
 
-#endif // OLLAMAPROVIDER_H
+#endif
