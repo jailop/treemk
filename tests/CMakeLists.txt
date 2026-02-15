@@ -25,7 +25,7 @@ add_library(treemk_logic STATIC
     ${CMAKE_SOURCE_DIR}/include/logic/systemprompts.h
     ${CMAKE_SOURCE_DIR}/src/logic/mainfilelocator.cpp
     ${CMAKE_SOURCE_DIR}/src/logic/systemprompts.cpp
-    ${CMAKE_SOURCE_DIR}/src/managers/workspacemanager.cpp
+    ${CMAKE_SOURCE_DIR}/src/managers/workspace.cpp
 )
 
 set_target_properties(treemk_logic PROPERTIES AUTOMOC ON)
@@ -37,7 +37,7 @@ target_link_libraries(treemk_logic
 # Window manager needs mainwindow for testing
 add_library(treemk_windowmanager STATIC
     ${CMAKE_SOURCE_DIR}/include/managers/windowmanager.h
-    ${CMAKE_SOURCE_DIR}/src/managers/windowmanager.cpp
+    ${CMAKE_SOURCE_DIR}/src/managers/window.cpp
 )
 
 set_target_properties(treemk_windowmanager PROPERTIES AUTOMOC ON)
@@ -104,7 +104,7 @@ add_executable(test_linkparser
     ${CMAKE_SOURCE_DIR}/include/linkparser.h
     ${CMAKE_SOURCE_DIR}/src/linkparser.cpp
     ${CMAKE_SOURCE_DIR}/include/backlinks/backlinksmanager.h
-    ${CMAKE_SOURCE_DIR}/src/backlinks/backlinksmanager.cpp
+    ${CMAKE_SOURCE_DIR}/src/backlinks/manager.cpp
 )
 
 set_target_properties(test_linkparser PROPERTIES AUTOMOC ON)
@@ -124,7 +124,7 @@ add_executable(test_aiassist_dialog
     ${CMAKE_SOURCE_DIR}/include/logic/ollamaprovider.h
     ${CMAKE_SOURCE_DIR}/include/logic/openaiprovider.h
     ${CMAKE_SOURCE_DIR}/include/logic/systemprompts.h
-    ${CMAKE_SOURCE_DIR}/src/aiassistant/aiassistdialog.cpp
+    ${CMAKE_SOURCE_DIR}/src/aiassistant/dialog.cpp
     ${CMAKE_SOURCE_DIR}/src/logic/aiprovider.cpp
     ${CMAKE_SOURCE_DIR}/src/logic/ollamaprovider.cpp
     ${CMAKE_SOURCE_DIR}/src/logic/openaiprovider.cpp
