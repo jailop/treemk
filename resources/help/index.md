@@ -12,15 +12,21 @@ TreeMk simply provides the tools to make working with these files more pleasant:
 
 ## Download
 
-The current version is 0.6.0:
+You can download TreeMk for your platform from:
 
-- [Windows x64_86 Installer](https://github.com/jailop/treemk/releases/download/v0.7.1/TreeMk-0.7.1-Setup.exe)
-- [Windows x64_86 Portable](https://github.com/jailop/treemk/releases/download/v0.7.1/TreeMk-0.7.1-Windows-x64-Portable.zip)
-- [MacOS arm64](https://github.com/jailop/treemk/releases/download/v0.7.1/TreeMk-0.7.1-macOS-arm64.dmg)*
-- [Linux x86_64 AppImage](https://github.com/jailop/treemk/releases/download/v0.7.1/TreeMk-0.7.1-x86_64.AppImage) 
-- [Linux x86_64 Deb](https://github.com/jailop/treemk/releases/download/v0.7.1/treemk_0.7.1_amd64.deb)
+https://github.com/jailop/treemk/releases
 
-(*) MacOS users, take care to bypass the security gatekeeper for this app.
+Installers and portable versions are available for Windows, MacOS, and
+Linux:
+
+- Windows x64_86 Installer
+- Windows x64_86 Portable
+- MacOS arm64
+- Linux x86_64 AppImage
+- Linux x86_64 Deb
+
+MacOS users, take care to bypass the OS security gatekeeper for this
+app. Otherwise, it will be reported as damaged and won't run.
 
 Archlinux users:
 
@@ -33,10 +39,12 @@ makepkg -si
 ## Documentation
 
 ### Getting Started
+
 - **[Getting Started](getting-started.md)** - Learn the basics and create your first notes
 - **[Installation](installation.md)** - Download and install guide (web only)
 
 ### User Guide
+
 - **[Editor Features](editor.md)** - Discover powerful editing capabilities
 - **[Navigation](navigation.md)** - Master wiki-links and note organization
 - **[Preview Features](preview.md)** - Formulas, diagrams, and rendering options
@@ -48,9 +56,11 @@ makepkg -si
 - **[Exporting Your Notes](exporting.md)** - Share as HTML, PDF, or DOCX
 
 ### Workflows
+
 - **[Real-World Use Cases](workflows.md)** - Research, documentation, journaling, and Zettelkasten
 
 ### Reference
+
 - **[Keyboard Shortcuts](keyboard-shortcuts.md)** - Complete reference of shortcuts
 - **[Settings Reference](settings.md)** - Every configuration option explained
 - **[FAQ](faq.md)** - Frequently asked questions
