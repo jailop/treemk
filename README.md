@@ -132,6 +132,12 @@ For Fedora:
 sudo dnf install @development-tools cmake qt6-qtbase-devel qt6-qtwebengine-devel qt6-qtsvg-devel pandoc md4c-devel
 ```
 
+For VoidLinux:
+
+```bash
+sudo xbps-install cmake gcc make qt6-base-devel qt6-webengine-devel qt6-svg-devel pkg-config md4c-devel
+```
+
 To build the app:
 
 ```bash
