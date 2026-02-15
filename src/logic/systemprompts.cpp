@@ -193,19 +193,20 @@ void SystemPrompts::reorderPrompts(const QList<SystemPrompt>& newOrder) {
 void SystemPrompts::loadFromSettings() {
     QSettings settings;
 
-    // Load enabled state for built-in prompts
+    prompts.erase(std::remove_if(prompts.begin(), prompts.end(),
+                                  [](const SystemPrompt& p) { return p.isCustom; }),
+                  prompts.end());
+
     for (SystemPrompt& p : prompts) {
         QString key = QString("ai/prompts/%1/enabled").arg(p.id);
         p.enabled = settings.value(key, true).toBool();
 
-        // Load order for built-in prompts
         QString orderKey = QString("ai/prompts/%1/order").arg(p.id);
         if (settings.contains(orderKey)) {
             p.order = settings.value(orderKey, p.order).toInt();
         }
     }
 
-    // Load custom prompts
     int customCount = settings.beginReadArray("ai/custom_prompts");
     QList<SystemPrompt> customPrompts;
     for (int i = 0; i < customCount; ++i) {
@@ -225,10 +226,8 @@ void SystemPrompts::loadFromSettings() {
     }
     settings.endArray();
 
-    // Append custom prompts
     prompts.append(customPrompts);
 
-    // Sort all prompts by order field
     std::sort(prompts.begin(), prompts.end(),
               [](const SystemPrompt& a, const SystemPrompt& b) {
                   return a.order < b.order;

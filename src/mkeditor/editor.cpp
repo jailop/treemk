@@ -614,7 +614,6 @@ void MarkdownEditor::contextMenuEvent(QContextMenuEvent* event) {
             aiMenu->addSeparator();
         }
         QAction* customAction = aiMenu->addAction(tr("Custom..."));
-        customAction->setShortcut(QKeySequence(tr("Ctrl+Shift+A")));
         connect(customAction, &QAction::triggered, this,
                 [this]() { emit aiAssistRequested(); });
     }

@@ -427,7 +427,7 @@ void MainWindow::createActions() {
     aiAssistAction = new QAction(
         iconWithFallback("tools-wizard", QStyle::SP_MessageBoxInformation),
         tr("AI &Assist..."), this);
-    aiAssistAction->setShortcut(QKeySequence(tr("Ctrl+Shift+A")));
+    aiAssistAction->setShortcut(QKeySequence(tr("Alt+A")));
     aiAssistAction->setStatusTip(tr("AI-powered writing assistance"));
     aiAssistAction->setToolTip(tr("AI Assist"));
     connect(aiAssistAction, &QAction::triggered, this,

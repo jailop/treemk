@@ -4,7 +4,7 @@ TreeMk is licensed under the GNU General Public License v3.0 (GPL-3.0).
 
 ## GPL-3.0 License
 
-Copyright (C) 2024 TreeMk Contributors
+Copyright (C) 2025-2026 TreeMk Contributors
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

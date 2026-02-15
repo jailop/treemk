@@ -16,6 +16,10 @@ public:
   
   virtual bool isAvailable() const = 0;
   virtual QString name() const = 0;
+
+protected:
+  static QString buildSystemPrompt();
+  static QString extractResultFromMarkdown(const QString &response);
 };
 
 class AIProviderManager {
@@ -43,4 +47,4 @@ private:
   static AIProviderManager* m_instance;
 };
 
-#endif // AIPROVIDER_H
+#endif
