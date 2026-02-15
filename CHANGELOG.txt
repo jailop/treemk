@@ -176,3 +176,6 @@ Documentation:
 - Help documentation updated for word prediction and AI assistance features
 - Clear explanation of what's in scope vs delegated to specialized tools
 
+2026-02-14:
+
+- Bumping to version 0.7.1
