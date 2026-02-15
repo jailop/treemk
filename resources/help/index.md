@@ -14,11 +14,11 @@ TreeMk simply provides the tools to make working with these files more pleasant:
 
 The current version is 0.6.0:
 
-- [Windows x64_86 Installer](https://github.com/jailop/treemk/releases/download/v0.7.0/TreeMk-0.7.0-Setup.exe)
-- [Windows x64_86 Portable](https://github.com/jailop/treemk/releases/download/v0.7.0/TreeMk-0.7.0-Windows-x64-Portable.zip)
-- [MacOS arm64](https://github.com/jailop/treemk/releases/download/v0.7.0/TreeMk-0.7.0-macOS-arm64.dmg)*
-- [Linux x86_64 AppImage](https://github.com/jailop/treemk/releases/download/v0.7.0/TreeMk-0.7.0-x86_64.AppImage) 
-- [Linux x86_64 Deb](https://github.com/jailop/treemk/releases/download/v0.7.0/treemk_0.7.0_amd64.deb)
+- [Windows x64_86 Installer](https://github.com/jailop/treemk/releases/download/v0.7.1/TreeMk-0.7.1-Setup.exe)
+- [Windows x64_86 Portable](https://github.com/jailop/treemk/releases/download/v0.7.1/TreeMk-0.7.1-Windows-x64-Portable.zip)
+- [MacOS arm64](https://github.com/jailop/treemk/releases/download/v0.7.1/TreeMk-0.7.1-macOS-arm64.dmg)*
+- [Linux x86_64 AppImage](https://github.com/jailop/treemk/releases/download/v0.7.1/TreeMk-0.7.1-x86_64.AppImage) 
+- [Linux x86_64 Deb](https://github.com/jailop/treemk/releases/download/v0.7.1/treemk_0.7.1_amd64.deb)
 
 (*) MacOS users, take care to bypass the security gatekeeper for this app.
 
