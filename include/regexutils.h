@@ -201,6 +201,22 @@ QRegularExpressionMatch getFirstMatch(const QString& text,
 QVector<QRegularExpressionMatch> getAllMatches(const QString& text,
                                                const QString& pattern);
 
+/**
+ * Generate slug from heading text for internal anchor links
+ *
+ * Converts heading text to lowercase anchor ID following GitHub style:
+ * - Converts to lowercase
+ * - Replaces whitespace with hyphens
+ * - Removes non-word characters except hyphens and underscores
+ * - Removes leading/trailing hyphens
+ *
+ * Examples:
+ * "Hello World" -> "hello-world"
+ * "Section 2.1" -> "section-21"
+ * "test_function" -> "test_function"
+ */
+QString generateSlug(const QString& headingText);
+
 }  // namespace RegexUtils
 
 #endif  // REGEXUTILS_H

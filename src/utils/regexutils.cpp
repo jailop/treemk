@@ -211,4 +211,12 @@ QVector<QRegularExpressionMatch> getAllMatches(const QString& text,
     return matches;
 }
 
+QString generateSlug(const QString& headingText) {
+    QString slug = headingText.trimmed().toLower();
+    slug.replace(QRegularExpression("\\s+"), "-");
+    slug.replace(QRegularExpression("[^\\w\\-_]", QRegularExpression::UseUnicodePropertiesOption), "");
+    slug.replace(QRegularExpression("^-+|-+$"), "");
+    return slug;
+}
+
 }  // namespace RegexUtils

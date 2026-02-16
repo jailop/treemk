@@ -189,6 +189,44 @@ constexpr char WHITESPACE_MULTIPLE[] = R"(\s+)";
 constexpr char NON_WORD_CHARS[] = R"([^\w\-_])";
 constexpr char LEADING_TRAILING_DASH[] = R"(^-+|-+$)";
 
+/**
+ * HTML/Preview processing patterns
+ *
+ * HTML_HEADING: Matches HTML heading tags <h1>text</h1> through <h6>text</h6>
+ *   - Capture group 1: Tag name (h1-h6)
+ *   - Capture group 2: Attributes (optional)
+ *   - Capture group 3: Heading text content
+ *
+ * HTML_ANCHOR: Matches HTML anchor links <a href="url">text</a>
+ *   - Capture group 1: URL/href attribute
+ *   - Capture group 2: Link text
+ *
+ * HTML_CODE: Matches HTML code tags <code>content</code> with optional attributes
+ *   - Capture group 1: Attributes (optional)
+ *   - Capture group 2: Code content
+ *
+ * LATEX_DISPLAY_EQUATION: Matches md4c output for display equations
+ *   - Captures content between <x-equation type="display"> tags
+ *
+ * LATEX_INLINE_EQUATION: Matches md4c output for inline equations
+ *   - Captures content between <x-equation> tags
+ *
+ * MD4C_WIKILINK: Matches md4c output for wiki links
+ *   - Capture group 1: Target/data-target attribute
+ *   - Capture group 2: Link text
+ *
+ * MD4C_WIKILINK_INCLUSION: Matches md4c output for inclusion wiki links [[!target]]
+ *   - Capture group 1: Target (without the ! marker)
+ *   - Capture group 2: Display text
+ */
+constexpr char HTML_HEADING[] = "<(h[1-6])([^>]*)>([^<]+)</\\1>";
+constexpr char HTML_ANCHOR[] = "<a href=\\\"([^\\\"]*)\\\"?>([^<]*)</a>";
+constexpr char HTML_CODE[] = "<code([^>]*)>([^<]*)</code>";
+constexpr char LATEX_DISPLAY_EQUATION[] = "<x-equation type=\\\"display\\\">([^<]*)</x-equation>";
+constexpr char LATEX_INLINE_EQUATION[] = "<x-equation>([^<]*)</x-equation>";
+constexpr char MD4C_WIKILINK[] = "<x-wikilink data-target=\\\"([^\\\"]+)\\\">([^<]+)</x-wikilink>";
+constexpr char MD4C_WIKILINK_INCLUSION[] = "<x-wikilink data-target=\\\"!([^\\\"]+)\\\">([^<]+)</x-wikilink>";
+
 }  // namespace RegexPatterns
 
 #endif  // REGEXPATTERNS_H

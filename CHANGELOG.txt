@@ -191,3 +191,5 @@ Documentation:
 2026-02-16:
 
 - Regexp centralized. Unit tests added
+- Print menu option
+- Internal links support

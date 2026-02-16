@@ -39,10 +39,7 @@ QVector<WikiLink> LinkParser::parseLinks(const QString& text) {
     QVector<RegexUtils::MarkdownLinkInfo> mdInfos =
         RegexUtils::parseMarkdownLinks(text);
     for (const auto& info : mdInfos) {
-        // Only include links that appear to be local file paths
-        // Skip URLs (http://, https://, mailto:, etc.)
-        if (!info.url.contains("://") && !info.url.startsWith("mailto:") &&
-            !info.url.startsWith("#")) {
+        if (!info.url.contains("://") && !info.url.startsWith("mailto:")) {
             WikiLink link(info.url, info.text, info.position, info.length,
                           false);
             links.append(link);
@@ -223,4 +220,26 @@ void LinkParser::searchInDirectory(const QString& dirPath,
             return;
         }
     }
+}
+
+LinkTarget LinkParser::parseLinkTarget(const QString& linkTarget) {
+    LinkTarget result;
+    
+    int hashPos = linkTarget.indexOf('#');
+    
+    if (hashPos == 0) {
+        result.filePath = QString();
+        result.anchor = RegexUtils::generateSlug(linkTarget.mid(1));
+        result.isInternalOnly = true;
+    } else if (hashPos > 0) {
+        result.filePath = linkTarget.left(hashPos);
+        result.anchor = RegexUtils::generateSlug(linkTarget.mid(hashPos + 1));
+        result.isInternalOnly = false;
+    } else {
+        result.filePath = linkTarget;
+        result.anchor = QString();
+        result.isInternalOnly = false;
+    }
+    
+    return result;
 }

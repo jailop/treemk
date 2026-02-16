@@ -33,6 +33,8 @@
 #include "defs.h"
 #include "logic/systemprompts.h"
 #include "markdownhighlighter.h"
+#include "regexpatterns.h"
+#include "regexutils.h"
 #include "shortcutmanager.h"
 #include "thememanager.h"
 
@@ -843,4 +845,35 @@ void MarkdownEditor::insertFromMimeData(const QMimeData* source) {
 
     // Fallback to default behavior for other content types
     QTextEdit::insertFromMimeData(source);
+}
+
+void MarkdownEditor::jumpToHeading(const QString& anchor) {
+    QString cleanAnchor = anchor;
+    if (cleanAnchor.startsWith("#")) {
+        cleanAnchor = cleanAnchor.mid(1);
+    }
+    
+    QTextBlock block = document()->firstBlock();
+    QRegularExpression headingPattern(RegexPatterns::HEADER);
+    
+    while (block.isValid()) {
+        QString text = block.text();
+        QRegularExpressionMatch match = headingPattern.match(text);
+        
+        if (match.hasMatch()) {
+            QString headingText = match.captured(2).trimmed();
+            QString slug = RegexUtils::generateSlug(headingText);
+            
+            if (slug == cleanAnchor) {
+                QTextCursor cursor(block);
+                setTextCursor(cursor);
+                ensureCursorVisible();
+                return;
+            }
+        }
+        
+        block = block.next();
+    }
+    
+    qWarning() << "Heading not found:" << anchor;
 }

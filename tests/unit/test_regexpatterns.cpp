@@ -87,6 +87,14 @@ private slots:
     void testWhitespaceMultiple();
     void testNonWordChars();
     void testLeadingTrailingDash();
+    
+    void testHTMLHeading_AllLevels();
+    void testHTMLAnchor_Basic();
+    void testHTMLCode_WithAttributes();
+    void testLatexDisplayEquation();
+    void testLatexInlineEquation();
+    void testMD4CWikilink_Basic();
+    void testMD4CWikilinkInclusion();
 };
 
 // Wiki Link Tests
@@ -953,6 +961,97 @@ void TestRegexPatterns::testLeadingTrailingDash() {
     
     // Should not match dashes in middle only
     QVERIFY(!pattern.match("no-dash-here").hasMatch());
+}
+
+void TestRegexPatterns::testHTMLHeading_AllLevels() {
+    QRegularExpression pattern(RegexPatterns::HTML_HEADING, 
+                               QRegularExpression::CaseInsensitiveOption);
+    
+    QRegularExpressionMatch match;
+    
+    match = pattern.match("<h1>Title</h1>");
+    QVERIFY(match.hasMatch());
+    QCOMPARE(match.captured(1), QString("h1"));
+    QCOMPARE(match.captured(3), QString("Title"));
+    
+    match = pattern.match("<h3 class=\"heading\">Section</h3>");
+    QVERIFY(match.hasMatch());
+    QCOMPARE(match.captured(1), QString("h3"));
+    QCOMPARE(match.captured(2), QString(" class=\"heading\""));
+    QCOMPARE(match.captured(3), QString("Section"));
+    
+    match = pattern.match("<h6>Deep Level</h6>");
+    QVERIFY(match.hasMatch());
+    QCOMPARE(match.captured(1), QString("h6"));
+    QCOMPARE(match.captured(3), QString("Deep Level"));
+}
+
+void TestRegexPatterns::testHTMLAnchor_Basic() {
+    QRegularExpression pattern(RegexPatterns::HTML_ANCHOR);
+    
+    QRegularExpressionMatch match;
+    
+    match = pattern.match("<a href=\"page.html\">Link Text</a>");
+    QVERIFY(match.hasMatch());
+    QCOMPARE(match.captured(1), QString("page.html"));
+    QCOMPARE(match.captured(2), QString("Link Text"));
+    
+    match = pattern.match("<a href=\"https://example.com\">Example</a>");
+    QVERIFY(match.hasMatch());
+    QCOMPARE(match.captured(1), QString("https://example.com"));
+    QCOMPARE(match.captured(2), QString("Example"));
+}
+
+void TestRegexPatterns::testHTMLCode_WithAttributes() {
+    QRegularExpression pattern(RegexPatterns::HTML_CODE);
+    
+    QRegularExpressionMatch match;
+    
+    match = pattern.match("<code>inline code</code>");
+    QVERIFY(match.hasMatch());
+    QCOMPARE(match.captured(2), QString("inline code"));
+    
+    match = pattern.match("<code class=\"language-python\">print('hello')</code>");
+    QVERIFY(match.hasMatch());
+    QCOMPARE(match.captured(1), QString(" class=\"language-python\""));
+    QCOMPARE(match.captured(2), QString("print('hello')"));
+}
+
+void TestRegexPatterns::testLatexDisplayEquation() {
+    QRegularExpression pattern(RegexPatterns::LATEX_DISPLAY_EQUATION);
+    
+    QRegularExpressionMatch match = pattern.match(
+        "<x-equation type=\"display\">E = mc^2</x-equation>");
+    QVERIFY(match.hasMatch());
+    QCOMPARE(match.captured(1), QString("E = mc^2"));
+}
+
+void TestRegexPatterns::testLatexInlineEquation() {
+    QRegularExpression pattern(RegexPatterns::LATEX_INLINE_EQUATION);
+    
+    QRegularExpressionMatch match = pattern.match("<x-equation>x^2</x-equation>");
+    QVERIFY(match.hasMatch());
+    QCOMPARE(match.captured(1), QString("x^2"));
+}
+
+void TestRegexPatterns::testMD4CWikilink_Basic() {
+    QRegularExpression pattern(RegexPatterns::MD4C_WIKILINK);
+    
+    QRegularExpressionMatch match = pattern.match(
+        "<x-wikilink data-target=\"PageName\">Display Text</x-wikilink>");
+    QVERIFY(match.hasMatch());
+    QCOMPARE(match.captured(1), QString("PageName"));
+    QCOMPARE(match.captured(2), QString("Display Text"));
+}
+
+void TestRegexPatterns::testMD4CWikilinkInclusion() {
+    QRegularExpression pattern(RegexPatterns::MD4C_WIKILINK_INCLUSION);
+    
+    QRegularExpressionMatch match = pattern.match(
+        "<x-wikilink data-target=\"!IncludedFile\">Include This</x-wikilink>");
+    QVERIFY(match.hasMatch());
+    QCOMPARE(match.captured(1), QString("IncludedFile"));
+    QCOMPARE(match.captured(2), QString("Include This"));
 }
 
 QTEST_MAIN(TestRegexPatterns)

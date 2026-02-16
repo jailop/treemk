@@ -75,6 +75,7 @@ class MainWindow : public QMainWindow {
     void onWikiLinkClicked(const QString& linkTarget);
     void onMarkdownLinkClicked(const QString& linkTarget);
     void onOpenLinkInNewWindow(const QString& linkTarget);
+    void onInternalLinkClicked(const QString& anchor);
     void updateBacklinks();
     void searchInFiles();
     void openSettings();

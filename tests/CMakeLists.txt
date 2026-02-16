@@ -117,7 +117,26 @@ target_link_libraries(test_linkparser
 
 add_test(NAME LinkParser COMMAND test_linkparser)
 
-# Test 5: Regex Patterns Tests
+# Test 5: Internal Links Tests
+add_executable(test_internal_links
+    unit/test_internal_links.cpp
+    ${CMAKE_SOURCE_DIR}/include/linkparser.h
+    ${CMAKE_SOURCE_DIR}/src/linkparser.cpp
+    ${CMAKE_SOURCE_DIR}/include/backlinks/backlinksmanager.h
+    ${CMAKE_SOURCE_DIR}/src/backlinks/manager.cpp
+    ${CMAKE_SOURCE_DIR}/src/utils/regexutils.cpp
+)
+
+set_target_properties(test_internal_links PROPERTIES AUTOMOC ON)
+
+target_link_libraries(test_internal_links
+    Qt6::Test
+    Qt6::Core
+)
+
+add_test(NAME InternalLinks COMMAND test_internal_links)
+
+# Test 6: Regex Patterns Tests
 add_executable(test_regexpatterns
     unit/test_regexpatterns.cpp
 )
@@ -219,13 +238,15 @@ set_tests_properties(MarkdownConversion PROPERTIES TIMEOUT 30)
 set_tests_properties(MainFileLocator PROPERTIES TIMEOUT 30)
 set_tests_properties(WorkspaceManager PROPERTIES TIMEOUT 30)
 set_tests_properties(LinkParser PROPERTIES TIMEOUT 30)
+set_tests_properties(InternalLinks PROPERTIES TIMEOUT 30)
+set_tests_properties(RegexPatterns PROPERTIES TIMEOUT 30)
 set_tests_properties(AIAssistDialog PROPERTIES TIMEOUT 30)
 set_tests_properties(Integration PROPERTIES TIMEOUT 30)
 
 # Add custom target to run all tests
 add_custom_target(check
     COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
-    DEPENDS test_markdown_conversion test_mainfilelocator test_workspacemanager test_linkparser test_aiassist_dialog test_integration
+    DEPENDS test_markdown_conversion test_mainfilelocator test_workspacemanager test_linkparser test_internal_links test_regexpatterns test_aiassist_dialog test_integration
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
