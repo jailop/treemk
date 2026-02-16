@@ -105,6 +105,7 @@ add_executable(test_linkparser
     ${CMAKE_SOURCE_DIR}/src/linkparser.cpp
     ${CMAKE_SOURCE_DIR}/include/backlinks/backlinksmanager.h
     ${CMAKE_SOURCE_DIR}/src/backlinks/manager.cpp
+    ${CMAKE_SOURCE_DIR}/src/utils/regexutils.cpp
 )
 
 set_target_properties(test_linkparser PROPERTIES AUTOMOC ON)
@@ -116,7 +117,19 @@ target_link_libraries(test_linkparser
 
 add_test(NAME LinkParser COMMAND test_linkparser)
 
-# Test 5: AIAssist Dialog Tests
+# Test 5: Regex Patterns Tests
+add_executable(test_regexpatterns
+    unit/test_regexpatterns.cpp
+)
+
+target_link_libraries(test_regexpatterns
+    Qt6::Test
+    Qt6::Core
+)
+
+add_test(NAME RegexPatterns COMMAND test_regexpatterns)
+
+# Test 6: AIAssist Dialog Tests
 add_executable(test_aiassist_dialog
     unit/test_aiassist_dialog.cpp
     ${CMAKE_SOURCE_DIR}/include/aiassistdialog.h

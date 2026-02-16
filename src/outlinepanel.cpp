@@ -4,10 +4,11 @@
 #include <QLabel>
 #include <QMenu>
 #include <QMouseEvent>
-#include <QRegularExpression>
 #include <QTreeWidget>
 #include <QTreeWidgetItem>
 #include <QVBoxLayout>
+
+#include "regexutils.h"
 
 OutlinePanel::OutlinePanel(QWidget* parent) : QWidget(parent) { setupUI(); }
 
@@ -23,7 +24,6 @@ void OutlinePanel::setupUI() {
     outlineTree->setAnimated(true);
     outlineTree->setContextMenuPolicy(Qt::CustomContextMenu);
 
-    // Install event filter to handle keyboard shortcuts
     outlineTree->installEventFilter(this);
 
     layout->addWidget(outlineTree);
@@ -60,12 +60,10 @@ void OutlinePanel::buildTree(const QList<OutlineItem>& headers) {
         item->setToolTip(
             0, QString("Line %1: %2").arg(header.lineNumber).arg(header.text));
 
-        // Remove bold fonts - use normal font
         QFont font = item->font(0);
         font.setBold(false);
         item->setFont(0, font);
 
-        // Adjust the stack to the correct level
         while (levelStack.size() > header.level) {
             levelStack.removeLast();
         }
@@ -73,14 +71,12 @@ void OutlinePanel::buildTree(const QList<OutlineItem>& headers) {
             levelStack.append(levelStack.last());
         }
 
-        // Add item to the appropriate parent
         if (header.level == 1 || levelStack[header.level - 1] == nullptr) {
             outlineTree->addTopLevelItem(item);
         } else {
             levelStack[header.level - 1]->addChild(item);
         }
 
-        // Update the stack for this level
         if (levelStack.size() == header.level) {
             levelStack.append(item);
         } else {
@@ -88,7 +84,6 @@ void OutlinePanel::buildTree(const QList<OutlineItem>& headers) {
         }
     }
 
-    // Expand all items by default
     outlineTree->expandAll();
 }
 
@@ -101,21 +96,18 @@ bool OutlinePanel::eventFilter(QObject* obj, QEvent* event) {
             return QWidget::eventFilter(obj, event);
         }
 
-        // Ctrl+Right or + : Expand current item
         if ((keyEvent->key() == Qt::Key_Right &&
              keyEvent->modifiers() & Qt::ControlModifier) ||
             keyEvent->key() == Qt::Key_Plus) {
             currentItem->setExpanded(true);
             return true;
         }
-        // Ctrl+Left or - : Collapse current item
         else if ((keyEvent->key() == Qt::Key_Left &&
                   keyEvent->modifiers() & Qt::ControlModifier) ||
                  keyEvent->key() == Qt::Key_Minus) {
             currentItem->setExpanded(false);
             return true;
         }
-        // Ctrl+Shift+Right or * : Expand all
         else if ((keyEvent->key() == Qt::Key_Right &&
                   keyEvent->modifiers() & Qt::ControlModifier &&
                   keyEvent->modifiers() & Qt::ShiftModifier) ||
@@ -123,7 +115,6 @@ bool OutlinePanel::eventFilter(QObject* obj, QEvent* event) {
             outlineTree->expandAll();
             return true;
         }
-        // Ctrl+Shift+Left or / : Collapse all
         else if ((keyEvent->key() == Qt::Key_Left &&
                   keyEvent->modifiers() & Qt::ControlModifier &&
                   keyEvent->modifiers() & Qt::ShiftModifier) ||
@@ -179,34 +170,25 @@ QList<OutlineItem> OutlinePanel::parseHeaders(const QString& markdown) {
 
     QStringList lines = markdown.split('\n');
 
-    // Regex for ATX-style headers: # Header
-    QRegularExpression headerPattern("^(#{1,6})\\s+(.+)$");
-
     bool inCodeBlock = false;
 
     for (int i = 0; i < lines.size(); ++i) {
         QString line = lines[i];
 
-        // Check for code block fences
         if (line.trimmed().startsWith("```")) {
             inCodeBlock = !inCodeBlock;
             continue;
         }
 
-        // Skip lines inside code blocks
         if (inCodeBlock) {
             continue;
         }
 
         QString trimmedLine = line.trimmed();
 
-        QRegularExpressionMatch match = headerPattern.match(trimmedLine);
-        if (match.hasMatch()) {
-            int level = match.captured(1).length();
-            QString text = match.captured(2).trimmed();
-
-            // Remove any trailing #
-            text = text.remove(QRegularExpression("#*$")).trimmed();
+        if (RegexUtils::isHeader(trimmedLine)) {
+            int level = RegexUtils::getHeaderLevel(trimmedLine);
+            QString text = RegexUtils::getHeaderText(trimmedLine);
 
             headers.append(OutlineItem(level, text, i + 1));
         }

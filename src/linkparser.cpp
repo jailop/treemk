@@ -4,10 +4,10 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QMutexLocker>
-#include <QRegularExpression>
 #include <QTextStream>
 
 #include "backlinks/backlinksmanager.h"
+#include "regexutils.h"
 
 static const QString MARKDOWN_FILTERS[] = {"*.md", "*.markdown"};
 static const int MARKDOWN_FILTER_COUNT = 2;
@@ -26,45 +26,25 @@ void LinkParser::setEnforceHomeBoundary(bool enforce) {
 QVector<WikiLink> LinkParser::parseLinks(const QString& text) {
     QVector<WikiLink> links;
 
-    // Pattern for [[!target]] or [[!target|display]] or [[target]] or
-    // [[target|display]]
-    QRegularExpression wikiLinkPattern(
-        "\\[\\[(!)?([^\\]|]+)(\\|([^\\]]+))?\\]\\]");
-    QRegularExpressionMatchIterator wikiIterator =
-        wikiLinkPattern.globalMatch(text);
-
-    while (wikiIterator.hasNext()) {
-        QRegularExpressionMatch match = wikiIterator.next();
-        bool isInclusion = !match.captured(1).isEmpty();
-        QString target = match.captured(2).trimmed();
-        QString display = match.captured(4).trimmed();
-
-        if (display.isEmpty()) {
-            display = target;
-        }
-
-        WikiLink link(target, display, match.capturedStart(),
-                      match.capturedLength(), isInclusion);
+    // Parse wiki links using utility function
+    QVector<RegexUtils::WikiLinkInfo> wikiInfos =
+        RegexUtils::parseWikiLinks(text);
+    for (const auto& info : wikiInfos) {
+        WikiLink link(info.target, info.display, info.position, info.length,
+                      info.isInclusion);
         links.append(link);
     }
 
-    // Pattern for markdown links: [text](url)
-    // Only capture links that look like local file paths (relative or absolute)
-    QRegularExpression markdownLinkPattern("\\[([^\\]]+)\\]\\(([^\\)]+)\\)");
-    QRegularExpressionMatchIterator mdIterator =
-        markdownLinkPattern.globalMatch(text);
-
-    while (mdIterator.hasNext()) {
-        QRegularExpressionMatch match = mdIterator.next();
-        QString display = match.captured(1).trimmed();
-        QString target = match.captured(2).trimmed();
-
+    // Parse markdown links using utility function
+    QVector<RegexUtils::MarkdownLinkInfo> mdInfos =
+        RegexUtils::parseMarkdownLinks(text);
+    for (const auto& info : mdInfos) {
         // Only include links that appear to be local file paths
         // Skip URLs (http://, https://, mailto:, etc.)
-        if (!target.contains("://") && !target.startsWith("mailto:") &&
-            !target.startsWith("#")) {
-            WikiLink link(target, display, match.capturedStart(),
-                          match.capturedLength(), false);
+        if (!info.url.contains("://") && !info.url.startsWith("mailto:") &&
+            !info.url.startsWith("#")) {
+            WikiLink link(info.url, info.text, info.position, info.length,
+                          false);
             links.append(link);
         }
     }
