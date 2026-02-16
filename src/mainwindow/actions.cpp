@@ -93,6 +93,14 @@ void MainWindow::createActions() {
     saveAsAction->setToolTip(tr("Save document with a new name"));
     connect(saveAsAction, &QAction::triggered, this, &MainWindow::saveAs);
 
+    printAction = new QAction(
+        iconWithFallback("document-print", QStyle::SP_DialogSaveButton),
+        tr("&Print..."), this);
+    printAction->setShortcuts(QKeySequence::Print);
+    printAction->setStatusTip(tr("Print the document preview"));
+    printAction->setToolTip(tr("Print preview"));
+    connect(printAction, &QAction::triggered, this, &MainWindow::print);
+
     exportHtmlAction =
         new QAction(adaptiveSvgIcon(":/icons/icons/export-html.svg"),
                     tr("Export to &HTML..."), this);

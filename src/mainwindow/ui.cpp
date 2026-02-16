@@ -45,6 +45,8 @@ void MainWindow::createMenus() {
     fileMenu->addAction(saveAction);
     fileMenu->addAction(saveAsAction);
     fileMenu->addSeparator();
+    fileMenu->addAction(printAction);
+    fileMenu->addSeparator();
     QMenu* exportMenu = fileMenu->addMenu(tr("&Export"));
     exportMenu->addAction(exportHtmlAction);
     exportMenu->addAction(exportPdfAction);
@@ -70,16 +72,12 @@ void MainWindow::createMenus() {
     editMenu->addAction(findReplaceAction);
     editMenu->addAction(searchInFilesAction);
     editMenu->addSeparator();
-    // Create AI Assistant submenu
     createAIAssistMenu();
     aiAssistEditSubmenu = editMenu->addMenu(tr("AI &Assistant"));
     aiAssistEditSubmenu->addActions(aiAssistMenu->actions());
     editMenu->addSeparator();
     editMenu->addAction(breakLinesAction);
     editMenu->addAction(joinLinesAction);
-    // moved to goMenu
-    // editMenu->addSeparator();
-    // editMenu->addAction(quickOpenAction);
 
     insertMenu = menuBar()->addMenu(tr("&Insert"));
     insertMenu->addAction(insertImageAction);
@@ -105,7 +103,6 @@ void MainWindow::createMenus() {
     insertMenu->addAction(insertTableAction);
     insertMenu->addSeparator();
 
-    // Date submenu
     insertDateMenu = insertMenu->addMenu(tr("Date"));
 
     QAction* dateYMD = insertDateMenu->addAction(tr("YYYY-MM-DD"));
@@ -132,7 +129,6 @@ void MainWindow::createMenus() {
     insertDateMenu->addSeparator();
     insertDateMenu->addAction(insertDateAction);  // Insert with last format
 
-    // Time submenu
     insertTimeMenu = insertMenu->addMenu(tr("Time"));
 
     QAction* timeHM = insertTimeMenu->addAction(tr("HH:MM"));
@@ -189,40 +185,32 @@ void MainWindow::createToolbar() {
     mainToolbar->setObjectName("MainToolbar");
     mainToolbar->setMovable(false);
 
-    // Set smaller icon size
     mainToolbar->setIconSize(QSize(16, 16));
 
-    // File operations
     mainToolbar->addAction(newAction);
     mainToolbar->addAction(openFolderAction);
     mainToolbar->addAction(saveAction);
     mainToolbar->addSeparator();
 
-    // Navigation
     mainToolbar->addAction(backAction);
     mainToolbar->addAction(forwardAction);
     mainToolbar->addSeparator();
 
-    // Edit operations
     mainToolbar->addAction(undoAction);
     mainToolbar->addAction(redoAction);
     mainToolbar->addSeparator();
 
-    // Formatting
     mainToolbar->addAction(insertBoldAction);
     mainToolbar->addAction(insertItalicAction);
     mainToolbar->addAction(insertCodeAction);
     mainToolbar->addSeparator();
 
-    // Insert operations
     mainToolbar->addAction(insertLinkAction);
     mainToolbar->addAction(insertImageAction);
     mainToolbar->addAction(attachDocumentAction);
     mainToolbar->addAction(insertTableAction);
     mainToolbar->addSeparator();
 
-    // AI and Search
-    // Create AI Assistant dropdown button
     QToolButton* aiAssistButton = new QToolButton(this);
     aiAssistButton->setDefaultAction(aiAssistAction);
     aiAssistButton->setPopupMode(QToolButton::MenuButtonPopup);
@@ -235,16 +223,13 @@ void MainWindow::createToolbar() {
     mainToolbar->addAction(quickOpenAction);
     mainToolbar->addSeparator();
 
-    // View toggles
     mainToolbar->addAction(toggleSidebarAction);
     mainToolbar->addAction(cycleViewModeAction);
 }
 
 void MainWindow::createLayout() {
-    // Create sidebar panel from UI file
     sidebarPanel = new SidebarPanel(this);
     
-    // Get references to widgets from UI
     leftTabWidget = sidebarPanel->getLeftTabWidget();
     treePanel = sidebarPanel->getTreePanel();
     outlinePanel = sidebarPanel->getOutlinePanel();
@@ -254,7 +239,6 @@ void MainWindow::createLayout() {
     historyView = sidebarPanel->getHistoryView();
     historyFilterInput = sidebarPanel->getHistoryFilterInput();
     
-    // Create and setup tree view
     treeView = new FileSystemTreeView(treePanel);
     sidebarPanel->setTreeView(treeView);
     
@@ -281,11 +265,9 @@ void MainWindow::createLayout() {
     connect(treeView, &FileSystemTreeView::fileRenamed, this,
             &MainWindow::onFileRenamed);
     
-    // Create and setup outline view
     outlineView = new OutlinePanel(outlinePanel);
     sidebarPanel->setOutlineView(outlineView);
     
-    // Setup backlinks connections
     connect(backlinksView, &QListWidget::itemDoubleClicked,
             [this](QListWidgetItem* item) {
                 QString filePath = item->data(Qt::UserRole).toString();
@@ -294,7 +276,6 @@ void MainWindow::createLayout() {
                 }
             });
     
-    // Setup history connections
     connect(historyFilterInput, &QLineEdit::textChanged, this,
             &MainWindow::filterHistoryList);
     
@@ -306,7 +287,6 @@ void MainWindow::createLayout() {
                 }
             });
     
-    // Set tab icons and tooltips
     leftTabWidget->setTabIcon(0, QIcon::fromTheme("folder", 
                                 style()->standardIcon(QStyle::SP_DirIcon)));
     leftTabWidget->setTabToolTip(0, tr("Files"));
@@ -323,7 +303,6 @@ void MainWindow::createLayout() {
                                 style()->standardIcon(QStyle::SP_FileDialogBack)));
     leftTabWidget->setTabToolTip(3, tr("History"));
 
-    // Tab widget for multiple editors
     tabWidget = new QTabWidget(this);
     tabWidget->setTabsClosable(true);
     tabWidget->setMovable(true);
@@ -334,7 +313,6 @@ void MainWindow::createLayout() {
     connect(tabWidget, &QTabWidget::tabCloseRequested, this,
             &MainWindow::onTabCloseRequested);
 
-    // Main splitter
     mainSplitter = new QSplitter(Qt::Horizontal, this);
     mainSplitter->addWidget(sidebarPanel);
     mainSplitter->addWidget(tabWidget);
@@ -343,7 +321,6 @@ void MainWindow::createLayout() {
 
     setCentralWidget(mainSplitter);
 
-    // Create initial tab
     createNewTab();
 }
 
@@ -361,11 +338,9 @@ void MainWindow::readSettings() {
     sidebarPanel->setVisible(sidebarVisible);
     toggleSidebarAction->setChecked(sidebarVisible);
 
-    // Load and apply view mode
     int savedViewMode = settings->value("viewMode", ViewMode_Both).toInt();
     currentViewMode = static_cast<ViewMode>(savedViewMode);
 
-    // Update action text based on current mode
     QString nextModeText;
     switch (currentViewMode) {
         case ViewMode_Both:
@@ -382,19 +357,14 @@ void MainWindow::readSettings() {
         cycleViewModeAction->setText(nextModeText);
     }
 
-    // Load recent folders
     recentFolders = settings->value("recentFolders").toStringList();
 
-    // Update the recent folders menu with loaded data
     populateRecentFoldersMenu();
 
-    // Determine which folder to open
     QString folderToOpen;
     if (!m_startupPath.isEmpty()) {
-        // Use startup path from command-line argument
         folderToOpen = m_startupPath;
     } else {
-        // Use last opened folder
         folderToOpen = settings->value("lastFolder").toString();
     }
 
@@ -409,28 +379,23 @@ void MainWindow::readSettings() {
 
         buildLinkIndexAsync();
         
-        // Restore the file tree root if it was set to a subdirectory
         QString fileTreeRoot = settings->value("session/fileTreeRoot").toString();
         if (!fileTreeRoot.isEmpty() && 
             QDir(fileTreeRoot).exists() && 
             fileTreeRoot != folderToOpen &&
             fileTreeRoot.startsWith(folderToOpen)) {
-            // Only restore if it's a subdirectory of the current folder
             treeView->setRootPath(fileTreeRoot);
         }
 
         statusBar()->showMessage(tr("Opened folder: %1").arg(folderToOpen));
     }
 
-    // Restore open files from last session (if enabled in preferences)
     bool restoreSession =
         settings->value("general/restoreSession", true).toBool();
     QStringList openFiles = settings->value("session/openFiles").toStringList();
     int activeTabIndex = settings->value("session/activeTab", -1).toInt();
 
     if (!m_startupFile.isEmpty()) {
-        // If a specific file was provided via command-line, open it
-        // Close the default empty tab if it exists
         if (tabWidget->count() == 1) {
             TabEditor* firstTab =
                 qobject_cast<TabEditor*>(tabWidget->widget(0));
@@ -442,7 +407,6 @@ void MainWindow::readSettings() {
         }
         loadFile(m_startupFile);
     } else if (restoreSession && !openFiles.isEmpty()) {
-        // Close the default empty tab if it exists and is empty
         if (tabWidget->count() == 1) {
             TabEditor* firstTab =
                 qobject_cast<TabEditor*>(tabWidget->widget(0));
@@ -453,26 +417,22 @@ void MainWindow::readSettings() {
             }
         }
 
-        // Open each file from the session
         for (const QString& filePath : openFiles) {
             if (QFileInfo::exists(filePath)) {
                 loadFile(filePath);
             }
         }
 
-        // Restore the active tab
         if (activeTabIndex >= 0 && activeTabIndex < tabWidget->count()) {
             tabWidget->setCurrentIndex(activeTabIndex);
         }
     } else if (!folderToOpen.isEmpty()) {
-        // No specific file or session to restore, try to open main file
         QString mainFileName =
             settings->value("workspace/mainFileName", "main.md").toString();
         QString mainFilePath =
             MainFileLocator::findMainFile(folderToOpen, mainFileName);
 
         if (!mainFilePath.isEmpty() && QFileInfo::exists(mainFilePath)) {
-            // Close the default empty tab if it exists
             if (tabWidget->count() == 1) {
                 TabEditor* firstTab =
                     qobject_cast<TabEditor*>(tabWidget->widget(0));
@@ -486,7 +446,6 @@ void MainWindow::readSettings() {
         }
     }
 
-    // Apply view mode to current tab
     applyViewMode(currentViewMode, false);
 }
 
@@ -499,12 +458,10 @@ void MainWindow::writeSettings() {
     settings->setValue("lastFolder", currentFolder);
     settings->setValue("recentFolders", recentFolders);
     
-    // Save the current file tree root path (which may be a subdirectory)
     if (treeView) {
         settings->setValue("session/fileTreeRoot", treeView->rootPath());
     }
 
-    // Save open files
     QStringList openFiles;
     int activeTabIndex = tabWidget->currentIndex();
 
@@ -560,18 +517,15 @@ void MainWindow::applySettings() {
                 highlighter->setCodeSyntaxEnabled(codeSyntaxEnabled);
                 highlighter->rehighlight();
             }
-            // Apply line numbers visibility
             bool showLineNumbers =
                 settings->value("editor/showLineNumbers", true).toBool();
             tab->editor()->setLineNumbersVisible(showLineNumbers);
             
-            // Apply word prediction setting
             bool wordPredictionEnabled =
                 settings->value("editor/enableWordPrediction", true).toBool();
             tab->editor()->setPredictionEnabled(wordPredictionEnabled);
         }
     }
-    // Apply auto-save settings
     if (settings->value("autoSaveEnabled", true).toBool()) {
         int interval = settings->value("autoSaveInterval", 60).toInt();
         if (autoSaveTimer) {
@@ -582,7 +536,6 @@ void MainWindow::applySettings() {
             autoSaveTimer->stop();
         }
     }
-    // Apply AI settings
     QString activeProviderName =
         settings->value("ai/provider", "ollama").toString();
     AIProviderManager::instance()->setActiveProvider(activeProviderName);
@@ -629,13 +582,10 @@ void MainWindow::applySettings() {
         }
     }
 
-    // Reload system prompts
     SystemPrompts::instance()->loadFromSettings();
 
-    // Rebuild AI assist menu (may have changed)
     createAIAssistMenu();
 
-    // Apply AI enabled/disabled state
     bool aiEnabled = settings->value("ai/enabled", true).toBool();
     aiAssistAction->setEnabled(aiEnabled);
     if (aiAssistMenu) {
@@ -645,7 +595,6 @@ void MainWindow::applySettings() {
         aiAssistEditSubmenu->setEnabled(aiEnabled);
     }
     
-    // Apply AI enabled state to all editor tabs
     for (int i = 0; i < tabWidget->count(); ++i) {
         TabEditor* tab = qobject_cast<TabEditor*>(tabWidget->widget(i));
         if (tab && tab->editor()) {
@@ -653,12 +602,10 @@ void MainWindow::applySettings() {
         }
     }
 
-    // Get the resolved preview theme
     QString theme = settings->value("previewTheme", "light").toString();
     if (ThemeManager::instance()) {
         theme = ThemeManager::instance()->getResolvedPreviewColorSchemeName();
     }
-    // Apply theme to all tabs
     for (int i = 0; i < tabWidget->count(); ++i) {
         TabEditor* tab = qobject_cast<TabEditor*>(tabWidget->widget(i));
         if (tab && tab->preview()) {
@@ -676,7 +623,6 @@ void MainWindow::applySettings() {
     }
     */
 
-    // Apply editor settings to all tabs
     QString fontFamily =
         settings->value("editor/font", "Sans Serif").toString();
     int fontSize = settings->value("editor/fontSize", 11).toInt();
@@ -693,7 +639,6 @@ void MainWindow::applySettings() {
                                                     : QTextEdit::NoWrap);
         }
     }
-    // Apply preview refresh rate
     int refreshRate = settings->value("preview/refreshRate", 500).toInt();
     if (previewUpdateTimer) {
         previewUpdateTimer->setInterval(refreshRate);

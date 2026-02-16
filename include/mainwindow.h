@@ -52,6 +52,7 @@ class MainWindow : public QMainWindow {
     void clearRecentFolders();
     void save();
     void saveAs();
+    void print();
     void about();
     void showUserGuide();
     void toggleSidebar();
@@ -165,6 +166,7 @@ class MainWindow : public QMainWindow {
     QAction* openFolderAction;
     QAction* saveAction;
     QAction* saveAsAction;
+    QAction* printAction;
     QAction* exportHtmlAction;
     QAction* exportPdfAction;
     QAction* exportDocxAction;
