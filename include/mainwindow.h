@@ -123,7 +123,6 @@ class MainWindow : public QMainWindow {
     void insertDateWithFormat(const QString& format);
     void insertTimeWithFormat(const QString& format);
     void filterHistoryList();
-    void openFileInExplorer();
 
    private:
     void createActions();

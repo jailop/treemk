@@ -306,21 +306,6 @@ void MainWindow::createLayout() {
                 }
             });
     
-    // Context menu for history view
-    historyView->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(historyView, &QListWidget::customContextMenuRequested, this,
-            [this](const QPoint& pos) {
-                QListWidgetItem* item = historyView->itemAt(pos);
-                if (item) {
-                    QMenu contextMenu(this);
-                    QAction* openAction =
-                        contextMenu.addAction(tr("Open in File Explorer"));
-                    connect(openAction, &QAction::triggered, this,
-                            &MainWindow::openFileInExplorer);
-                    contextMenu.exec(historyView->mapToGlobal(pos));
-                }
-            });
-    
     // Set tab icons and tooltips
     leftTabWidget->setTabIcon(0, QIcon::fromTheme("folder", 
                                 style()->standardIcon(QStyle::SP_DirIcon)));

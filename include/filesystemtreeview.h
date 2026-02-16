@@ -68,6 +68,7 @@ private slots:
   void openInNewWindow();
   void openFile();
   void openFileWith();
+  void openInFileExplorer();
   void onItemRenamed(const QModelIndex &topLeft, const QModelIndex &bottomRight);
   void onEditStarted();
 
@@ -95,6 +96,7 @@ private:
   QAction *openInNewWindowAction;
   QAction *openAction;
   QAction *openWithAction;
+  QAction *openInFileExplorerAction;
 
   QString clipboardPath;
   bool clipboardIsCut;
