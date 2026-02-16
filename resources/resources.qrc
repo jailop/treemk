@@ -109,4 +109,8 @@
         <file>help/images/filepanel.png</file>
         <file>help/images/aiassistant.png</file>
     </qresource>
+    <qresource prefix="/ui">
+        <file>../ui/historypanel.ui</file>
+        <file>../ui/sidebarpanel.ui</file>
+    </qresource>
 </RCC>

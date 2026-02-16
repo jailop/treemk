@@ -31,6 +31,7 @@ class QuickOpenDialog;
 class OutlinePanel;
 class AIAssistDialog;
 class NavigationHistory;
+class SidebarPanel;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -225,6 +226,7 @@ class MainWindow : public QMainWindow {
     QProgressBar* progressBar;
 
     QSplitter* mainSplitter;
+    SidebarPanel* sidebarPanel;
     QTabWidget* leftTabWidget;
     QWidget* treePanel;
     QWidget* outlinePanel;

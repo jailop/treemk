@@ -1,4 +1,5 @@
 #include <QDir>
+#include <QFile>
 #include <QFileInfo>
 #include <QLabel>
 #include <QLineEdit>
@@ -29,6 +30,7 @@
 #include "outlinepanel.h"
 #include "settingsdialog.h"
 #include "shortcutsdialog.h"
+#include "sidebarpanel.h"
 #include "tabeditor.h"
 #include "thememanager.h"
 
@@ -239,20 +241,23 @@ void MainWindow::createToolbar() {
 }
 
 void MainWindow::createLayout() {
-    // Create left panel with tabs for File Tree, Outline, and Backlinks
-    leftTabWidget = new QTabWidget(this);
-    leftTabWidget->setTabPosition(QTabWidget::South);
-    leftTabWidget->setMinimumWidth(150);
-    leftTabWidget->setIconSize(QSize(20, 20));
-
-    // File tree tab
-    treePanel = new QWidget(this);
-    QVBoxLayout* treeLayout = new QVBoxLayout(treePanel);
-    treeLayout->setContentsMargins(0, 0, 0, 0);
-
+    // Create sidebar panel from UI file
+    sidebarPanel = new SidebarPanel(this);
+    
+    // Get references to widgets from UI
+    leftTabWidget = sidebarPanel->getLeftTabWidget();
+    treePanel = sidebarPanel->getTreePanel();
+    outlinePanel = sidebarPanel->getOutlinePanel();
+    backlinksPanel = sidebarPanel->getBacklinksPanel();
+    historyPanel = sidebarPanel->getHistoryPanel();
+    backlinksView = sidebarPanel->getBacklinksView();
+    historyView = sidebarPanel->getHistoryView();
+    historyFilterInput = sidebarPanel->getHistoryFilterInput();
+    
+    // Create and setup tree view
     treeView = new FileSystemTreeView(treePanel);
-    treeLayout->addWidget(treeView);
-
+    sidebarPanel->setTreeView(treeView);
+    
     connect(treeView, &FileSystemTreeView::fileSelected, this,
             &MainWindow::onFileSelected);
     connect(treeView, &FileSystemTreeView::fileDoubleClicked, this,
@@ -275,37 +280,12 @@ void MainWindow::createLayout() {
             &MainWindow::onFileDeleted);
     connect(treeView, &FileSystemTreeView::fileRenamed, this,
             &MainWindow::onFileRenamed);
-
-    leftTabWidget->addTab(
-        treePanel,
-        QIcon::fromTheme("folder", style()->standardIcon(QStyle::SP_DirIcon)),
-        QString());
-    leftTabWidget->setTabToolTip(0, tr("Files"));
-
-    // Outline tab
-    outlinePanel = new QWidget(this);
-    QVBoxLayout* outlineLayout = new QVBoxLayout(outlinePanel);
-    outlineLayout->setContentsMargins(0, 0, 0, 0);
-
+    
+    // Create and setup outline view
     outlineView = new OutlinePanel(outlinePanel);
-    outlineLayout->addWidget(outlineView);
-
-    leftTabWidget->addTab(
-        outlinePanel,
-        QIcon::fromTheme(
-            "view-list-tree",
-            style()->standardIcon(QStyle::SP_FileDialogDetailedView)),
-        QString());
-    leftTabWidget->setTabToolTip(1, tr("Outline"));
-
-    // Backlinks tab
-    backlinksPanel = new QWidget(this);
-    QVBoxLayout* backlinksLayout = new QVBoxLayout(backlinksPanel);
-    backlinksLayout->setContentsMargins(0, 0, 0, 0);
-
-    backlinksView = new QListWidget(backlinksPanel);
-    backlinksLayout->addWidget(backlinksView);
-
+    sidebarPanel->setOutlineView(outlineView);
+    
+    // Setup backlinks connections
     connect(backlinksView, &QListWidget::itemDoubleClicked,
             [this](QListWidgetItem* item) {
                 QString filePath = item->data(Qt::UserRole).toString();
@@ -313,32 +293,11 @@ void MainWindow::createLayout() {
                     loadFile(filePath);
                 }
             });
-
-    leftTabWidget->addTab(
-        backlinksPanel,
-        QIcon::fromTheme("insert-link",
-                         style()->standardIcon(QStyle::SP_ArrowBack)),
-        QString());
-    leftTabWidget->setTabToolTip(2, tr("Backlinks"));
-
-    // History tab
-    historyPanel = new QWidget(this);
-    QVBoxLayout* historyLayout = new QVBoxLayout(historyPanel);
-    historyLayout->setContentsMargins(0, 0, 0, 0);
-    historyLayout->setSpacing(0);
-
-    // Filter input with clear button
-    historyFilterInput = new QLineEdit(historyPanel);
-    historyFilterInput->setPlaceholderText(tr("Filter history..."));
-    historyFilterInput->setClearButtonEnabled(true);
-    historyLayout->addWidget(historyFilterInput);
-
-    historyView = new QListWidget(historyPanel);
-    historyLayout->addWidget(historyView);
-
+    
+    // Setup history connections
     connect(historyFilterInput, &QLineEdit::textChanged, this,
             &MainWindow::filterHistoryList);
-
+    
     connect(historyView, &QListWidget::itemDoubleClicked,
             [this](QListWidgetItem* item) {
                 QString filePath = item->data(Qt::UserRole).toString();
@@ -346,7 +305,7 @@ void MainWindow::createLayout() {
                     loadFile(filePath);
                 }
             });
-
+    
     // Context menu for history view
     historyView->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(historyView, &QListWidget::customContextMenuRequested, this,
@@ -361,12 +320,22 @@ void MainWindow::createLayout() {
                     contextMenu.exec(historyView->mapToGlobal(pos));
                 }
             });
-
-    leftTabWidget->addTab(
-        historyPanel,
-        QIcon::fromTheme("document-open-recent",
-                         style()->standardIcon(QStyle::SP_FileDialogBack)),
-        QString());
+    
+    // Set tab icons and tooltips
+    leftTabWidget->setTabIcon(0, QIcon::fromTheme("folder", 
+                                style()->standardIcon(QStyle::SP_DirIcon)));
+    leftTabWidget->setTabToolTip(0, tr("Files"));
+    
+    leftTabWidget->setTabIcon(1, QIcon::fromTheme("view-list-tree",
+                                style()->standardIcon(QStyle::SP_FileDialogDetailedView)));
+    leftTabWidget->setTabToolTip(1, tr("Outline"));
+    
+    leftTabWidget->setTabIcon(2, QIcon::fromTheme("insert-link",
+                                style()->standardIcon(QStyle::SP_ArrowBack)));
+    leftTabWidget->setTabToolTip(2, tr("Backlinks"));
+    
+    leftTabWidget->setTabIcon(3, QIcon::fromTheme("document-open-recent",
+                                style()->standardIcon(QStyle::SP_FileDialogBack)));
     leftTabWidget->setTabToolTip(3, tr("History"));
 
     // Tab widget for multiple editors
@@ -382,9 +351,9 @@ void MainWindow::createLayout() {
 
     // Main splitter
     mainSplitter = new QSplitter(Qt::Horizontal, this);
-    mainSplitter->addWidget(leftTabWidget);
+    mainSplitter->addWidget(sidebarPanel);
     mainSplitter->addWidget(tabWidget);
-    mainSplitter->setStretchFactor(0, 0);  // Left tab widget
+    mainSplitter->setStretchFactor(0, 0);  // Sidebar panel
     mainSplitter->setStretchFactor(1, 1);  // Tab widget gets most space
 
     setCentralWidget(mainSplitter);
@@ -404,7 +373,7 @@ void MainWindow::readSettings() {
             settings->value("mainSplitter").toByteArray());
 
     bool sidebarVisible = settings->value("sidebarVisible", true).toBool();
-    leftTabWidget->setVisible(sidebarVisible);
+    sidebarPanel->setVisible(sidebarVisible);
     toggleSidebarAction->setChecked(sidebarVisible);
 
     // Load and apply view mode

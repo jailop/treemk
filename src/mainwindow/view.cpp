@@ -13,10 +13,11 @@
 #include "managers/windowmanager.h"
 #include "markdowneditor.h"
 #include "markdownpreview.h"
+#include "sidebarpanel.h"
 #include "tabeditor.h"
 
 void MainWindow::toggleSidebar() {
-    leftTabWidget->setVisible(!leftTabWidget->isVisible());
+    sidebarPanel->setVisible(!sidebarPanel->isVisible());
 }
 
 void MainWindow::togglePreview() {
