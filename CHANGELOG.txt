@@ -193,3 +193,4 @@ Documentation:
 - Regexp centralized. Unit tests added
 - Print menu option
 - Internal links support
+- fixed issue: wikilinks - create new file

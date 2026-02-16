@@ -25,7 +25,7 @@ struct ThemeColors {
   
   QColor header = QColor(100, 120, 200);
   QColor link = QColor(120, 140, 230);
-  QColor wikiLink = QColor(80, 180, 120);
+  QColor wikiLink = QColor(120, 140, 230);
   QColor brokenLink = QColor(220, 100, 110);
   QColor code = QColor(180, 100, 140);
   QColor listMarker = QColor(100, 170, 100);
@@ -93,7 +93,7 @@ inline const ThemeColors& getDarkTheme() {
     
     QColor(200, 180, 255),
     QColor(180, 200, 255),
-    QColor(150, 230, 200),
+    QColor(180, 200, 255),
     QColor(255, 160, 180),
     QColor(240, 180, 210),
     QColor(180, 220, 180),

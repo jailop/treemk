@@ -108,9 +108,15 @@ void MainWindow::onWikiLinkClicked(const QString& linkTarget) {
         linkParser->resolveLinkTarget(linkTarget, currentFilePath, depth);
 
     if (targetFile.isEmpty()) {
-        statusBar()->showMessage(
-            tr("Wiki link target not found: %1").arg(linkTarget), 3000);
-        return;
+        // File not found, construct path for potential creation
+        QFileInfo currentFileInfo(currentFilePath);
+        QDir currentDir = currentFileInfo.dir();
+        targetFile = currentDir.filePath(linkTarget);
+        
+        // Add .md extension if not present
+        if (QFileInfo(targetFile).suffix().isEmpty()) {
+            targetFile += ".md";
+        }
     }
 
     if (QFileInfo(targetFile).exists()) {
@@ -123,13 +129,17 @@ void MainWindow::onWikiLinkClicked(const QString& linkTarget) {
             QMessageBox::Yes | QMessageBox::No);
 
         if (reply == QMessageBox::Yes) {
-            if (createFileFromLink(targetFile, linkTarget)) {
-                // Adjust path with .md extension if it was added
-                QString newFilePath = targetFile;
-                if (QFileInfo(newFilePath).suffix().isEmpty()) {
-                    newFilePath += ".md";
-                }
-                loadFile(newFilePath);
+            QString initialContent = QString("# %1\n\nCreated from wiki link: [[%2]]\n")
+                                         .arg(QFileInfo(targetFile).baseName())
+                                         .arg(linkTarget);
+
+            FileUtils::FileCreationResult result =
+                FileUtils::createFileWithDirectories(targetFile, initialContent);
+
+            if (result.success) {
+                loadFile(targetFile);
+            } else {
+                statusBar()->showMessage(result.errorMessage, 3000);
             }
         }
     }

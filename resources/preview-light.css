@@ -10,7 +10,7 @@
     --hr-color: #d2cdd7;
     --table-border: #d7d2dc;
     --link-color: #788ce6;
-    --wiki-link-color: #50b478;
+    --wiki-link-color: #788ce6;
 }
 
 body { background-color: var(--bg-color); color: var(--text-color); }
