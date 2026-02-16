@@ -16,11 +16,13 @@ public:
   void setLatexEnabled(bool enabled);
   void scrollToPercentage(double percentage);
   double currentScrollPercentage() const;
+  void scrollToAnchor(const QString &anchor);
 
  signals:
    void wikiLinkClicked(const QString &linkTarget);
    void markdownLinkClicked(const QString &linkTarget);
    void openLinkInNewWindowRequested(const QString &linkTarget);
+   void internalLinkClicked(const QString &anchor);
 
 private slots:
   void showContextMenu(const QPoint &pos);
@@ -35,6 +37,7 @@ private:
   QString resolveAndIncludeFile(const QString &linkTarget,
                                 const QString &displayText);
   QString readFileContent(const QString &linkTarget, QString &errorMsg);
+  QString addHeadingIds(const QString &html);
 
   QString currentTheme;
   QString basePath;

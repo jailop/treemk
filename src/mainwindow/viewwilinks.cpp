@@ -1,6 +1,10 @@
 #include <QDesktopServices>
 #include <QDir>
 #include <QFileInfo>
+#include <QMessageBox>
+#include <QStatusBar>
+#include <QTimer>
+#include <QUrl>
 
 #include "fileutils.h"
 #include "linkparser.h"
@@ -9,11 +13,6 @@
 #include "markdowneditor.h"
 #include "markdownpreview.h"
 #include "tabeditor.h"
-// #include <QListWidget>
-#include <QMessageBox>
-#include <QStatusBar>
-// #include <QTimer>
-#include <QUrl>
 
 void MainWindow::onMarkdownLinkClicked(const QString& linkTarget) {
     if (currentFolder.isEmpty()) {
@@ -21,13 +20,21 @@ void MainWindow::onMarkdownLinkClicked(const QString& linkTarget) {
             tr("No folder opened. Cannot resolve markdown link."), 3000);
         return;
     }
+    
+    LinkTarget parsed = LinkParser::parseLinkTarget(linkTarget);
+    
+    if (parsed.isInternalOnly) {
+        onInternalLinkClicked(parsed.anchor);
+        return;
+    }
+    
     QString resolvedPath;
-    if (QFileInfo(linkTarget).isAbsolute()) {
-        resolvedPath = linkTarget;
+    if (QFileInfo(parsed.filePath).isAbsolute()) {
+        resolvedPath = parsed.filePath;
     } else {
         QFileInfo currentFileInfo(currentFilePath);
         QDir currentDir = currentFileInfo.dir();
-        resolvedPath = currentDir.filePath(linkTarget);
+        resolvedPath = currentDir.filePath(parsed.filePath);
     }
     resolvedPath = QFileInfo(resolvedPath).absoluteFilePath();
     QString finalPath = resolvedPath;
@@ -38,18 +45,15 @@ void MainWindow::onMarkdownLinkClicked(const QString& linkTarget) {
     } else {
         QFileInfo resolvedInfo(resolvedPath);
         if (resolvedInfo.suffix().isEmpty()) {
-            // No extension - try .md first
             QString mdPath = resolvedPath + ".md";
             if (QFileInfo(mdPath).exists()) {
                 finalPath = mdPath;
                 shouldOpenInTreeMk = true;
             } else {
-                // Use .md for creation
                 finalPath = mdPath;
                 shouldOpenInTreeMk = true;
             }
         } else {
-            // Has extension but doesn't exist - offer to create if it's .md
             shouldOpenInTreeMk =
                 resolvedPath.endsWith(".md", Qt::CaseInsensitive);
             finalPath = resolvedPath;
@@ -58,11 +62,15 @@ void MainWindow::onMarkdownLinkClicked(const QString& linkTarget) {
     if (QFileInfo(finalPath).exists()) {
         if (shouldOpenInTreeMk) {
             loadFile(finalPath);
+            if (!parsed.anchor.isEmpty()) {
+                QTimer::singleShot(100, [this, parsed]() {
+                    onInternalLinkClicked(parsed.anchor);
+                });
+            }
         } else {
             QDesktopServices::openUrl(QUrl::fromLocalFile(finalPath));
         }
     } else {
-        // File doesn't exist - only offer to create .md files
         if (shouldOpenInTreeMk) {
             QMessageBox::StandardButton reply = QMessageBox::question(
                 this, tr("Create File"),
@@ -70,7 +78,6 @@ void MainWindow::onMarkdownLinkClicked(const QString& linkTarget) {
                     .arg(QFileInfo(finalPath).fileName()),
                 QMessageBox::Yes | QMessageBox::No);
             if (reply == QMessageBox::Yes) {
-                // Create the file with a basic template
                 QString initialContent =
                     QString("# %1\n\nCreated from markdown link: %2\n")
                         .arg(QFileInfo(finalPath).baseName())
@@ -81,16 +88,29 @@ void MainWindow::onMarkdownLinkClicked(const QString& linkTarget) {
                                                          initialContent);
 
                 if (result.success) {
-                    // Load the newly created file
                     loadFile(finalPath);
+                    if (!parsed.anchor.isEmpty()) {
+                        QTimer::singleShot(100, [this, parsed]() {
+                            onInternalLinkClicked(parsed.anchor);
+                        });
+                    }
                 } else {
                     statusBar()->showMessage(result.errorMessage, 3000);
                 }
             }
         } else {
-            // For non-.md files that don't exist, show an error
             statusBar()->showMessage(tr("File not found: %1").arg(finalPath),
                                      3000);
         }
     }
+}
+
+void MainWindow::onInternalLinkClicked(const QString& anchor) {
+    TabEditor* currentTab = currentTabEditor();
+    if (!currentTab) {
+        return;
+    }
+    
+    currentTab->editor()->jumpToHeading(anchor);
+    currentTab->preview()->scrollToAnchor(anchor);
 }

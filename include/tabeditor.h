@@ -34,9 +34,11 @@ signals:
   void modificationChanged(bool modified);
   void filePathChanged(const QString &filePath);
   void fileModified(bool modified);
+  void documentModified();
   void wikiLinkClicked(const QString &linkTarget);
   void markdownLinkClicked(const QString &linkTarget);
   void openLinkInNewWindowRequested(const QString &linkTarget);
+  void internalLinkClicked(const QString &anchor);
   void aiAssistRequested();
   
 public slots:

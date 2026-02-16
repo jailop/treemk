@@ -1,6 +1,10 @@
+#include <QRegularExpression>
+
 #include "defs.h"
 #include "markdowneditor.h"
 #include "markdownhighlighter.h"
+#include "regexpatterns.h"
+#include "regexutils.h"
 #include "shortcutmanager.h"
 
 QString MarkdownEditor::getTaskMarkerAtPosition(int position) const {
@@ -9,12 +13,10 @@ QString MarkdownEditor::getTaskMarkerAtPosition(int position) const {
     QString line = cursor.block().text();
     int posInBlock = cursor.positionInBlock();
 
-    QRegularExpression taskPattern("[-*+] \\[([ xX.]?)\\]");
-    QRegularExpressionMatchIterator matchIterator =
-        taskPattern.globalMatch(line);
+    QVector<QRegularExpressionMatch> matches = 
+        RegexUtils::getAllMatches(line, RegexPatterns::TASK_CHECKBOX);
 
-    while (matchIterator.hasNext()) {
-        QRegularExpressionMatch match = matchIterator.next();
+    for (const auto& match : matches) {
         int start = match.capturedStart();
         int end = start + match.capturedLength();
         if (posInBlock >= start && posInBlock <= end) {
@@ -30,22 +32,19 @@ bool MarkdownEditor::isClickOnCheckbox(int position) const {
     QString line = cursor.block().text();
     int posInBlock = cursor.positionInBlock();
 
-    // Pattern to match task list: - [ ], * [ ], + [ ]
-    QRegularExpression taskPattern("([-*+])\\s+\\[([ xX.]?)\\]");
-    QRegularExpressionMatch match = taskPattern.match(line);
-
-    if (match.hasMatch()) {
-        // Check if click is on the checkbox part: [ ] or [X] or [.]
-        int checkboxStart = match.capturedStart();
-
-        // Allow clicking anywhere on "[ ]" part (including the brackets)
-        int bracketStart = line.indexOf('[', checkboxStart);
-        int bracketEnd = line.indexOf(']', bracketStart);
-
-        if (bracketStart >= 0 && bracketEnd >= 0) {
-            return (posInBlock >= bracketStart && posInBlock <= bracketEnd + 1);
-        }
+    if (!RegexUtils::isTaskItem(line)) {
+        return false;
     }
+
+    RegexUtils::TaskItemInfo taskInfo = RegexUtils::parseTaskItem(line);
+    
+    int bracketStart = line.indexOf('[');
+    int bracketEnd = line.indexOf(']', bracketStart);
+
+    if (bracketStart >= 0 && bracketEnd >= 0) {
+        return (posInBlock >= bracketStart && posInBlock <= bracketEnd + 1);
+    }
+
     return false;
 }
 
@@ -55,14 +54,12 @@ void MarkdownEditor::toggleTaskAtPosition(int position) {
     QTextBlock block = cursor.block();
     QString line = block.text();
 
-    // Match any list marker (-, *, +) followed by [ ]
     QRegularExpression taskPattern("([-*+])\\s+\\[([ xX.]?)\\]");
     QRegularExpressionMatch match = taskPattern.match(line);
     if (match.hasMatch()) {
         QString marker = match.captured(2);  // The character inside brackets
         QString newMarker;
 
-        // Toggle: space -> X, X/x -> space, . -> X
         if (marker == " ") {
             newMarker = "X";
         } else if (marker.toUpper() == "X") {
@@ -73,29 +70,23 @@ void MarkdownEditor::toggleTaskAtPosition(int position) {
             newMarker = "X";
         }
 
-        // Save current cursor position in the editor
         QTextCursor editorCursor = textCursor();
         int cursorPos = editorCursor.position();
         int blockPos = block.position();
         int relativePos = cursorPos - blockPos;
 
-        // Replace the marker character
         cursor.beginEditBlock();
         cursor.setPosition(block.position() + match.capturedStart(2));
         cursor.deleteChar();
         cursor.insertText(newMarker);
         cursor.endEditBlock();
 
-        // Restore cursor position
         editorCursor.setPosition(blockPos + relativePos);
         setTextCursor(editorCursor);
 
-        // Update parent task states
         updateParentTask(block);
 
-        // Update child task states if this task was marked as done/pending
         if (newMarker == " ") {
-            // Parent was unchecked - uncheck all children
             uncheckChildTasks(block);
         }
     }
@@ -110,7 +101,6 @@ void MarkdownEditor::uncheckChildTasks(const QTextBlock& block) {
         if (match.hasMatch()) {
             QString marker = match.captured(2);
             if (marker != " ") {
-                // Change to unchecked
                 QTextCursor cursor(document());
                 cursor.setPosition(child.position());
                 cursor.beginEditBlock();
@@ -248,7 +238,6 @@ void MarkdownEditor::applyListHangingIndent(const QTextBlock& block) {
     QTextBlockFormat blockFormat = cursor.blockFormat();
 
     if (!match.hasMatch()) {
-        // Not a list item - reset margins if they were set
         if (blockFormat.leftMargin() != 0 || blockFormat.textIndent() != 0) {
             blockFormat.setLeftMargin(0);
             blockFormat.setTextIndent(0);
@@ -257,7 +246,6 @@ void MarkdownEditor::applyListHangingIndent(const QTextBlock& block) {
         return;
     }
 
-    // Is a list item - apply hanging indent
     QFont font = this->font();
     QFontMetrics fm(font);
     QString indent = match.captured(1);  // Leading whitespace
@@ -270,13 +258,10 @@ void MarkdownEditor::applyListHangingIndent(const QTextBlock& block) {
 }
 
 void MarkdownEditor::applyListHangingIndentToCurrentBlock() {
-    // Apply formatting only to current block without adding to undo stack
-    // We do this by temporarily disabling undo/redo for just this operation
 
     QTextCursor cursor = textCursor();
     QTextBlock currentBlock = cursor.block();
 
-    // Check if we need to update format
     QString text = currentBlock.text();
     QRegularExpression listPattern("^(\\s*)([-*+]|[0-9]+\\.)\\s+");
     QRegularExpressionMatch match = listPattern.match(text);
@@ -288,7 +273,6 @@ void MarkdownEditor::applyListHangingIndentToCurrentBlock() {
     qreal targetTextIndent = 0;
 
     if (match.hasMatch()) {
-        // Is a list item - calculate target format
         QFont font = this->font();
         QFontMetrics fm(font);
         QString indent = match.captured(1);
@@ -302,7 +286,6 @@ void MarkdownEditor::applyListHangingIndentToCurrentBlock() {
             needsUpdate = true;
         }
     } else {
-        // Not a list item - should have zero margins
         if (currentFormat.leftMargin() != 0 ||
             currentFormat.textIndent() != 0) {
             needsUpdate = true;
@@ -310,7 +293,6 @@ void MarkdownEditor::applyListHangingIndentToCurrentBlock() {
     }
 
     if (needsUpdate) {
-        // Temporarily disable undo/redo for this single formatting operation
         bool undoEnabled = document()->isUndoRedoEnabled();
         document()->setUndoRedoEnabled(false);
 
@@ -319,23 +301,15 @@ void MarkdownEditor::applyListHangingIndentToCurrentBlock() {
         newFormat.setTextIndent(targetTextIndent);
         cursor.setBlockFormat(newFormat);
 
-        // Re-enable undo/redo immediately
         document()->setUndoRedoEnabled(undoEnabled);
     }
 }
 
 void MarkdownEditor::applyDeferredFormatting() {
-    // This method is called after user stops typing (via QTimer)
-    // It safely applies hanging indent formatting to all list items
-
-    // Store the current modified state
     bool wasModified = document()->isModified();
 
-    // Create a single cursor to batch all format changes
     QTextCursor batchCursor(document());
 
-    // Use beginEditBlock/endEditBlock to group all formatting as one undo
-    // action Then we'll clear it from the undo stack
     batchCursor.beginEditBlock();
 
     QTextBlock block = document()->firstBlock();
@@ -346,10 +320,7 @@ void MarkdownEditor::applyDeferredFormatting() {
 
     batchCursor.endEditBlock();
 
-    // Now undo this formatting block to remove it from the stack
-    // but keep the visual formatting (it's already applied)
     document()->undo();
 
-    // Restore the modified state (formatting shouldn't count as modification)
     document()->setModified(wasModified);
 }

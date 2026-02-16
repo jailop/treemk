@@ -44,7 +44,7 @@ void MarkdownHighlighter::setupFormats() {
         quoteColor = QColor(147, 161, 161);
         latexColor = QColor(203, 75, 22);
         codeBg = QColor(238, 232, 213);
-        wikiLinkColor = QColor(42, 161, 152);
+        wikiLinkColor = QColor(38, 139, 210);
         brokenLinkColor = QColor(211, 54, 130);
         strikethroughColor = QColor(147, 161, 161);
     } else if (currentColorScheme == "solarized-dark") {
@@ -56,7 +56,7 @@ void MarkdownHighlighter::setupFormats() {
         quoteColor = QColor(88, 110, 117);
         latexColor = QColor(203, 75, 22);
         codeBg = QColor(7, 54, 66);
-        wikiLinkColor = QColor(42, 161, 152);
+        wikiLinkColor = QColor(38, 139, 210);
         brokenLinkColor = QColor(211, 54, 130);
         strikethroughColor = QColor(88, 110, 117);
     } else {

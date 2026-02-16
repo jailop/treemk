@@ -6,11 +6,16 @@
 #include <QLineEdit>
 #include <QMenu>
 #include <QMessageBox>
+#include <QPageLayout>
+#include <QPageSize>
+#include <QPrintDialog>
+#include <QPrinter>
 #include <QPushButton>
 #include <QRegularExpression>
 #include <QStatusBar>
 #include <QTextCursor>
 #include <QTextDocument>
+#include <QWebEngineView>
 #include <algorithm>
 
 #include "defs.h"
@@ -21,6 +26,7 @@
 #include "managers/windowmanager.h"
 #include "markdowneditor.h"
 #include "markdownhighlighter.h"
+#include "markdownpreview.h"
 #include "navigationhistory.h"
 #include "tabeditor.h"
 
@@ -366,4 +372,23 @@ void MainWindow::autoSave() {
             tab->saveFile();
         }
     }
+}
+
+void MainWindow::print() {
+    TabEditor* tab = currentTabEditor();
+    if (!tab) {
+        QMessageBox::warning(this, tr("No Document"),
+                            tr("No document is currently open."));
+        return;
+    }
+
+    MarkdownPreview* preview = tab->preview();
+    if (!preview || !preview->page()) {
+        QMessageBox::warning(this, tr("No Preview"),
+                            tr("Preview is not available."));
+        return;
+    }
+
+    preview->page()->runJavaScript("window.print();");
+    statusBar()->showMessage(tr("Opening print dialog..."), 2000);
 }

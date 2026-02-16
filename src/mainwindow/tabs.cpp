@@ -69,6 +69,8 @@ TabEditor* MainWindow::createNewTab() {
             &MainWindow::onMarkdownLinkClicked);
     connect(tab->preview(), &MarkdownPreview::openLinkInNewWindowRequested,
             this, &MainWindow::onOpenLinkInNewWindow);
+    connect(tab->preview(), &MarkdownPreview::internalLinkClicked, this,
+            &MainWindow::onInternalLinkClicked);
 
     if (outlineView) {
         connect(outlineView, &OutlinePanel::headerClicked, this,
@@ -111,7 +113,6 @@ TabEditor* MainWindow::createNewTab() {
         outlineView->updateOutline(tab->editor()->toPlainText());
     }
 
-    // Apply current view mode to the newly created tab
     applyViewMode(currentViewMode, false);
 
     return tab;
@@ -168,17 +169,14 @@ void MainWindow::onTabChanged(int index) {
         if (!tab->filePath().isEmpty()) {
             setWindowTitle(QString("%1 - %2").arg(tab->fileName(), APP_LABEL));
 
-            // Synchronize file panel selection with active tab
             treeView->selectFile(tab->filePath());
 
-            // Show full path in status bar
             statusBar()->showMessage(tab->filePath());
         } else {
             setWindowTitle(APP_LABEL);
             statusBar()->clearMessage();
         }
 
-        // Apply current view mode to the newly active tab
         applyViewMode(currentViewMode, false);
     }
 }
@@ -189,7 +187,6 @@ void MainWindow::onTabCloseRequested(int index) {
         return;
     }
 
-    // Only prompt if document is modified AND not empty
     bool isDocumentEmpty = tab->editor()->toPlainText().trimmed().isEmpty();
     bool shouldSave = !isDocumentEmpty && tab->isModified();
 
@@ -260,7 +257,6 @@ void MainWindow::closeTabsFromOtherFolders() {
     QDir currentDir(currentFolder);
     QString canonicalCurrentFolder = currentDir.canonicalPath();
 
-    // Close tabs in reverse order to avoid index issues
     for (int i = tabWidget->count() - 1; i >= 0; --i) {
         TabEditor* tab = qobject_cast<TabEditor*>(tabWidget->widget(i));
         if (!tab || tab->filePath().isEmpty()) {
@@ -270,15 +266,12 @@ void MainWindow::closeTabsFromOtherFolders() {
         QFileInfo fileInfo(tab->filePath());
         QString canonicalFilePath = fileInfo.canonicalPath();
 
-        // Check if file is not in current folder or its subfolders
         if (!canonicalFilePath.startsWith(canonicalCurrentFolder)) {
-            // Close tab without prompting (it's from a different folder)
             tabWidget->removeTab(i);
             delete tab;
         }
     }
 
-    // Ensure at least one tab exists
     if (tabWidget->count() == 0) {
         createNewTab();
     }

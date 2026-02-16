@@ -22,6 +22,8 @@
 #include <QWebEngineSettings>
 
 #include "defs.h"
+#include "regexpatterns.h"
+#include "regexutils.h"
 #include "thememanager.h"
 
 class WikiLinkPage : public QWebEnginePage {
@@ -37,6 +39,15 @@ class WikiLinkPage : public QWebEnginePage {
             return false;
         }
         if (url.scheme() == "markdown") {
+            if (url.path().isEmpty() && url.hasFragment()) {
+                emit preview->internalLinkClicked(url.fragment());
+                return false;
+            }
+            if (url.hasFragment()) {
+                QString linkTarget = url.path() + "#" + url.fragment();
+                emit preview->markdownLinkClicked(linkTarget);
+                return false;
+            }
             emit preview->markdownLinkClicked(url.path());
             return false;
         }
@@ -44,6 +55,15 @@ class WikiLinkPage : public QWebEnginePage {
             url.toLocalFile().endsWith(".md", Qt::CaseInsensitive)) {
             emit preview->markdownLinkClicked(url.toLocalFile());
             return false;
+        }
+        if (url.hasFragment()) {
+            QString fragment = url.fragment();
+            QString path = url.path();
+            
+            if (path.isEmpty() || path == "/" || url.scheme().isEmpty()) {
+                emit preview->internalLinkClicked(fragment);
+                return false;
+            }
         }
         if (url.scheme() == "http" || url.scheme() == "https") {
             QDesktopServices::openUrl(url);
@@ -64,20 +84,15 @@ MarkdownPreview::MarkdownPreview(QWidget* parent)
       lastScrollPercentage(0.0),
       lastMarkdownContent("") {
     setContextMenuPolicy(Qt::CustomContextMenu);
-    // Set custom page to intercept link clicks
     WikiLinkPage* wikiPage = new WikiLinkPage(this);
     setPage(wikiPage);
-    // Allow loading remote content (KaTeX CDN) from local HTML
     page()->settings()->setAttribute(
         QWebEngineSettings::LocalContentCanAccessRemoteUrls, true);
-    // Connect context menu
     connect(this, &QWidget::customContextMenuRequested, this,
             &MarkdownPreview::showContextMenu);
-    // Add F5 shortcut for reload
     QShortcut* reloadShortcut = new QShortcut(QKeySequence(Qt::Key_F5), this);
     connect(reloadShortcut, &QShortcut::activated, this,
             &MarkdownPreview::reloadPreview);
-    // Connect to theme changes
     if (ThemeManager::instance()) {
         connect(ThemeManager::instance(),
                 &ThemeManager::previewColorSchemeChanged, this,
@@ -97,10 +112,10 @@ void MarkdownPreview::setMarkdownContent(const QString& markdown) {
     lastMarkdownContent = markdown;
     QString html = convertMarkdownToHtml(markdown);
     html = processWikiLinks(html);
+    html = addHeadingIds(html);
     if (latexEnabled) {
         html = processLatexFormulas(html);
     }
-    // Get the appropriate stylesheet with max-width for images
     QString baseStyleSheet = ThemeManager::instance()->getPreviewStyleSheet();
     QString imageStyleSheet = "img { max-width: 100%; height: auto; }";
     QString taskStyles;
@@ -111,9 +126,7 @@ void MarkdownPreview::setMarkdownContent(const QString& markdown) {
     }
     QString previewStyleSheet =
         baseStyleSheet + "\n" + imageStyleSheet + "\n" + taskStyles;
-    // Choose highlight.js theme based on current preview scheme
     QString highlightTheme = "highlight-github.min.css";
-    // Determine if we're in dark mode
     QSettings appSettings(APP_LABEL, APP_LABEL);
     QString previewScheme =
         appSettings.value("appearance/previewColorScheme", "auto").toString();
@@ -134,14 +147,11 @@ void MarkdownPreview::setMarkdownContent(const QString& markdown) {
         isDark = true;
     }
 
-    // Set dark theme if needed
     if (isDark) {
         highlightTheme = "highlight-github-dark.min.css";
     }
-    // Add custom CSS
     QString customCSS = appSettings.value("preview/customCSS", "").toString();
     previewStyleSheet += "\n" + customCSS;
-    // Load HTML template from resources
     QFile templateFile(":/templates/preview-template.html");
     if (!templateFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
         qWarning() << "Failed to load preview template";
@@ -149,7 +159,6 @@ void MarkdownPreview::setMarkdownContent(const QString& markdown) {
     }
     QString fullHtml = QString::fromUtf8(templateFile.readAll());
     templateFile.close();
-    // Replace placeholders in template
     QString mermaidTheme = isDark ? "dark" : "default";
     fullHtml.replace("HIGHLIGHT_THEME", highlightTheme);
     fullHtml.replace("MERMAID_THEME", mermaidTheme);
@@ -157,10 +166,8 @@ void MarkdownPreview::setMarkdownContent(const QString& markdown) {
     fullHtml.replace("SCROLL_PERCENTAGE",
                      QString::number(lastScrollPercentage));
     fullHtml.replace("MARKDOWN_CONTENT", html);
-    // Use setHtml with baseUrl to allow loading local images
     QUrl baseUrl;
     if (basePath.startsWith("qrc:") || basePath.startsWith(":/")) {
-        // For Qt resources, use QUrl directly
         QString qrcPath = basePath;
         if (qrcPath.startsWith(":/")) {
             qrcPath = "qrc" + qrcPath;
@@ -170,15 +177,37 @@ void MarkdownPreview::setMarkdownContent(const QString& markdown) {
         }
         baseUrl = QUrl(qrcPath);
     } else {
-        // For local files, use fromLocalFile
         baseUrl = QUrl::fromLocalFile(basePath + "/");
     }
     setHtml(fullHtml, baseUrl);
 }
+
+void MarkdownPreview::scrollToAnchor(const QString& anchor) {
+    QString cleanAnchor = anchor;
+    if (cleanAnchor.startsWith("#")) {
+        cleanAnchor = cleanAnchor.mid(1);
+    }
+    
+    QString script = QString(
+        "var element = document.getElementById('%1');"
+        "if (element) {"
+        "    element.scrollIntoView({behavior: 'smooth', block: 'start'});"
+        "    true;"
+        "} else {"
+        "    false;"
+        "}"
+    ).arg(cleanAnchor);
+    
+    page()->runJavaScript(script, [anchor](const QVariant& result) {
+        if (!result.toBool()) {
+            qWarning() << "Anchor not found:" << anchor;
+        }
+    });
+}
+
 void MarkdownPreview::setTheme(const QString& theme) { currentTheme = theme; }
 void MarkdownPreview::scrollToPercentage(double percentage) {
     lastScrollPercentage = percentage;
-    // Use JavaScript to scroll the preview to a specific percentage
     QString script =
         QString("window.scrollTo(0, document.body.scrollHeight * %1);")
             .arg(percentage);
@@ -190,7 +219,6 @@ double MarkdownPreview::currentScrollPercentage() const {
 }
 
 QString MarkdownPreview::convertMarkdownToHtml(const QString& markdown) {
-    // Callback function for md4c to accumulate HTML output
     struct OutputBuffer {
         QString html;
     };
@@ -200,7 +228,6 @@ QString MarkdownPreview::convertMarkdownToHtml(const QString& markdown) {
     };
     OutputBuffer buffer;
     QByteArray utf8Data = markdown.toUtf8();
-    // Configure parser flags for CommonMark + extensions
     unsigned parserFlags =
         MD_FLAG_TABLES |                    // Enable tables
         MD_FLAG_STRIKETHROUGH |             // Enable ~~strikethrough~~
@@ -211,7 +238,6 @@ QString MarkdownPreview::convertMarkdownToHtml(const QString& markdown) {
         MD_FLAG_PERMISSIVEEMAILAUTOLINKS |  // Auto-link emails
         MD_FLAG_PERMISSIVEWWWAUTOLINKS;     // Auto-link www.example.com
     unsigned rendererFlags = 0;
-    // Parse markdown to HTML using md4c
     int result = md_html(utf8Data.constData(), utf8Data.size(), processOutput,
                          &buffer, parserFlags, rendererFlags);
     if (result != 0) {
@@ -221,7 +247,6 @@ QString MarkdownPreview::convertMarkdownToHtml(const QString& markdown) {
 }
 
 QString MarkdownPreview::getStyleSheet(const QString& theme) {
-    // Load base stylesheet
     QFile baseFile(":/css/preview-base.css");
     if (!baseFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
         qWarning() << "Failed to load base CSS";
@@ -229,7 +254,6 @@ QString MarkdownPreview::getStyleSheet(const QString& theme) {
     }
     QString baseStyle = QString::fromUtf8(baseFile.readAll());
     baseFile.close();
-    // Load theme-specific stylesheet
     QString themeFileName;
     if (theme == "dark") {
         themeFileName = ":/css/preview-dark.css";
@@ -251,21 +275,19 @@ QString MarkdownPreview::getStyleSheet(const QString& theme) {
 QString MarkdownPreview::processLatexFormulas(const QString& html) {
     QString result = html;
     result.replace(
-        QRegularExpression("<x-equation type=\"display\">([^<]*)</x-equation>"),
+        QRegularExpression(RegexPatterns::LATEX_DISPLAY_EQUATION),
         "$$\\1$$");
-    result.replace(QRegularExpression("<x-equation>([^<]*)</x-equation>"),
-                   "$\\1$");
+    result.replace(
+        QRegularExpression(RegexPatterns::LATEX_INLINE_EQUATION),
+        "$\\1$");
     return result;
 }
 
 QString MarkdownPreview::processWikiLinks(const QString& html) {
     QString result = html;
     
-    // First, process inclusion links inside code blocks [[!filename]]
-    // These are preserved as literal text by md4c inside <code> tags
-    // We need to find and replace just the [[!filename]] pattern within code blocks
     QRegularExpression codeBlockPattern(
-        "<code([^>]*)>([^<]*)</code>", 
+        RegexPatterns::HTML_CODE,
         QRegularExpression::DotMatchesEverythingOption);
     QRegularExpressionMatchIterator codeIt = codeBlockPattern.globalMatch(result);
     QList<QRegularExpressionMatch> codeMatches;
@@ -277,54 +299,42 @@ QString MarkdownPreview::processWikiLinks(const QString& html) {
         QString codeAttrs = match.captured(1);
         QString codeContent = match.captured(2);
         
-        // Check if this code block contains [[!filename]]
-        QRegularExpression inclusionPattern("\\[\\[!([^\\]]+)\\]\\]");
+        QRegularExpression inclusionPattern(RegexPatterns::INCLUSION_PATTERN);
         QRegularExpressionMatch inclMatch = inclusionPattern.match(codeContent);
         if (!inclMatch.hasMatch()) {
-            continue;  // No inclusion in this code block, skip it
+            continue;
         }
         
-        // Process all inclusions in this code block by repeatedly replacing
         QString processedContent = codeContent;
         while (true) {
             QRegularExpressionMatch inclMatch = inclusionPattern.match(processedContent);
             if (!inclMatch.hasMatch()) {
-                break;  // No more inclusions
+                break;
             }
             
             QString target = inclMatch.captured(1).trimmed();
             
-            // Read the file content
             QString errorMsg;
             QString fileContent = readFileContent(target, errorMsg);
             
             if (!errorMsg.isEmpty()) {
-                // Show error in code block
                 fileContent = QString("Error: %1").arg(errorMsg);
             }
             
-            // HTML escape the file content for display in code block
             fileContent = fileContent.toHtmlEscaped();
             
-            // Replace this specific [[!filename]] with the content
             processedContent.replace(inclMatch.capturedStart(), 
                                     inclMatch.capturedLength(), 
                                     fileContent);
         }
         
-        // Replace the entire code block with the processed version
         QString replacement = QString("<code%1>%2</code>").arg(codeAttrs, processedContent);
         result.replace(match.capturedStart(), match.capturedLength(), replacement);
     }
     
-    // md4c converts [[!target]] or [[!target|display]] to 
-    // <x-wikilink data-target="!target">display</x-wikilink>
-    // Process inclusion links first (before converting regular wiki links to <a> tags)
-    QRegularExpression inclusionPattern(
-        "<x-wikilink data-target=\"!([^\"]+)\">([^<]+)</x-wikilink>");
+    QRegularExpression inclusionPattern(RegexPatterns::MD4C_WIKILINK_INCLUSION);
     QRegularExpressionMatchIterator inclusionIt =
         inclusionPattern.globalMatch(result);
-    // Collect matches in reverse order to avoid position shifts
     QList<QRegularExpressionMatch> inclusionMatches;
     while (inclusionIt.hasNext()) {
         inclusionMatches.prepend(inclusionIt.next());
@@ -332,28 +342,19 @@ QString MarkdownPreview::processWikiLinks(const QString& html) {
     for (const QRegularExpressionMatch& match : inclusionMatches) {
         QString target = match.captured(1).trimmed();
         QString display = match.captured(2).trimmed();
-        // md4c already extracted the display text correctly from [[!target|display]]
-        // If no pipe was used, display will be "!target", so we need to clean it
         if (display.startsWith("!")) {
-            display = target;  // Use target as display if no custom display was provided
+            display = target;
         }
         QString includedContent = resolveAndIncludeFile(target, display);
         result.replace(match.capturedStart(), match.capturedLength(),
                        includedContent);
     }
-    // md4c already handles regular wiki links [[link]] with MD_FLAG_WIKILINKS
-    // but we need to convert them to use wiki: scheme and add CSS class
-    // md4c outputs: <x-wikilink data-target="link">link</x-wikilink>
     result.replace(
-        QRegularExpression(
-            "<x-wikilink data-target=\"([^\"]+)\">([^<]+)</x-wikilink>"),
+        QRegularExpression(RegexPatterns::MD4C_WIKILINK),
         "<a href=\"wiki:\\1\" class=\"wiki-link\">\\2</a>");
 
-    // Process standard markdown links [text](url)
-    // md4c outputs: <a href="url">text</a>
-    QRegularExpression linkPattern("<a href=\"([^\"]*)\">([^<]*)</a>");
+    QRegularExpression linkPattern(RegexPatterns::HTML_ANCHOR);
     QRegularExpressionMatchIterator linkIt = linkPattern.globalMatch(result);
-    // Collect matches in reverse order to avoid position shifts
     QList<QRegularExpressionMatch> linkMatches;
     while (linkIt.hasNext()) {
         linkMatches.prepend(linkIt.next());
@@ -378,10 +379,8 @@ QString MarkdownPreview::processWikiLinks(const QString& html) {
 
 QString MarkdownPreview::resolveAndIncludeFile(const QString& linkTarget,
                                                const QString& displayText) {
-    // Resolve the file path relative to basePath
     QDir baseDir(basePath);
     QString cleanTarget = linkTarget.trimmed();
-    // Try different file extensions
     QStringList possibleFiles;
     possibleFiles << cleanTarget + ".md" << cleanTarget + ".markdown"
                   << cleanTarget;
@@ -394,7 +393,6 @@ QString MarkdownPreview::resolveAndIncludeFile(const QString& linkTarget,
         }
     }
     if (resolvedPath.isEmpty()) {
-        // File not found, return error message
         return QString(
                    "<div class=\"inclusion-error\" style=\"border: 1px solid "
                    "#ff6b6b; "
@@ -404,7 +402,6 @@ QString MarkdownPreview::resolveAndIncludeFile(const QString& linkTarget,
                    "</div>")
             .arg(linkTarget.toHtmlEscaped());
     }
-    // Read file content
     QFile file(resolvedPath);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         return QString(
@@ -420,9 +417,7 @@ QString MarkdownPreview::resolveAndIncludeFile(const QString& linkTarget,
     in.setEncoding(QStringConverter::Utf8);
     QString content = in.readAll();
     file.close();
-    // Convert the included markdown to HTML
     QString includedHtml = convertMarkdownToHtml(content);
-    // Wrap the included content in a styled div with optional title
     QString wrappedContent =
         QString(
             "<div class=\"included-content\" "
@@ -439,10 +434,8 @@ QString MarkdownPreview::resolveAndIncludeFile(const QString& linkTarget,
 
 QString MarkdownPreview::readFileContent(const QString& linkTarget,
                                          QString& errorMsg) {
-    // Resolve the file path relative to basePath
     QDir baseDir(basePath);
     QString cleanTarget = linkTarget.trimmed();
-    // Try different file extensions
     QStringList possibleFiles;
     possibleFiles << cleanTarget << cleanTarget + ".md"
                   << cleanTarget + ".markdown" << cleanTarget + ".txt"
@@ -461,7 +454,6 @@ QString MarkdownPreview::readFileContent(const QString& linkTarget,
         errorMsg = QString("File not found: %1").arg(linkTarget);
         return QString();
     }
-    // Read file content
     QFile file(resolvedPath);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         errorMsg = QString("Cannot read file: %1").arg(linkTarget);
@@ -476,7 +468,6 @@ QString MarkdownPreview::readFileContent(const QString& linkTarget,
 }
 
 void MarkdownPreview::showContextMenu(const QPoint& pos) {
-    // Use JavaScript to check if cursor is on a link
     QString jsCode = QString(
                          "(function() {"
                          "  var elem = document.elementFromPoint(%1, %2);"
@@ -497,18 +488,15 @@ void MarkdownPreview::showContextMenu(const QPoint& pos) {
         QString href = linkInfo.value("href").toString();
 
         if (isLink && !href.isEmpty()) {
-            // Add "Open Link in New Window" for links
             QAction* openNewWindowAction =
                 contextMenu.addAction(tr("Open Link in New Window"));
             connect(openNewWindowAction, &QAction::triggered, this,
                     [this, href]() {
-                        // Emit signal with the link target
                         emit openLinkInNewWindowRequested(href);
                     });
             contextMenu.addSeparator();
         }
 
-        // Add copy action using the web page's standard action
         QAction* copyAction = page()->action(QWebEnginePage::Copy);
         if (copyAction) {
             contextMenu.addAction(copyAction);
@@ -526,8 +514,47 @@ void MarkdownPreview::showContextMenu(const QPoint& pos) {
 void MarkdownPreview::reloadPreview() { reload(); }
 
 void MarkdownPreview::onThemeChanged() {
-    // Trigger a re-render with the new theme
     if (!lastMarkdownContent.isEmpty()) {
         setMarkdownContent(lastMarkdownContent);
     }
+}
+
+QString MarkdownPreview::addHeadingIds(const QString& html) {
+    QString result = html;
+    QMap<QString, int> anchorCounts;
+    
+    QRegularExpression headingPattern(
+        RegexPatterns::HTML_HEADING,
+        QRegularExpression::CaseInsensitiveOption
+    );
+    
+    QRegularExpressionMatchIterator it = headingPattern.globalMatch(html);
+    QList<QRegularExpressionMatch> matches;
+    
+    while (it.hasNext()) {
+        matches.prepend(it.next());
+    }
+    
+    for (const QRegularExpressionMatch& match : matches) {
+        QString tag = match.captured(1);
+        QString attributes = match.captured(2);
+        QString headingText = match.captured(3);
+        
+        QString slug = RegexUtils::generateSlug(headingText);
+        
+        if (anchorCounts.contains(slug)) {
+            anchorCounts[slug]++;
+            slug += QString("-%1").arg(anchorCounts[slug]);
+        } else {
+            anchorCounts[slug] = 1;
+        }
+        
+        QString newHeading = QString(
+            "<%1%2 id=\"%3\">%4</%1>"
+        ).arg(tag, attributes, slug, headingText);
+        
+        result.replace(match.capturedStart(), match.capturedLength(), newHeading);
+    }
+    
+    return result;
 }

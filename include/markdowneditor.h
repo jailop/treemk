@@ -34,6 +34,7 @@ public:
   QString getTaskMarkerAtPosition(int position) const;
   bool isClickOnCheckbox(int position) const;
   void toggleTaskAtPosition(int position);
+  void jumpToHeading(const QString &anchor);
 
   void setCurrentFilePath(const QString &filePath);
 

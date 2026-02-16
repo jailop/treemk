@@ -31,11 +31,13 @@ p { margin-top: 0; margin-bottom: 16px; }
 
 a { color: #0366d6; text-decoration: none; }
 a:hover { text-decoration: underline; }
-a.wiki-link { color: #0a8a0a; font-weight: 500; }
+a.wiki-link { 
+    color: #0366d6;
+    font-weight: 500;
+}
 a.markdown-link { 
     color: #0366d6;
     font-weight: 500;
-    text-decoration: underline;
 }
 
 code {

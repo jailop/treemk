@@ -1,11 +1,11 @@
 #include <QDesktopServices>
 #include <QKeyEvent>
-#include <QRegularExpression>
 #include <QSettings>
 #include <QTextBlock>
 
 #include "defs.h"
 #include "markdowneditor.h"
+#include "regexutils.h"
 #include "shortcutmanager.h"
 
 void MarkdownEditor::keyPressEvent(QKeyEvent* event) {
@@ -160,12 +160,11 @@ void MarkdownEditor::keyPressEvent(QKeyEvent* event) {
         int cursorPosInBlock = cursor.positionInBlock();
 
         // Check if current line is a task list item
-        QRegularExpression taskPattern("^(\\s*)([-*+])\\s+\\[([ xX.]?)\\]\\s*");
-        QRegularExpressionMatch taskMatch = taskPattern.match(currentLine);
-
-        if (taskMatch.hasMatch()) {
-            QString whitespace = taskMatch.captured(1);
-            QString bullet = taskMatch.captured(2);
+        if (RegexUtils::isTaskItem(currentLine)) {
+            RegexUtils::TaskItemInfo taskInfo =
+                RegexUtils::parseTaskItem(currentLine);
+            QString whitespace = taskInfo.indent;
+            QString bullet = taskInfo.marker;
 
             // Check if cursor is at the end of the line
             bool isAtEnd = cursorPosInBlock >= currentLine.length();
@@ -173,9 +172,8 @@ void MarkdownEditor::keyPressEvent(QKeyEvent* event) {
             if (isAtEnd) {
                 // Check if the task line contains only the checkbox (empty task
                 // item)
-                QString lineAfterCheckbox =
-                    currentLine.mid(taskMatch.capturedLength());
-                bool isEmptyTaskItem = lineAfterCheckbox.trimmed().isEmpty();
+                QString lineAfterCheckbox = taskInfo.content;
+                bool isEmptyTaskItem = lineAfterCheckbox.isEmpty();
 
                 if (isEmptyTaskItem) {
                     // User pressed Enter on an empty task item - exit task mode
@@ -196,21 +194,19 @@ void MarkdownEditor::keyPressEvent(QKeyEvent* event) {
         }
 
         // Check if current line is a regular list item (not task)
-        QRegularExpression listPattern("^(\\s*)([-*+]|[0-9]+\\.)\\s+");
-        QRegularExpressionMatch match = listPattern.match(currentLine);
-
-        if (match.hasMatch()) {
-            QString whitespace = match.captured(1);
-            QString bullet = match.captured(2);
+        if (RegexUtils::isListItem(currentLine)) {
+            RegexUtils::ListItemInfo listInfo =
+                RegexUtils::parseListItem(currentLine);
+            QString whitespace = listInfo.indent;
+            QString bullet = listInfo.marker;
 
             // Check if cursor is at the end of the line (after all content)
             bool isAtEnd = cursorPosInBlock >= currentLine.length();
 
             if (isAtEnd) {
                 // Check if the line contains only the bullet (empty list item)
-                QString lineAfterBullet =
-                    currentLine.mid(match.capturedLength());
-                bool isEmptyListItem = lineAfterBullet.trimmed().isEmpty();
+                QString lineAfterBullet = listInfo.content;
+                bool isEmptyListItem = lineAfterBullet.isEmpty();
 
                 if (isEmptyListItem) {
                     // User pressed Enter on an empty list item - exit list mode
@@ -233,10 +229,12 @@ void MarkdownEditor::keyPressEvent(QKeyEvent* event) {
 
         int indent = 0;
 
-        if (match.hasMatch()) {
+        if (RegexUtils::isListItem(currentLine)) {
+            RegexUtils::ListItemInfo info =
+                RegexUtils::parseListItem(currentLine);
             // For list items, indent continuation to align with the text after
             // the marker
-            indent = match.capturedLength(1) + match.capturedLength(2) +
+            indent = info.indent.length() + info.marker.length() +
                      1;  // marker + space
         } else {
             // Calculate leading whitespace for other cases
@@ -307,10 +305,8 @@ void MarkdownEditor::keyPressEvent(QKeyEvent* event) {
         QString line = cursor.block().text();
 
         // Check if current line is a list or task item
-        QRegularExpression listPattern("^(\\s*)([-*+]|[0-9]+\\.)\\s");
-        QRegularExpressionMatch match = listPattern.match(line);
-
-        if (match.hasMatch()) {
+        if (RegexUtils::isListItem(line)) {
+            RegexUtils::ListItemInfo listInfo = RegexUtils::parseListItem(line);
             cursor.beginEditBlock();
 
             if (event->key() == Qt::Key_Tab &&
@@ -321,7 +317,7 @@ void MarkdownEditor::keyPressEvent(QKeyEvent* event) {
             } else if (event->key() == Qt::Key_Backtab ||
                        (event->modifiers() & Qt::ShiftModifier)) {
                 // Shift+Tab - dedent (remove up to 2 spaces)
-                QString whitespace = match.captured(1);
+                QString whitespace = listInfo.indent;
                 if (!whitespace.isEmpty()) {
                     cursor.movePosition(QTextCursor::StartOfBlock);
                     int charsToRemove = qMin(2, whitespace.length());
@@ -344,14 +340,15 @@ void MarkdownEditor::keyPressEvent(QKeyEvent* event) {
          event->modifiers() == (Qt::ControlModifier | Qt::KeypadModifier))) {
         QTextCursor cursor = textCursor();
         QString line = cursor.block().text();
-        QRegularExpression taskPattern("([-*+])\\s+\\[([ xX.]?)\\]");
-        QRegularExpressionMatch match = taskPattern.match(line);
-        if (match.hasMatch()) {
+
+        if (RegexUtils::isTaskItem(line)) {
             // Calculate the position of the marker character inside the
             // brackets
-            int checkboxStart = match.capturedStart(
-                2);  // Position of the marker (space, X, x, or .)
-            toggleTaskAtPosition(cursor.block().position() + checkboxStart);
+            int checkboxStart = line.indexOf('[');
+            if (checkboxStart >= 0) {
+                int markerPos = checkboxStart + 1;
+                toggleTaskAtPosition(cursor.block().position() + markerPos);
+            }
         }
         // Always accept and return - don't insert space
         event->accept();

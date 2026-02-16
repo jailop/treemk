@@ -179,3 +179,19 @@ Documentation:
 2026-02-14:
 
 - Bumping to version 0.7.1
+
+2026-02-15:
+
+- A input field has been added to the history panel to let the user filter the list of files.
+- All the file panel has been converted in ui file
+- The file panel has a new menu option: Open in file explorer
+- The file panel only shows the option "Open with" in the platforms that have a feature at hand for that. That excludes KDE and MacOs
+- Click and enter actions reviewed
+
+2026-02-16:
+
+- Regexp centralized. Unit tests added
+- Print menu option
+- Internal links support
+- fixed issue: wikilinks - create new file
+- new feature: insert table of content

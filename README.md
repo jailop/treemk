@@ -4,7 +4,7 @@ TreeMk is a desktop Markdown editor that works directly with your file system—
 
 **Work with your files, where they already are.**
 
- TreeMk doesn't move your notes into a special database or vault. It simply provides an integrated environment for editing and navigating Markdown files across any folder on your system.
+TreeMk doesn't move your notes into a special database or vault. It simply provides an integrated environment for editing and navigating Markdown files across any folder on your system.
 
 ![screenshot](screenshot.png)
 
@@ -221,4 +221,3 @@ Third-party libraries used in TreeMk are subject to their own licenses.
 TreeMk is provided "as is" without any warranties. The developers are
 not liable for any damage or loss of data resulting from the use of this
 software. Always back up your notes before using new software.
-

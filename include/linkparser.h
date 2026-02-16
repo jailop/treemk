@@ -23,6 +23,16 @@ struct WikiLink {
         isInclusion(inclusion) {}
 };
 
+struct LinkTarget {
+  QString filePath;
+  QString anchor;
+  bool isInternalOnly;
+
+  LinkTarget() : isInternalOnly(false) {}
+  LinkTarget(const QString &file, const QString &anc, bool internal)
+      : filePath(file), anchor(anc), isInternalOnly(internal) {}
+};
+
 class LinkParser : public QObject {
   Q_OBJECT
 
@@ -37,6 +47,7 @@ public:
   QVector<QString> getBacklinks(const QString &filePath) const;
   QString resolveLinkTarget(const QString &linkTarget,
                             const QString &currentFilePath, int maxDepth) const;
+  static LinkTarget parseLinkTarget(const QString &linkTarget);
 
 signals:
   void indexBuildStarted();

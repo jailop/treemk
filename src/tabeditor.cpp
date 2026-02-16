@@ -37,7 +37,6 @@ void TabEditor::setupUI() {
     connect(m_editor, &MarkdownEditor::cursorPositionChanged, this,
             &TabEditor::syncPreviewScroll);
 
-    // Forward editor signals
     connect(m_editor, &MarkdownEditor::wikiLinkClicked, this,
             &TabEditor::wikiLinkClicked);
     connect(m_editor, &MarkdownEditor::markdownLinkClicked, this,
@@ -49,14 +48,21 @@ void TabEditor::setupUI() {
 
     m_preview = new MarkdownPreview(this);
     m_preview->setMinimumWidth(300);
+    
+    connect(m_preview, &MarkdownPreview::wikiLinkClicked, this,
+            &TabEditor::wikiLinkClicked);
+    connect(m_preview, &MarkdownPreview::markdownLinkClicked, this,
+            &TabEditor::markdownLinkClicked);
+    connect(m_preview, &MarkdownPreview::openLinkInNewWindowRequested, this,
+            &TabEditor::openLinkInNewWindowRequested);
+    connect(m_preview, &MarkdownPreview::internalLinkClicked, this,
+            &TabEditor::internalLinkClicked);
 
     m_splitter->addWidget(m_editor);
     m_splitter->addWidget(m_preview);
     m_splitter->setStretchFactor(0, 1);
     m_splitter->setStretchFactor(1, 1);
 
-    // Set equal sizes for editor and preview (50/50 split)
-    // Use a large initial size that will be adjusted by the layout
     QList<int> sizes;
     sizes << 1000 << 1000;  // Equal sizes
     m_splitter->setSizes(sizes);
@@ -149,10 +155,8 @@ void TabEditor::updatePreview() {
         QFileInfo fileInfo(m_filePath);
         m_preview->setBasePath(fileInfo.absolutePath());
     }
-    // Update scroll position before setting new content
     syncPreviewScroll();
     m_preview->setMarkdownContent(markdown);
-    // No need to mark pending scroll since position is embedded in HTML
 }
 
 void TabEditor::onDocumentModified() {
@@ -160,7 +164,6 @@ void TabEditor::onDocumentModified() {
         setModified(true);
     }
 
-    // Restart preview timer
     m_previewTimer->start();
 }
 

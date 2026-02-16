@@ -21,11 +21,8 @@
 #include "managers/windowmanager.h"
 #include "markdowneditor.h"
 #include "markdownhighlighter.h"
+#include "regexpatterns.h"
 #include "tabeditor.h"
-
-static const char* WIKI_LINK_PATTERN =
-    "(!)?\\[\\[([^\\]|]+)(\\|([^\\]]+))?\\]\\]";
-static const char* MARKDOWN_LINK_PATTERN = "(!)?\\[([^\\]]+)\\]\\(([^\\)]+)\\)";
 
 static const char* HTTP_PREFIX = "http://";
 static const char* HTTPS_PREFIX = "https://";
@@ -53,7 +50,7 @@ static void updateLinksInDocument(QTextDocument* document,
     QList<QPair<int, QPair<int, QString>>>
         replacements;  // position, length, replacement
 
-    QRegularExpression wikiLinkPattern(WIKI_LINK_PATTERN);
+    QRegularExpression wikiLinkPattern(RegexPatterns::WIKI_LINK);
     QRegularExpressionMatchIterator wikiIterator =
         wikiLinkPattern.globalMatch(content);
 
@@ -125,7 +122,8 @@ static void updateLinksInDocument(QTextDocument* document,
     }
 
     // Pattern for markdown links with optional !: ![text](url) or [text](url)
-    QRegularExpression markdownLinkPattern(MARKDOWN_LINK_PATTERN);
+    QRegularExpression markdownLinkPattern(
+        RegexPatterns::MARKDOWN_LINK_WITH_IMAGE);
     QRegularExpressionMatchIterator mdIterator =
         markdownLinkPattern.globalMatch(content);
 
@@ -194,7 +192,7 @@ static void removeLinksInDocument(QTextDocument* document,
 
     QList<QPair<int, QPair<int, QString>>> replacements;
 
-    QRegularExpression wikiLinkPattern(WIKI_LINK_PATTERN);
+    QRegularExpression wikiLinkPattern(RegexPatterns::WIKI_LINK);
     QRegularExpressionMatchIterator wikiIterator =
         wikiLinkPattern.globalMatch(content);
 
@@ -246,7 +244,8 @@ static void removeLinksInDocument(QTextDocument* document,
         }
     }
 
-    QRegularExpression markdownLinkPattern(MARKDOWN_LINK_PATTERN);
+    QRegularExpression markdownLinkPattern(
+        RegexPatterns::MARKDOWN_LINK_WITH_IMAGE);
     QRegularExpressionMatchIterator mdIterator =
         markdownLinkPattern.globalMatch(content);
 
