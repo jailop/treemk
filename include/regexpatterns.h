@@ -111,7 +111,7 @@ constexpr char TASK_CHECKBOX_CHECKED[] = R"(([-*+])\s+\[([xX.]?)\])";
 constexpr char HEADER[] = R"(^(#{1,6})\s+(.+)$)";
 constexpr char HEADER_PREFIX[] = R"(^(#{1,6})\s)";
 constexpr char HEADER_H1[] = R"(^#\s+(.+)$)";
-constexpr char HEADER_ANY[] = R"(^#{1,6}\s+(.+)$)";
+constexpr char HEADER_ANY[] = R"(^(#{1,6})\s+(.+)$)";
 constexpr char BOLD[] = R"((\\*\\*|__)(?=\\S)(.+?)(?<=\\S)\\1)";
 constexpr char ITALIC[] =
     R"((?<!\\*)\\*(?=\\S)(.+?)(?<=\\S)\\*(?!\\*)|(?<!_)_(?=\\S)(.+?)(?<=\\S)_(?!_))";
@@ -226,6 +226,13 @@ constexpr char LATEX_DISPLAY_EQUATION[] = "<x-equation type=\\\"display\\\">([^<
 constexpr char LATEX_INLINE_EQUATION[] = "<x-equation>([^<]*)</x-equation>";
 constexpr char MD4C_WIKILINK[] = "<x-wikilink data-target=\\\"([^\\\"]+)\\\">([^<]+)</x-wikilink>";
 constexpr char MD4C_WIKILINK_INCLUSION[] = "<x-wikilink data-target=\\\"!([^\\\"]+)\\\">([^<]+)</x-wikilink>";
+
+// TOC patterns
+constexpr char TOC_HEADER_TABLE[] = R"((?:^|\n)## Table of Contents\s*\n(?:.*\n)*?(?=\n##|\n#[^#]|$))";
+constexpr char TOC_HEADER_CONTENTS[] = R"((?:^|\n)## Contents\s*\n(?:.*\n)*?(?=\n##|\n#[^#]|$))";
+constexpr char TOC_HTML_COMMENT[] = R"((?:^|\n)<!-- TOC -->.*?<!-- /TOC -->\n?)";
+constexpr char TOC_DETECT_HEADER[] = R"((?:^|\n)##\s+(?:Table of Contents|Contents)\s*\n)";
+constexpr char TOC_DETECT_COMMENT[] = R"(<!-- TOC -->)";
 
 }  // namespace RegexPatterns
 

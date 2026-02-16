@@ -101,6 +101,7 @@ void MainWindow::createMenus() {
     insertMenu->addSeparator();
     insertMenu->addAction(insertHorizontalRuleAction);
     insertMenu->addAction(insertTableAction);
+    insertMenu->addAction(insertTocAction);
     insertMenu->addSeparator();
 
     insertDateMenu = insertMenu->addMenu(tr("Date"));

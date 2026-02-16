@@ -95,6 +95,11 @@ private slots:
     void testLatexInlineEquation();
     void testMD4CWikilink_Basic();
     void testMD4CWikilinkInclusion();
+    void testTocHeaderTable();
+    void testTocHeaderContents();
+    void testTocHtmlComment();
+    void testTocDetectHeader();
+    void testTocDetectComment();
 };
 
 // Wiki Link Tests
@@ -1052,6 +1057,105 @@ void TestRegexPatterns::testMD4CWikilinkInclusion() {
     QVERIFY(match.hasMatch());
     QCOMPARE(match.captured(1), QString("IncludedFile"));
     QCOMPARE(match.captured(2), QString("Include This"));
+}
+
+void TestRegexPatterns::testTocHeaderTable() {
+    QRegularExpression re(RegexPatterns::TOC_HEADER_TABLE,
+                          QRegularExpression::MultilineOption);
+
+    QString text1 = R"(# Title
+
+## Table of Contents
+
+- [Section 1](#section-1)
+- [Section 2](#section-2)
+
+## Section 1
+)";
+    QRegularExpressionMatch match1 = re.match(text1);
+    QVERIFY(match1.hasMatch());
+    QVERIFY(match1.captured(0).contains("Table of Contents"));
+
+    QString text2 = "## Contents\n";
+    QVERIFY(!re.match(text2).hasMatch());
+}
+
+void TestRegexPatterns::testTocHeaderContents() {
+    QRegularExpression re(RegexPatterns::TOC_HEADER_CONTENTS,
+                          QRegularExpression::MultilineOption);
+
+    QString text1 = R"(# Title
+
+## Contents
+
+- [Section 1](#section-1)
+
+## Section 1
+)";
+    QRegularExpressionMatch match1 = re.match(text1);
+    QVERIFY(match1.hasMatch());
+    QVERIFY(match1.captured(0).contains("Contents"));
+
+    QString text2 = "## Table of Contents\n";
+    QVERIFY(!re.match(text2).hasMatch());
+}
+
+void TestRegexPatterns::testTocHtmlComment() {
+    QRegularExpression re(RegexPatterns::TOC_HTML_COMMENT,
+                          QRegularExpression::DotMatchesEverythingOption);
+
+    QString text1 = R"(# Title
+
+<!-- TOC -->
+- [Section 1](#section-1)
+- [Section 2](#section-2)
+<!-- /TOC -->
+
+## Section 1
+)";
+    QRegularExpressionMatch match1 = re.match(text1);
+    QVERIFY(match1.hasMatch());
+    QVERIFY(match1.captured(0).contains("<!-- TOC -->"));
+    QVERIFY(match1.captured(0).contains("<!-- /TOC -->"));
+
+    QString text2 = "<!-- Not a TOC -->";
+    QVERIFY(!re.match(text2).hasMatch());
+}
+
+void TestRegexPatterns::testTocDetectHeader() {
+    QRegularExpression re(RegexPatterns::TOC_DETECT_HEADER,
+                          QRegularExpression::MultilineOption);
+
+    QString text1 = "## Table of Contents\n";
+    QVERIFY(re.match(text1).hasMatch());
+
+    QString text2 = "## Contents\n";
+    QVERIFY(re.match(text2).hasMatch());
+
+    QString text3 = "\n## Table of Contents\n";
+    QVERIFY(re.match(text3).hasMatch());
+
+    QString text4 = "## Introduction\n";
+    QVERIFY(!re.match(text4).hasMatch());
+
+    QString text5 = "### Table of Contents\n";
+    QVERIFY(!re.match(text5).hasMatch());
+}
+
+void TestRegexPatterns::testTocDetectComment() {
+    QRegularExpression re(RegexPatterns::TOC_DETECT_COMMENT);
+
+    QString text1 = "<!-- TOC -->";
+    QVERIFY(re.match(text1).hasMatch());
+
+    QString text2 = R"(# Title
+<!-- TOC -->
+- Content
+)";
+    QVERIFY(re.match(text2).hasMatch());
+
+    QString text3 = "<!-- Not TOC -->";
+    QVERIFY(!re.match(text3).hasMatch());
 }
 
 QTEST_MAIN(TestRegexPatterns)

@@ -252,6 +252,13 @@ void MainWindow::createActions() {
     connect(insertTableAction, &QAction::triggered, this,
             &MainWindow::insertTable);
 
+    insertTocAction = createAction(
+        this, tr("Insert Table of &Contents"), 
+        tr("Generate or update table of contents"));
+    insertTocAction->setShortcut(QKeySequence(tr("Ctrl+Shift+G")));
+    connect(insertTocAction, &QAction::triggered, this,
+            &MainWindow::insertToc);
+
     insertDateAction = createAction(
         this, tr("Insert Date"), 
         tr("Insert current date with last used format"),

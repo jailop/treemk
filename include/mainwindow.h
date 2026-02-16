@@ -97,6 +97,7 @@ class MainWindow : public QMainWindow {
     void insertHorizontalRule();
     void insertLink();
     void insertTable();
+    void insertToc();
     void quickOpen();
     void jumpToLine(int lineNumber);
     void onTabChanged(int index);
@@ -188,6 +189,7 @@ class MainWindow : public QMainWindow {
     QAction* insertHorizontalRuleAction;
     QAction* insertLinkAction;
     QAction* insertTableAction;
+    QAction* insertTocAction;
     QAction* insertDateAction;
     QAction* insertTimeAction;
     QAction* exitAction;
