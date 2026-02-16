@@ -122,17 +122,40 @@ void FileSystemTreeView::createContextMenu() {
     openAction = new QAction(tr("Open"), this);
     connect(openAction, &QAction::triggered, this,
             &FileSystemTreeView::openFile);
-    openWithAction = new QAction(tr("Open With..."), this);
-    connect(openWithAction, &QAction::triggered, this,
-            &FileSystemTreeView::openFileWith);
     openInFileExplorerAction = new QAction(tr("Open in File Explorer"), this);
     connect(openInFileExplorerAction, &QAction::triggered, this,
             &FileSystemTreeView::openInFileExplorer);
+    
+    // Only create "Open With" action on supported platforms
+    openWithAction = nullptr;
+#if defined(Q_OS_WIN)
+    // Windows supports "Open With" dialog
+    openWithAction = new QAction(tr("Open With..."), this);
+    connect(openWithAction, &QAction::triggered, this,
+            &FileSystemTreeView::openFileWith);
+#elif defined(Q_OS_LINUX)
+    // On Linux, only GNOME/GTK environments support it via gio
+    QString desktopEnv = qgetenv("XDG_CURRENT_DESKTOP");
+    if (desktopEnv.contains("GNOME", Qt::CaseInsensitive) || 
+        desktopEnv.contains("GTK", Qt::CaseInsensitive) ||
+        desktopEnv.contains("XFCE", Qt::CaseInsensitive) ||
+        desktopEnv.contains("MATE", Qt::CaseInsensitive)) {
+        // Check if gio is available
+        if (QProcess::execute("which", QStringList() << "gio") == 0) {
+            openWithAction = new QAction(tr("Open With..."), this);
+            connect(openWithAction, &QAction::triggered, this,
+                    &FileSystemTreeView::openFileWith);
+        }
+    }
+#endif
+    
     contextMenu->addAction(newFileAction);
     contextMenu->addAction(newFolderAction);
     contextMenu->addSeparator();
     contextMenu->addAction(openAction);
-    contextMenu->addAction(openWithAction);
+    if (openWithAction) {
+        contextMenu->addAction(openWithAction);
+    }
     contextMenu->addAction(openInNewWindowAction);
     contextMenu->addAction(openInFileExplorerAction);
     contextMenu->addSeparator();
@@ -314,7 +337,9 @@ void FileSystemTreeView::contextMenuEvent(QContextMenuEvent* event) {
 
     // Open and Open With - only for non-markdown files
     openAction->setEnabled(hasSelection && isNonMarkdownFile);
-    openWithAction->setEnabled(hasSelection && isNonMarkdownFile);
+    if (openWithAction) {
+        openWithAction->setEnabled(hasSelection && isNonMarkdownFile);
+    }
 
     // Open in new window - for md/txt files and directories
     openInNewWindowAction->setEnabled(hasSelection && (isMarkdownFile || isDirectory));
@@ -656,53 +681,20 @@ void FileSystemTreeView::openFileWith() {
     QString filePath = fileSystemModel->filePath(index);
     QFileInfo fileInfo(filePath);
     
-    if (fileInfo.isFile()) {
-        // Delegate to the desktop environment's "Open With" functionality
-#ifdef Q_OS_LINUX
-        // Try different desktop environments in order of preference
-        QString desktopEnv = qgetenv("XDG_CURRENT_DESKTOP");
-        
-        // KDE Plasma - use kioclient5
-        if (desktopEnv.contains("KDE", Qt::CaseInsensitive)) {
-            if (QProcess::execute("which", QStringList() << "kioclient5") == 0) {
-                QProcess::startDetached("kioclient5", QStringList() << "openProperties" << filePath);
-                return;
-            }
-        }
-        
-        // GNOME/GTK environments - use gio
-        if (QProcess::execute("which", QStringList() << "gio") == 0) {
-            QProcess::startDetached("gio", QStringList() << "open" << "--ask" << filePath);
-            return;
-        }
-        
-        // Fallback: open with default and inform user
-        QDesktopServices::openUrl(QUrl::fromLocalFile(filePath));
-        QMessageBox::information(this, tr("Open With"),
-            tr("'Open With' dialog not available on this system.\n"
-               "File opened with default application.\n\n"
-               "To enable 'Open With':\n"
-               "• GNOME/GTK: Install 'gio' (usually in 'glib2' package)\n"
-               "• KDE: Install 'kioclient5' (usually in 'kio' package)"));
-        
-#elif defined(Q_OS_WIN)
-        // On Windows, use the "Open With" dialog
-        QProcess::startDetached("rundll32.exe", 
-            QStringList() << "shell32.dll,OpenAs_RunDLL" << QDir::toNativeSeparators(filePath));
-            
-#elif defined(Q_OS_MAC)
-        // On macOS, there's no direct "Open With" command line option
-        // Open with default and show a message
-        QDesktopServices::openUrl(QUrl::fromLocalFile(filePath));
-        QMessageBox::information(this, tr("Open With"),
-            tr("To choose a different application, right-click the file in Finder\n"
-               "and select 'Open With'."));
-               
-#else
-        // Generic fallback: just open with default application
-        QDesktopServices::openUrl(QUrl::fromLocalFile(filePath));
-#endif
+    if (!fileInfo.isFile()) {
+        return;
     }
+
+#ifdef Q_OS_WIN
+    // Windows: use the "Open With" dialog
+    QProcess::startDetached("rundll32.exe", 
+        QStringList() << "shell32.dll,OpenAs_RunDLL" << QDir::toNativeSeparators(filePath));
+            
+#elif defined(Q_OS_LINUX)
+    // Linux: use gio (available on GNOME/GTK environments)
+    QProcess::startDetached("gio", QStringList() << "open" << "--ask" << filePath);
+    
+#endif
 }
 
 void FileSystemTreeView::openInFileExplorer() {
