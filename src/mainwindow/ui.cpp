@@ -1,6 +1,7 @@
 #include <QDir>
 #include <QFileInfo>
 #include <QLabel>
+#include <QLineEdit>
 #include <QListWidget>
 #include <QMenu>
 #include <QMenuBar>
@@ -324,15 +325,40 @@ void MainWindow::createLayout() {
     historyPanel = new QWidget(this);
     QVBoxLayout* historyLayout = new QVBoxLayout(historyPanel);
     historyLayout->setContentsMargins(0, 0, 0, 0);
+    historyLayout->setSpacing(0);
+
+    // Filter input with clear button
+    historyFilterInput = new QLineEdit(historyPanel);
+    historyFilterInput->setPlaceholderText(tr("Filter history..."));
+    historyFilterInput->setClearButtonEnabled(true);
+    historyLayout->addWidget(historyFilterInput);
 
     historyView = new QListWidget(historyPanel);
     historyLayout->addWidget(historyView);
+
+    connect(historyFilterInput, &QLineEdit::textChanged, this,
+            &MainWindow::filterHistoryList);
 
     connect(historyView, &QListWidget::itemDoubleClicked,
             [this](QListWidgetItem* item) {
                 QString filePath = item->data(Qt::UserRole).toString();
                 if (!filePath.isEmpty()) {
                     loadFile(filePath);
+                }
+            });
+
+    // Context menu for history view
+    historyView->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(historyView, &QListWidget::customContextMenuRequested, this,
+            [this](const QPoint& pos) {
+                QListWidgetItem* item = historyView->itemAt(pos);
+                if (item) {
+                    QMenu contextMenu(this);
+                    QAction* openAction =
+                        contextMenu.addAction(tr("Open in File Explorer"));
+                    connect(openAction, &QAction::triggered, this,
+                            &MainWindow::openFileInExplorer);
+                    contextMenu.exec(historyView->mapToGlobal(pos));
                 }
             });
 

@@ -19,6 +19,7 @@ class QListWidget;
 class QTabWidget;
 class QToolBar;
 class QProgressBar;
+class QLineEdit;
 class FileSystemTreeView;
 class TabEditor;
 class MarkdownEditor;
@@ -120,6 +121,8 @@ class MainWindow : public QMainWindow {
     void insertTime();
     void insertDateWithFormat(const QString& format);
     void insertTimeWithFormat(const QString& format);
+    void filterHistoryList();
+    void openFileInExplorer();
 
    private:
     void createActions();
@@ -234,6 +237,7 @@ class MainWindow : public QMainWindow {
     OutlinePanel* outlineView;
     QListWidget* backlinksView;
     QListWidget* historyView;
+    QLineEdit* historyFilterInput;
     LinkParser* linkParser;
     NavigationHistory* navigationHistory;
 
