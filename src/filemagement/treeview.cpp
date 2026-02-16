@@ -408,7 +408,9 @@ void FileSystemTreeView::createNewFile() {
         return;
     }
 
-    if (!fileName.endsWith(".md") && !fileName.endsWith(".markdown")) {
+    // Only add .md extension if user hasn't provided any extension
+    QFileInfo fileNameInfo(fileName);
+    if (fileNameInfo.suffix().isEmpty()) {
         fileName += ".md";
     }
 
