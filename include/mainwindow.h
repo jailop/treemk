@@ -19,6 +19,7 @@ class QListWidget;
 class QTabWidget;
 class QToolBar;
 class QProgressBar;
+class QLineEdit;
 class FileSystemTreeView;
 class TabEditor;
 class MarkdownEditor;
@@ -30,6 +31,7 @@ class QuickOpenDialog;
 class OutlinePanel;
 class AIAssistDialog;
 class NavigationHistory;
+class SidebarPanel;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -120,6 +122,7 @@ class MainWindow : public QMainWindow {
     void insertTime();
     void insertDateWithFormat(const QString& format);
     void insertTimeWithFormat(const QString& format);
+    void filterHistoryList();
 
    private:
     void createActions();
@@ -222,6 +225,7 @@ class MainWindow : public QMainWindow {
     QProgressBar* progressBar;
 
     QSplitter* mainSplitter;
+    SidebarPanel* sidebarPanel;
     QTabWidget* leftTabWidget;
     QWidget* treePanel;
     QWidget* outlinePanel;
@@ -234,6 +238,7 @@ class MainWindow : public QMainWindow {
     OutlinePanel* outlineView;
     QListWidget* backlinksView;
     QListWidget* historyView;
+    QLineEdit* historyFilterInput;
     LinkParser* linkParser;
     NavigationHistory* navigationHistory;
 

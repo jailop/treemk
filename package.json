@@ -12,6 +12,8 @@
   "dependencies": {
     "highlight.js": "^11.11.1",
     "katex": "^0.16.28",
-    "mermaid": "^11.12.2"
+    "mermaid": "^11.12.2",
+    "npm": "11.10",
+    "pg": "^8.18.0"
   }
 }

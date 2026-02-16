@@ -92,31 +92,8 @@ MainWindow::MainWindow(QWidget* parent)
             &MainWindow::updateNavigationActions);
     connect(
         navigationHistory, &NavigationHistory::historyChanged, this, [this]() {
-            // Update history panel display (most recent first)
-            if (historyView) {
-                historyView->clear();
-                QVector<QString> history = navigationHistory->getHistory();
-                // Iterate in reverse order to show most recent at the top
-                for (int i = history.size() - 1; i >= 0; --i) {
-                    const QString& filePath = history[i];
-                    QFileInfo fileInfo(filePath);
-
-                    // Show relative path if within current folder, otherwise
-                    // show full path
-                    QString displayText;
-                    if (!currentFolder.isEmpty() &&
-                        filePath.startsWith(currentFolder + "/")) {
-                        displayText = filePath.mid(currentFolder.length() + 1);
-                    } else {
-                        displayText = filePath;
-                    }
-
-                    QListWidgetItem* item = new QListWidgetItem(displayText);
-                    item->setData(Qt::UserRole, filePath);
-                    item->setToolTip(filePath);
-                    historyView->addItem(item);
-                }
-            }
+            // Update history panel display using filter function
+            filterHistoryList();
         });
 
     setWindowTitle("TreeMk - Markdown Editor");
