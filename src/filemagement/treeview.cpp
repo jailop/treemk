@@ -305,6 +305,36 @@ void FileSystemTreeView::keyPressEvent(QKeyEvent* event) {
         if (index.isValid()) {
             renameOldPath = fileSystemModel->filePath(index);
         }
+    } else if (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter) {
+        QModelIndex index = currentIndex();
+        if (index.isValid()) {
+            QString filePath = fileSystemModel->filePath(index);
+            QFileInfo fileInfo(filePath);
+            
+            if (fileInfo.isDir()) {
+                // For directories, expand/collapse the tree view
+                if (isExpanded(index)) {
+                    collapse(index);
+                } else {
+                    expand(index);
+                }
+            } else if (fileInfo.isFile()) {
+                // For files, behave like "Open" action
+                QString suffix = fileInfo.suffix().toLower();
+                bool isMarkdownFile =
+                    (suffix == "md" || suffix == "markdown" || suffix == "txt");
+                
+                if (isMarkdownFile) {
+                    // Open markdown/txt files in TreeMk editor
+                    emit fileDoubleClicked(filePath);
+                } else {
+                    // Open other files with system default application
+                    QDesktopServices::openUrl(QUrl::fromLocalFile(filePath));
+                }
+            }
+        }
+        event->accept();
+        return;
     }
     QTreeView::keyPressEvent(event);
 }
@@ -335,8 +365,10 @@ void FileSystemTreeView::contextMenuEvent(QContextMenuEvent* event) {
     cutAction->setEnabled(hasSelection);
     copyAction->setEnabled(hasSelection);
 
-    // Open and Open With - only for non-markdown files
-    openAction->setEnabled(hasSelection && isNonMarkdownFile);
+    // Open - for all files (md/txt files open in TreeMk, others with system app)
+    openAction->setEnabled(hasSelection && !isDirectory);
+    
+    // Open With - only for non-markdown files
     if (openWithAction) {
         openWithAction->setEnabled(hasSelection && isNonMarkdownFile);
     }
@@ -668,7 +700,17 @@ void FileSystemTreeView::openFile() {
     QFileInfo fileInfo(filePath);
     
     if (fileInfo.isFile()) {
-        QDesktopServices::openUrl(QUrl::fromLocalFile(filePath));
+        QString suffix = fileInfo.suffix().toLower();
+        bool isMarkdownFile =
+            (suffix == "md" || suffix == "markdown" || suffix == "txt");
+        
+        if (isMarkdownFile) {
+            // Open markdown/txt files in TreeMk editor
+            emit fileDoubleClicked(filePath);
+        } else {
+            // Open other files with system default application
+            QDesktopServices::openUrl(QUrl::fromLocalFile(filePath));
+        }
     }
 }
 
