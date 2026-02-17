@@ -230,8 +230,10 @@ void MainWindow::createToolbar() {
 }
 
 void MainWindow::createLayout() {
+    // Create sidebar panel from UI file
     sidebarPanel = new SidebarPanel(this);
     
+    // Get references to widgets from UI
     leftTabWidget = sidebarPanel->getLeftTabWidget();
     treePanel = sidebarPanel->getTreePanel();
     outlinePanel = sidebarPanel->getOutlinePanel();
