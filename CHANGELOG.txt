@@ -198,3 +198,5 @@ Documentation:
 - new feature: focus mode
 - when new files are created from wiki-links, if a label if defined,
   that one is used as the title of the new file.
+- now auto close brackets only works when the following character is an
+  space or the end of the line
