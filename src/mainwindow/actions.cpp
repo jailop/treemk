@@ -452,6 +452,19 @@ void MainWindow::createActions() {
     connect(cycleViewModeAction, &QAction::triggered, this,
             &MainWindow::cycleViewMode);
 
+    toggleFocusModeAction = createAction(
+        this,
+        tr("&Focus Mode"),
+        tr("Toggle distraction-free focus mode"),
+        tr("Focus mode (F11)"));
+    toggleFocusModeAction->setCheckable(true);
+    toggleFocusModeAction->setChecked(false);
+    toggleFocusModeAction->setShortcut(QKeySequence(tr("F11")));
+    toggleFocusModeAction->setShortcutContext(Qt::ApplicationShortcut);
+    connect(toggleFocusModeAction, &QAction::triggered, this,
+            &MainWindow::toggleFocusMode);
+    addAction(toggleFocusModeAction);
+
     /* TODO: to be removed. theme is general for all the app.
     previewThemeLightAction = new QAction(tr("Light Theme"), this);
     previewThemeLightAction->setCheckable(true);

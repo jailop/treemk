@@ -39,7 +39,12 @@
 #include "thememanager.h"
 
 MarkdownEditor::MarkdownEditor(QWidget* parent)
-    : QTextEdit(parent), m_predictionEnabled(true), m_aiAssistEnabled(true), m_lineNumbersVisible(true) {
+    : QTextEdit(parent), 
+      m_predictionEnabled(true), 
+      m_aiAssistEnabled(true), 
+      m_lineNumbersVisible(true),
+      m_focusModeEnabled(false),
+      m_focusModeMaxWidth(900) {
     lineNumberArea = new LineNumberArea(this);
     m_highlighter = new MarkdownHighlighter(document());
 
@@ -727,8 +732,36 @@ void MarkdownEditor::setLineNumbersVisible(bool visible) {
     updateLineNumberAreaWidth(0);
 }
 
+void MarkdownEditor::setFocusModeEnabled(bool enabled) {
+    m_focusModeEnabled = enabled;
+    updateLineNumberAreaWidth(0);
+}
+
+void MarkdownEditor::setFocusModeMaxWidth(int maxWidth) {
+    m_focusModeMaxWidth = maxWidth;
+    if (m_focusModeEnabled) {
+        updateLineNumberAreaWidth(0);
+    }
+}
+
 void MarkdownEditor::updateLineNumberAreaWidth(int /* newBlockCount */) {
-    setViewportMargins(lineNumberAreaWidth(), 0, 0, 0);
+    if (!m_focusModeEnabled) {
+        setViewportMargins(lineNumberAreaWidth(), 0, 0, 0);
+    } else {
+        QRect cr = contentsRect();
+        int availableWidth = cr.width();
+        int leftMargin = lineNumberAreaWidth();
+        int rightMargin = 0;
+        
+        if (availableWidth > m_focusModeMaxWidth) {
+            int totalHorizontalMargin = availableWidth - m_focusModeMaxWidth;
+            int sideMargin = totalHorizontalMargin / 2;
+            leftMargin += sideMargin;
+            rightMargin = sideMargin;
+        }
+        
+        setViewportMargins(leftMargin, 0, rightMargin, 0);
+    }
 }
 
 void MarkdownEditor::updateLineNumberArea(const QRect& rect, int dy) {
@@ -745,8 +778,27 @@ void MarkdownEditor::resizeEvent(QResizeEvent* e) {
     QTextEdit::resizeEvent(e);
 
     QRect cr = contentsRect();
-    lineNumberArea->setGeometry(
-        QRect(cr.left(), cr.top(), lineNumberAreaWidth(), cr.height()));
+    
+    if (m_focusModeEnabled) {
+        int availableWidth = cr.width();
+        int leftMargin = lineNumberAreaWidth();
+        int rightMargin = 0;
+        
+        if (availableWidth > m_focusModeMaxWidth) {
+            int totalHorizontalMargin = availableWidth - m_focusModeMaxWidth;
+            int sideMargin = totalHorizontalMargin / 2;
+            leftMargin += sideMargin;
+            rightMargin = sideMargin;
+        }
+        
+        setViewportMargins(leftMargin, 0, rightMargin, 0);
+        lineNumberArea->setGeometry(
+            QRect(cr.left(), cr.top(), lineNumberAreaWidth(), cr.height()));
+    } else {
+        setViewportMargins(lineNumberAreaWidth(), 0, 0, 0);
+        lineNumberArea->setGeometry(
+            QRect(cr.left(), cr.top(), lineNumberAreaWidth(), cr.height()));
+    }
 }
 
 void MarkdownEditor::highlightCurrentLine() {

@@ -21,6 +21,8 @@ public:
   void setLineNumbersVisible(bool visible);
   void setPredictionEnabled(bool enabled);
   void setAIAssistEnabled(bool enabled);
+  void setFocusModeEnabled(bool enabled);
+  void setFocusModeMaxWidth(int maxWidth);
 
   bool isModified() const;
   void setModified(bool modified);
@@ -109,6 +111,8 @@ private:
     bool m_predictionEnabled;
     bool m_aiAssistEnabled;
     bool m_lineNumbersVisible;
+    bool m_focusModeEnabled;
+    int m_focusModeMaxWidth;
 };
 
 class LineNumberArea : public QWidget {

@@ -79,7 +79,10 @@ MainWindow::MainWindow(QWidget* parent)
       aboutAction(nullptr),
       aboutQtAction(nullptr),
       keyboardShortcutsAction(nullptr),
-      currentViewMode(ViewMode_Both) {
+      currentViewMode(ViewMode_Both),
+      focusModeActive(false),
+      preFocusModeViewMode(ViewMode_Both),
+      preFocusModeSidebarVisible(true) {
     settings = new QSettings(APP_LABEL, APP_LABEL, this);
     linkParser = new LinkParser(this);
     connect(linkParser, &LinkParser::indexBuildCompleted, this,

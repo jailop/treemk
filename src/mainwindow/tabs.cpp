@@ -178,6 +178,11 @@ void MainWindow::onTabChanged(int index) {
         }
 
         applyViewMode(currentViewMode, false);
+        
+        if (focusModeActive && editor) {
+            tab->preview()->hide();
+            editor->setFocusModeEnabled(true);
+        }
     }
 }
 

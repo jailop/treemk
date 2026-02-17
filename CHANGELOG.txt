@@ -195,3 +195,4 @@ Documentation:
 - Internal links support
 - fixed issue: wikilinks - create new file
 - new feature: insert table of content
+- new feature: focus mode

@@ -126,6 +126,7 @@ class MainWindow : public QMainWindow {
     void insertDateWithFormat(const QString& format);
     void insertTimeWithFormat(const QString& format);
     void filterHistoryList();
+    void toggleFocusMode();
 
    private:
     void createActions();
@@ -225,6 +226,7 @@ class MainWindow : public QMainWindow {
     QAction* aiAssistAction;
     QAction* backAction;
     QAction* forwardAction;
+    QAction* toggleFocusModeAction;
 
     QToolBar* mainToolbar;
     QProgressBar* progressBar;
@@ -258,6 +260,9 @@ class MainWindow : public QMainWindow {
 
     QSettings* settings;
     ViewMode currentViewMode;
+    bool focusModeActive;
+    ViewMode preFocusModeViewMode;
+    bool preFocusModeSidebarVisible;
 };
 
 #endif  // MAINWINDOW_H

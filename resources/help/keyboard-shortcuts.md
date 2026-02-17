@@ -88,6 +88,7 @@ Complete list of keyboard shortcuts available in TreeMk.
 | Toggle Sidebar | Ctrl+B (when not editing) |
 | Toggle Preview | Ctrl+R |
 | Cycle View Mode | Ctrl+\ |
+| Focus Mode | F11 |
 | Zoom In | Ctrl++ |
 | Zoom Out | Ctrl+- |
 | Reset Zoom | Ctrl+0 |

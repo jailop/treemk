@@ -154,6 +154,7 @@ void MainWindow::createMenus() {
     viewMenu = menuBar()->addMenu(tr("&View"));
     viewMenu->addAction(toggleSidebarAction);
     viewMenu->addAction(cycleViewModeAction);
+    viewMenu->addAction(toggleFocusModeAction);
     viewMenu->addSeparator();
     /*
     QMenu* previewThemeMenu = viewMenu->addMenu(tr("Preview Theme"));
@@ -448,6 +449,17 @@ void MainWindow::readSettings() {
     }
 
     applyViewMode(currentViewMode, false);
+    
+    bool shouldRestoreFocusMode = settings->value("focusMode", false).toBool();
+    if (shouldRestoreFocusMode && toggleFocusModeAction) {
+        focusModeActive = false;
+        toggleFocusModeAction->setChecked(false);
+        QTimer::singleShot(100, this, [this]() {
+            if (toggleFocusModeAction && !focusModeActive) {
+                toggleFocusMode();
+            }
+        });
+    }
 }
 
 void MainWindow::writeSettings() {

@@ -144,6 +144,25 @@ Want TreeMk to remember your work session? Enable **Settings → General → Res
 
 Enable **Settings → General → Auto-save** to automatically save your work every minute (or whatever interval you prefer). Never lose a thought to an unexpected interruption.
 
+## Focus Mode: Writing Without Distractions
+
+Sometimes you need to tune out everything except your words. Press **F11** to enter Focus Mode—a distraction-free environment where the menu bar, toolbar, sidebar, and preview all disappear, leaving only your editor and your thoughts.
+
+In Focus Mode, TreeMk centers your text with a maximum width of 900 pixels, no matter how wide your window is. This creates a comfortable reading width that doesn't force your eyes to track across an entire monitor. It's the digital equivalent of a blank page on a clean desk.
+
+**What happens in Focus Mode:**
+
+- Menu bar hidden
+- Toolbar hidden  
+- Sidebar (files, outline, backlinks, history) hidden
+- Preview panel hidden
+- Text centered with comfortable max-width
+- Status bar briefly shows "Focus Mode: ON (F11 to exit)" then disappears
+
+Press **F11** again to exit Focus Mode. Everything returns to exactly how it was—your sidebar visibility, view mode, all restored. You can also access Focus Mode through **View → Focus Mode** in the menu.
+
+**When to use it:** First drafts. Flow states. Timed writing sessions. Late-night journal entries. Anytime you want nothing between you and your writing.
+
 ## Writing with AI Assistance
 
 Sometimes you need a second opinion on your writing, or a quick translation, or help expanding a rough outline into full sentences. TreeMk integrates with AI services to provide exactly that kind of help.
