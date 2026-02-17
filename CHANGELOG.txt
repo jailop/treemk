@@ -196,3 +196,5 @@ Documentation:
 - fixed issue: wikilinks - create new file
 - new feature: insert table of content
 - new feature: focus mode
+- when new files are created from wiki-links, if a label if defined,
+  that one is used as the title of the new file.

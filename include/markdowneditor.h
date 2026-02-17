@@ -31,8 +31,10 @@ public:
   MarkdownHighlighter *highlighter() const { return getHighlighter(); }
 
    QString getLinkAtPosition(int position) const;
+   QString getLinkAtPosition(int position, QString& displayText) const;
    QString getExternalLinkAtPosition(int position) const;
    QString getMarkdownLinkAtPosition(int position) const;
+   QString getMarkdownLinkAtPosition(int position, QString& labelText) const;
   QString getTaskMarkerAtPosition(int position) const;
   bool isClickOnCheckbox(int position) const;
   void toggleTaskAtPosition(int position);

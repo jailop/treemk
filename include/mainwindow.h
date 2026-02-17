@@ -149,7 +149,8 @@ class MainWindow : public QMainWindow {
     TabEditor* findTabByPath(const QString& filePath) const;
     int findTabIndexByPath(const QString& filePath) const;
     bool createFileFromLink(const QString& targetFile,
-                            const QString& linkTarget);
+                            const QString& linkTarget,
+                            const QString& label = QString());
     int getLinkSearchDepth() const;
     void buildLinkIndexAsync();
 
