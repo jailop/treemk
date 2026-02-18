@@ -3,6 +3,7 @@
 
 #include <QFileSystemModel>
 #include <QFileSystemWatcher>
+#include <QSortFilterProxyModel>
 #include <QTreeView>
 
 /**
@@ -35,6 +36,8 @@ public:
   void notifyFileSaving(const QString &filePath);
 
   void selectFile(const QString &filePath);
+
+  void setNameFilter(const QString &filter);
 
 signals:
   void fileSelected(const QString &filePath);
@@ -81,6 +84,7 @@ private:
   void addDirectoriesToWatcher(const QString &path);
 
   QFileSystemModel *fileSystemModel;
+  QSortFilterProxyModel *proxyModel;
   QFileSystemWatcher *fileSystemWatcher;
   QMenu *contextMenu;
   QAction *newFileAction;
@@ -101,6 +105,7 @@ private:
   QString clipboardPath;
   bool clipboardIsCut;
   QString currentRootPath;
+  QModelIndex currentRootSourceIndex;
   QString watchedFilePath;
   QString fileSavingPath;
   QString renameOldPath;

@@ -29,6 +29,7 @@ public:
   QListWidget* getBacklinksView() const;
   QListWidget* getHistoryView() const;
   QLineEdit* getHistoryFilterInput() const;
+  QLineEdit* getFileFilterInput() const;
 
   // Methods to add custom widgets to panels
   void setTreeView(FileSystemTreeView* treeView);

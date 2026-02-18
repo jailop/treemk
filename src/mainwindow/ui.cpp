@@ -246,6 +246,10 @@ void MainWindow::createLayout() {
     treeView = new FileSystemTreeView(treePanel);
     sidebarPanel->setTreeView(treeView);
     
+    QLineEdit* fileFilterInput = sidebarPanel->getFileFilterInput();
+    connect(fileFilterInput, &QLineEdit::textChanged, treeView,
+            &FileSystemTreeView::setNameFilter);
+    
     connect(treeView, &FileSystemTreeView::fileSelected, this,
             &MainWindow::onFileSelected);
     connect(treeView, &FileSystemTreeView::fileDoubleClicked, this,
