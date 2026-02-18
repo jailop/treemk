@@ -481,10 +481,21 @@ void MarkdownEditor::showPrediction() {
     }
 
     QTextCursor cursor = textCursor();
+    
+    QTextCursor checkCursor = cursor;
+    checkCursor.movePosition(QTextCursor::NextCharacter, QTextCursor::KeepAnchor);
+    QString nextChar = checkCursor.selectedText();
+    
+    if (!nextChar.isEmpty() && !nextChar.at(0).isSpace()) {
+        m_currentPrediction.clear();
+        viewport()->update();
+        return;
+    }
+
+    cursor = textCursor();
     cursor.movePosition(QTextCursor::StartOfWord, QTextCursor::KeepAnchor);
     QString currentWord = cursor.selectedText();
 
-    // Allow predictions with 1+ characters for bigram, 2+ for unigram
     if (currentWord.length() >= 1) {
         QString prediction = predictWord(currentWord);
         if (!prediction.isEmpty() &&

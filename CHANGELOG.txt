@@ -200,3 +200,9 @@ Documentation:
   that one is used as the title of the new file.
 - now auto close brackets only works when the following character is an
   space or the end of the line
+
+2026-02-18:
+
+- word prediction is only activated at the end of the line or if there
+  is a blank space after the cursor position
+- a file filter has been added
