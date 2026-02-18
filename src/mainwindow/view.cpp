@@ -103,6 +103,14 @@ void MainWindow::onWikiLinkClicked(const QString& linkTarget) {
         return;
     }
 
+    // Extract display text from current editor if available
+    QString displayText;
+    TabEditor* tab = currentTabEditor();
+    if (tab) {
+        QTextCursor cursor = tab->editor()->textCursor();
+        tab->editor()->getLinkAtPosition(cursor.position(), displayText);
+    }
+
     int depth = getLinkSearchDepth();
     QString targetFile =
         linkParser->resolveLinkTarget(linkTarget, currentFilePath, depth);
@@ -129,9 +137,13 @@ void MainWindow::onWikiLinkClicked(const QString& linkTarget) {
             QMessageBox::Yes | QMessageBox::No);
 
         if (reply == QMessageBox::Yes) {
-            QString initialContent = QString("# %1\n\nCreated from wiki link: [[%2]]\n")
-                                         .arg(QFileInfo(targetFile).baseName())
-                                         .arg(linkTarget);
+            QString title = displayText.isEmpty() 
+                ? QFileInfo(targetFile).baseName() 
+                : displayText;
+            
+            QString initialContent = title.isEmpty()
+                ? QString("\n")
+                : QString("# %1\n\n").arg(title);
 
             FileUtils::FileCreationResult result =
                 FileUtils::createFileWithDirectories(targetFile, initialContent);
@@ -182,15 +194,20 @@ void MainWindow::onOpenLinkInNewWindow(const QString& linkTarget) {
 }
 
 bool MainWindow::createFileFromLink(const QString& targetFile,
-                                    const QString& linkTarget) {
+                                    const QString& linkTarget,
+                                    const QString& label) {
     QString newFilePath = targetFile;
     if (QFileInfo(newFilePath).suffix().isEmpty()) {
         newFilePath += ".md";
     }
 
-    QString initialContent = QString("# %1\n\nCreated from link: %2\n")
-                                 .arg(QFileInfo(newFilePath).baseName())
-                                 .arg(linkTarget);
+    QString title = label.isEmpty() 
+        ? QFileInfo(newFilePath).baseName() 
+        : label;
+    
+    QString initialContent = title.isEmpty()
+        ? QString("\n")
+        : QString("# %1\n\n").arg(title);
 
     FileUtils::FileCreationResult result =
         FileUtils::createFileWithDirectories(newFilePath, initialContent);

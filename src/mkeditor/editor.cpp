@@ -139,6 +139,11 @@ MarkdownHighlighter* MarkdownEditor::getHighlighter() const {
 }
 
 QString MarkdownEditor::getLinkAtPosition(int position) const {
+    QString dummy;
+    return getLinkAtPosition(position, dummy);
+}
+
+QString MarkdownEditor::getLinkAtPosition(int position, QString& displayText) const {
     QTextCursor cursor(document());
     cursor.setPosition(position);
 
@@ -158,10 +163,12 @@ QString MarkdownEditor::getLinkAtPosition(int position) const {
         int end = start + match.capturedLength();
 
         if (posInBlock >= start && posInBlock <= end) {
+            displayText = match.captured(3).trimmed();
             return match.captured(1).trimmed();
         }
     }
 
+    displayText.clear();
     return QString();
 }
 
@@ -209,6 +216,11 @@ QString MarkdownEditor::getExternalLinkAtPosition(int position) const {
 }
 
 QString MarkdownEditor::getMarkdownLinkAtPosition(int position) const {
+    QString dummy;
+    return getMarkdownLinkAtPosition(position, dummy);
+}
+
+QString MarkdownEditor::getMarkdownLinkAtPosition(int position, QString& labelText) const {
     QTextCursor cursor(document());
     cursor.setPosition(position);
 
@@ -229,11 +241,13 @@ QString MarkdownEditor::getMarkdownLinkAtPosition(int position) const {
             QString url = match.captured(2).trimmed();
             // Return any markdown link that is not an external URL
             if (!url.startsWith("http://") && !url.startsWith("https://")) {
+                labelText = match.captured(1).trimmed();
                 return url;
             }
         }
     }
 
+    labelText.clear();
     return QString();
 }
 
@@ -467,10 +481,21 @@ void MarkdownEditor::showPrediction() {
     }
 
     QTextCursor cursor = textCursor();
+    
+    QTextCursor checkCursor = cursor;
+    checkCursor.movePosition(QTextCursor::NextCharacter, QTextCursor::KeepAnchor);
+    QString nextChar = checkCursor.selectedText();
+    
+    if (!nextChar.isEmpty() && !nextChar.at(0).isSpace()) {
+        m_currentPrediction.clear();
+        viewport()->update();
+        return;
+    }
+
+    cursor = textCursor();
     cursor.movePosition(QTextCursor::StartOfWord, QTextCursor::KeepAnchor);
     QString currentWord = cursor.selectedText();
 
-    // Allow predictions with 1+ characters for bigram, 2+ for unigram
     if (currentWord.length() >= 1) {
         QString prediction = predictWord(currentWord);
         if (!prediction.isEmpty() &&

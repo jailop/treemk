@@ -12,6 +12,8 @@
 #include <QMessageBox>
 #include <QMouseEvent>
 #include <QProcess>
+#include <QRegularExpression>
+#include <QSortFilterProxyModel>
 #include <QUrl>
 
 #include "fileutils.h"
@@ -31,13 +33,15 @@ void FileSystemTreeView::setupModel() {
     fileSystemModel->setReadOnly(false);
     fileSystemModel->setFilter(QDir::AllDirs | QDir::Files |
                                QDir::NoDotAndDotDot);
-    // QStringList filters;
-    // filters << "*.md" << "*.markdown";
-    // fileSystemModel->setNameFilters(filters);
-    // fileSystemModel->setNameFilterDisables(false);
-    setModel(fileSystemModel);
 
-    // Try both dataChanged and fileRenamed signals
+    proxyModel = new QSortFilterProxyModel(this);
+    proxyModel->setSourceModel(fileSystemModel);
+    proxyModel->setRecursiveFilteringEnabled(true);
+    proxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
+    proxyModel->setFilterRole(Qt::DisplayRole);
+
+    setModel(proxyModel);
+
     connect(fileSystemModel, &QFileSystemModel::dataChanged, this,
             &FileSystemTreeView::onItemRenamed);
     connect(fileSystemModel, &QFileSystemModel::fileRenamed, this,
@@ -200,11 +204,12 @@ void FileSystemTreeView::setRootPath(const QString& path) {
     }
 
     currentRootPath = path;
-    QModelIndex rootIndex = fileSystemModel->setRootPath(path);
-    setRootIndex(rootIndex);
+    currentRootSourceIndex = fileSystemModel->setRootPath(path);
+    QModelIndex proxyRootIndex = proxyModel->mapFromSource(currentRootSourceIndex);
+    setRootIndex(proxyRootIndex);
 
-    if (rootIndex.isValid()) {
-        expand(rootIndex);
+    if (proxyRootIndex.isValid()) {
+        expand(proxyRootIndex);
     }
 
     fileSystemWatcher->addPath(path);
@@ -217,7 +222,8 @@ QString FileSystemTreeView::currentFilePath() const {
     if (!index.isValid()) {
         return QString();
     }
-    return fileSystemModel->filePath(index);
+    QModelIndex sourceIndex = proxyModel->mapToSource(index);
+    return fileSystemModel->filePath(sourceIndex);
 }
 
 QString FileSystemTreeView::rootPath() const { return currentRootPath; }
@@ -228,7 +234,8 @@ void FileSystemTreeView::onSelectionChanged(const QModelIndex& current,
     if (!current.isValid()) {
         return;
     }
-    QString filePath = fileSystemModel->filePath(current);
+    QModelIndex sourceIndex = proxyModel->mapToSource(current);
+    QString filePath = fileSystemModel->filePath(sourceIndex);
     QFileInfo fileInfo(filePath);
     if (fileInfo.isFile()) {
         QString suffix = fileInfo.suffix().toLower();
@@ -284,7 +291,8 @@ void FileSystemTreeView::mouseDoubleClickEvent(QMouseEvent* event) {
     if (!index.isValid()) {
         return;
     }
-    QString filePath = fileSystemModel->filePath(index);
+    QModelIndex sourceIndex = proxyModel->mapToSource(index);
+    QString filePath = fileSystemModel->filePath(sourceIndex);
     QFileInfo fileInfo(filePath);
     if (fileInfo.isFile()) {
         QString suffix = fileInfo.suffix().toLower();
@@ -303,12 +311,14 @@ void FileSystemTreeView::keyPressEvent(QKeyEvent* event) {
     if (event->key() == Qt::Key_F2) {
         QModelIndex index = currentIndex();
         if (index.isValid()) {
-            renameOldPath = fileSystemModel->filePath(index);
+            QModelIndex sourceIndex = proxyModel->mapToSource(index);
+            renameOldPath = fileSystemModel->filePath(sourceIndex);
         }
     } else if (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter) {
         QModelIndex index = currentIndex();
         if (index.isValid()) {
-            QString filePath = fileSystemModel->filePath(index);
+            QModelIndex sourceIndex = proxyModel->mapToSource(index);
+            QString filePath = fileSystemModel->filePath(sourceIndex);
             QFileInfo fileInfo(filePath);
             
             if (fileInfo.isDir()) {
@@ -346,7 +356,8 @@ void FileSystemTreeView::contextMenuEvent(QContextMenuEvent* event) {
     bool isMarkdownFile = false;
     bool isNonMarkdownFile = false;
     if (hasSelection) {
-        QString filePath = fileSystemModel->filePath(index);
+        QModelIndex sourceIndex = proxyModel->mapToSource(index);
+        QString filePath = fileSystemModel->filePath(sourceIndex);
         QFileInfo fileInfo(filePath);
         isDirectory = fileInfo.isDir();
 
@@ -392,7 +403,8 @@ void FileSystemTreeView::createNewFile() {
     QString parentPath;
 
     if (index.isValid()) {
-        QString selectedPath = fileSystemModel->filePath(index);
+        QModelIndex sourceIndex = proxyModel->mapToSource(index);
+        QString selectedPath = fileSystemModel->filePath(sourceIndex);
         QFileInfo fileInfo(selectedPath);
         parentPath = fileInfo.isDir() ? selectedPath : fileInfo.absolutePath();
     } else {
@@ -435,7 +447,8 @@ void FileSystemTreeView::createNewFolder() {
     QString parentPath;
 
     if (index.isValid()) {
-        QString selectedPath = fileSystemModel->filePath(index);
+        QModelIndex sourceIndex = proxyModel->mapToSource(index);
+        QString selectedPath = fileSystemModel->filePath(sourceIndex);
         QFileInfo fileInfo(selectedPath);
         parentPath = fileInfo.isDir() ? selectedPath : fileInfo.absolutePath();
     } else {
@@ -473,7 +486,8 @@ void FileSystemTreeView::renameItem() {
         return;
     }
 
-    renameOldPath = fileSystemModel->filePath(index);
+    QModelIndex sourceIndex = proxyModel->mapToSource(index);
+    renameOldPath = fileSystemModel->filePath(sourceIndex);
     edit(index);
 }
 
@@ -483,7 +497,8 @@ void FileSystemTreeView::deleteItem() {
         return;
     }
 
-    QString filePath = fileSystemModel->filePath(index);
+    QModelIndex sourceIndex = proxyModel->mapToSource(index);
+    QString filePath = fileSystemModel->filePath(sourceIndex);
     QFileInfo fileInfo(filePath);
 
     QString itemType = fileInfo.isDir() ? tr("folder") : tr("file");
@@ -521,7 +536,8 @@ void FileSystemTreeView::cutItem() {
     if (!index.isValid()) {
         return;
     }
-    clipboardPath = fileSystemModel->filePath(index);
+    QModelIndex sourceIndex = proxyModel->mapToSource(index);
+    clipboardPath = fileSystemModel->filePath(sourceIndex);
     clipboardIsCut = true;
 }
 
@@ -530,7 +546,8 @@ void FileSystemTreeView::copyItem() {
     if (!index.isValid()) {
         return;
     }
-    clipboardPath = fileSystemModel->filePath(index);
+    QModelIndex sourceIndex = proxyModel->mapToSource(index);
+    clipboardPath = fileSystemModel->filePath(sourceIndex);
     clipboardIsCut = false;
 }
 
@@ -541,7 +558,8 @@ void FileSystemTreeView::pasteItem() {
     QModelIndex index = currentIndex();
     QString targetPath;
     if (index.isValid()) {
-        QString selectedPath = fileSystemModel->filePath(index);
+        QModelIndex sourceIndex = proxyModel->mapToSource(index);
+        QString selectedPath = fileSystemModel->filePath(sourceIndex);
         QFileInfo fileInfo(selectedPath);
         targetPath = fileInfo.isDir() ? selectedPath : fileInfo.absolutePath();
     } else {
@@ -646,10 +664,13 @@ void FileSystemTreeView::refreshDirectory() {
     setRootPath(currentRootPath);
 
     if (!savedPath.isEmpty() && QFile::exists(savedPath)) {
-        QModelIndex idx = fileSystemModel->index(savedPath);
-        if (idx.isValid()) {
-            setCurrentIndex(idx);
-            scrollTo(idx);
+        QModelIndex sourceIdx = fileSystemModel->index(savedPath);
+        if (sourceIdx.isValid()) {
+            QModelIndex proxyIdx = proxyModel->mapFromSource(sourceIdx);
+            if (proxyIdx.isValid()) {
+                setCurrentIndex(proxyIdx);
+                scrollTo(proxyIdx);
+            }
         }
     }
 }
@@ -660,7 +681,8 @@ void FileSystemTreeView::setAsCurrentFolder() {
         return;
     }
 
-    QString selectedPath = fileSystemModel->filePath(index);
+    QModelIndex sourceIndex = proxyModel->mapToSource(index);
+    QString selectedPath = fileSystemModel->filePath(sourceIndex);
     QFileInfo fileInfo(selectedPath);
 
     if (fileInfo.isDir()) {
@@ -688,7 +710,8 @@ void FileSystemTreeView::openInNewWindow() {
         return;
     }
 
-    QString path = fileSystemModel->filePath(index);
+    QModelIndex sourceIndex = proxyModel->mapToSource(index);
+    QString path = fileSystemModel->filePath(sourceIndex);
     emit openInNewWindowRequested(path);
 }
 
@@ -698,7 +721,8 @@ void FileSystemTreeView::openFile() {
         return;
     }
 
-    QString filePath = fileSystemModel->filePath(index);
+    QModelIndex sourceIndex = proxyModel->mapToSource(index);
+    QString filePath = fileSystemModel->filePath(sourceIndex);
     QFileInfo fileInfo(filePath);
     
     if (fileInfo.isFile()) {
@@ -722,7 +746,8 @@ void FileSystemTreeView::openFileWith() {
         return;
     }
 
-    QString filePath = fileSystemModel->filePath(index);
+    QModelIndex sourceIndex = proxyModel->mapToSource(index);
+    QString filePath = fileSystemModel->filePath(sourceIndex);
     QFileInfo fileInfo(filePath);
     
     if (!fileInfo.isFile()) {
@@ -747,7 +772,8 @@ void FileSystemTreeView::openInFileExplorer() {
         return;
     }
 
-    QString filePath = fileSystemModel->filePath(index);
+    QModelIndex sourceIndex = proxyModel->mapToSource(index);
+    QString filePath = fileSystemModel->filePath(sourceIndex);
     QFileInfo fileInfo(filePath);
     
     if (!fileInfo.exists()) {
@@ -805,15 +831,31 @@ void FileSystemTreeView::selectFile(const QString& filePath) {
         return;
     }
 
-    QModelIndex index = fileSystemModel->index(filePath);
-    if (index.isValid()) {
-        setCurrentIndex(index);
-        scrollTo(index);
+    QModelIndex sourceIndex = fileSystemModel->index(filePath);
+    if (sourceIndex.isValid()) {
+        QModelIndex proxyIndex = proxyModel->mapFromSource(sourceIndex);
+        if (proxyIndex.isValid()) {
+            setCurrentIndex(proxyIndex);
+            scrollTo(proxyIndex);
+        }
     }
 }
 
 void FileSystemTreeView::notifyFileSaving(const QString& filePath) {
     fileSavingPath = filePath;
+}
+
+void FileSystemTreeView::setNameFilter(const QString& filter) {
+    if (filter.isEmpty()) {
+        proxyModel->setFilterRegularExpression(QRegularExpression());
+    } else {
+        proxyModel->setFilterWildcard("*" + filter + "*");
+    }
+    
+    if (currentRootSourceIndex.isValid()) {
+        QModelIndex proxyRootIndex = proxyModel->mapFromSource(currentRootSourceIndex);
+        setRootIndex(proxyRootIndex);
+    }
 }
 
 void FileSystemTreeView::onItemRenamed(const QModelIndex& topLeft,

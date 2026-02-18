@@ -21,6 +21,14 @@ void MainWindow::onMarkdownLinkClicked(const QString& linkTarget) {
         return;
     }
     
+    // Extract label text from current editor if available
+    QString labelText;
+    TabEditor* tab = currentTabEditor();
+    if (tab) {
+        QTextCursor cursor = tab->editor()->textCursor();
+        tab->editor()->getMarkdownLinkAtPosition(cursor.position(), labelText);
+    }
+    
     LinkTarget parsed = LinkParser::parseLinkTarget(linkTarget);
     
     if (parsed.isInternalOnly) {
@@ -78,10 +86,13 @@ void MainWindow::onMarkdownLinkClicked(const QString& linkTarget) {
                     .arg(QFileInfo(finalPath).fileName()),
                 QMessageBox::Yes | QMessageBox::No);
             if (reply == QMessageBox::Yes) {
-                QString initialContent =
-                    QString("# %1\n\nCreated from markdown link: %2\n")
-                        .arg(QFileInfo(finalPath).baseName())
-                        .arg(linkTarget);
+                QString title = labelText.isEmpty() 
+                    ? QFileInfo(finalPath).baseName() 
+                    : labelText;
+                
+                QString initialContent = title.isEmpty()
+                    ? QString("\n")
+                    : QString("# %1\n\n").arg(title);
 
                 FileUtils::FileCreationResult result =
                     FileUtils::createFileWithDirectories(finalPath,

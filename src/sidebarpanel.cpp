@@ -50,6 +50,10 @@ QLineEdit* SidebarPanel::getHistoryFilterInput() const {
     return ui->historyFilterInput;
 }
 
+QLineEdit* SidebarPanel::getFileFilterInput() const {
+    return ui->fileFilterInput;
+}
+
 void SidebarPanel::setTreeView(FileSystemTreeView* treeView) {
     if (treeView && ui->treePanel) {
         QVBoxLayout* layout = qobject_cast<QVBoxLayout*>(ui->treePanel->layout());
