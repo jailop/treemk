@@ -55,6 +55,13 @@ protected:
   void resizeEvent(QResizeEvent *event) override;
   void mousePressEvent(QMouseEvent *event) override;
   void mouseMoveEvent(QMouseEvent *event) override;
+
+  /**
+   * Handles key press events for the editor. This includes among other
+   * things: standard text input and editing, movement commands, list
+   * and task management, wiki-link actions, and auto-closing of
+   * brackets and quotes.
+   */
   void keyPressEvent(QKeyEvent *event) override;
   void dragEnterEvent(QDragEnterEvent *event) override;
   void dragMoveEvent(QDragMoveEvent *event) override;

@@ -206,3 +206,8 @@ Documentation:
 - word prediction is only activated at the end of the line or if there
   is a blank space after the cursor position
 - a file filter has been added
+
+2026-02-19:
+
+- Fixed: Auto-numbering lists. It was repeating the same number when the
+  user press Enter. Now, the number is auto-increased.

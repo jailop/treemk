@@ -74,14 +74,13 @@ VS Code is a programming IDE. TreeMk is a note-taking editor. They serve differe
 **Minimum:**
 
 - 4GB RAM
-- 100MB disk space
+- 256MB disk space
 - 1280×720 display
 
 **Recommended:**
 
 - 8GB RAM (for large workspaces with thousands of files)
 - SSD for better file indexing performance
-- 1920×1080 or higher display
 
 **Reality:** TreeMk runs on modest hardware. Performance depends on workspace size and search/indexing frequency.
 
