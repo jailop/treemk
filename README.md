@@ -138,6 +138,12 @@ For VoidLinux:
 sudo xbps-install cmake gcc make qt6-base-devel qt6-webengine-devel qt6-svg-devel pkg-config md4c-devel
 ```
 
+For FreeBSD:
+
+```
+pkg install cmake pkgconf gcc qt6-base qt6-webengine qt6-svg md4c
+```
+
 To build the app:
 
 ```bash
