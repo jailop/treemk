@@ -2,6 +2,7 @@
 #define MARKDOWNEDITOR_H
 
 #include <QTextEdit>
+#include <memory>
 
 class QSyntaxHighlighter;
 class LineNumberArea;
@@ -118,7 +119,7 @@ class MarkdownEditor : public QTextEdit {
     QString m_currentFilePath;
     class QTimer* m_formatTimer;
 
-    WordPredictor* m_wordPredictor;
+    std::unique_ptr<WordPredictor> m_wordPredictor;
     QString m_currentPrediction;
     bool m_predictionEnabled;
     bool m_aiAssistEnabled;
