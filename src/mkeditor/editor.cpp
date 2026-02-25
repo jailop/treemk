@@ -141,19 +141,14 @@ QString MarkdownEditor::getLinkAtPosition(int position, QString& displayText) co
     QString line = cursor.block().text();
     int posInBlock = cursor.positionInBlock();
 
-    QRegularExpression wikiLinkPattern(
-        "!?\\[\\[([^\\]|]+)(\\|([^\\]]+))?\\]\\]");
-    QRegularExpressionMatchIterator matchIterator =
-        wikiLinkPattern.globalMatch(line);
-
-    while (matchIterator.hasNext()) {
-        QRegularExpressionMatch match = matchIterator.next();
-        int start = match.capturedStart();
-        int end = start + match.capturedLength();
+    QVector<RegexUtils::WikiLinkInfo> links = RegexUtils::parseWikiLinks(line);
+    for (const auto& link : links) {
+        int start = link.position;
+        int end = start + link.length;
 
         if (posInBlock >= start && posInBlock <= end) {
-            displayText = match.captured(3).trimmed();
-            return match.captured(1).trimmed();
+            displayText = link.display;
+            return link.target;
         }
     }
 
@@ -168,24 +163,19 @@ QString MarkdownEditor::getExternalLinkAtPosition(int position) const {
     QString line = cursor.block().text();
     int posInBlock = cursor.positionInBlock();
 
-    QRegularExpression markdownLinkPattern("\\[([^\\]]+)\\]\\(([^\\)]+)\\)");
-    QRegularExpressionMatchIterator matchIterator =
-        markdownLinkPattern.globalMatch(line);
-
-    while (matchIterator.hasNext()) {
-        QRegularExpressionMatch match = matchIterator.next();
-        int start = match.capturedStart();
-        int end = start + match.capturedLength();
+    QVector<RegexUtils::MarkdownLinkInfo> links = RegexUtils::parseMarkdownLinks(line);
+    for (const auto& link : links) {
+        int start = link.position;
+        int end = start + link.length;
 
         if (posInBlock >= start && posInBlock <= end) {
-            QString url = match.captured(2).trimmed();
-            if (url.startsWith("http://") || url.startsWith("https://")) {
-                return url;
+            if (link.url.startsWith("http://") || link.url.startsWith("https://")) {
+                return link.url;
             }
         }
     }
 
-    QRegularExpression urlPattern("(https?://[^\\s]+)");
+    QRegularExpression urlPattern(RegexPatterns::URL);
     QRegularExpressionMatchIterator urlIterator = urlPattern.globalMatch(line);
 
     while (urlIterator.hasNext()) {
@@ -213,20 +203,15 @@ QString MarkdownEditor::getMarkdownLinkAtPosition(int position, QString& labelTe
     QString line = cursor.block().text();
     int posInBlock = cursor.positionInBlock();
 
-    QRegularExpression markdownLinkPattern("!?\\[([^\\]]+)\\]\\(([^\\)]+)\\)");
-    QRegularExpressionMatchIterator matchIterator =
-        markdownLinkPattern.globalMatch(line);
-
-    while (matchIterator.hasNext()) {
-        QRegularExpressionMatch match = matchIterator.next();
-        int start = match.capturedStart();
-        int end = start + match.capturedLength();
+    QVector<RegexUtils::MarkdownLinkInfo> links = RegexUtils::parseMarkdownLinks(line);
+    for (const auto& link : links) {
+        int start = link.position;
+        int end = start + link.length;
 
         if (posInBlock >= start && posInBlock <= end) {
-            QString url = match.captured(2).trimmed();
-            if (!url.startsWith("http://") && !url.startsWith("https://")) {
-                labelText = match.captured(1).trimmed();
-                return url;
+            if (!link.url.startsWith("http://") && !link.url.startsWith("https://")) {
+                labelText = link.text;
+                return link.url;
             }
         }
     }
@@ -291,7 +276,7 @@ void MarkdownEditor::updateWordFrequency() {
     m_bigramFrequency.clear();
 
     QString text = toPlainText();
-    QRegularExpression wordRegex("\\b[a-zA-Z]{3,}\\b");
+    QRegularExpression wordRegex(RegexPatterns::WORD_BOUNDARY);
     QRegularExpressionMatchIterator it = wordRegex.globalMatch(text);
 
     QStringList words;
@@ -322,7 +307,7 @@ void MarkdownEditor::updateDirectoryWordFrequency() {
     filters << "*.md" << "*.markdown";
     QFileInfoList files = dir.entryInfoList(filters, QDir::Files);
 
-    QRegularExpression wordRegex("\\b[a-zA-Z]{3,}\\b");
+    QRegularExpression wordRegex(RegexPatterns::WORD_BOUNDARY);
 
     for (const QFileInfo& file : files) {
         if (file.absoluteFilePath() == m_currentFilePath) {
@@ -510,7 +495,16 @@ void MarkdownEditor::paintEvent(QPaintEvent* event) {
 
         QPainter painter(viewport());
         painter.setFont(font);
-        painter.setPen(QColor(128, 128, 128, 180));  // Gray with transparency
+        
+        QString scheme = m_highlighter->getColorScheme();
+        QColor predictionColor;
+        if (scheme.contains("dark", Qt::CaseInsensitive)) {
+            predictionColor = ColorPalette::getDarkTheme().predictionText;
+        } else {
+            predictionColor = ColorPalette::getLightTheme().predictionText;
+        }
+        predictionColor.setAlpha(180);
+        painter.setPen(predictionColor);
 
         int x = rect.right();
         int y = rect.bottom();

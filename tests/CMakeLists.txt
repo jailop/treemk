@@ -148,7 +148,20 @@ target_link_libraries(test_regexpatterns
 
 add_test(NAME RegexPatterns COMMAND test_regexpatterns)
 
-# Test 6: AIAssist Dialog Tests
+# Test 7: FileUtils Tests
+add_executable(test_fileutils
+    unit/test_fileutils.cpp
+    ${CMAKE_SOURCE_DIR}/src/filemagement/utils.cpp
+)
+
+target_link_libraries(test_fileutils
+    Qt6::Test
+    Qt6::Core
+)
+
+add_test(NAME FileUtils COMMAND test_fileutils)
+
+# Test 8: AIAssist Dialog Tests
 add_executable(test_aiassist_dialog
     unit/test_aiassist_dialog.cpp
     ${CMAKE_SOURCE_DIR}/include/aiassistdialog.h
@@ -240,13 +253,14 @@ set_tests_properties(WorkspaceManager PROPERTIES TIMEOUT 30)
 set_tests_properties(LinkParser PROPERTIES TIMEOUT 30)
 set_tests_properties(InternalLinks PROPERTIES TIMEOUT 30)
 set_tests_properties(RegexPatterns PROPERTIES TIMEOUT 30)
+set_tests_properties(FileUtils PROPERTIES TIMEOUT 30)
 set_tests_properties(AIAssistDialog PROPERTIES TIMEOUT 30)
 set_tests_properties(Integration PROPERTIES TIMEOUT 30)
 
 # Add custom target to run all tests
 add_custom_target(check
     COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
-    DEPENDS test_markdown_conversion test_mainfilelocator test_workspacemanager test_linkparser test_internal_links test_regexpatterns test_aiassist_dialog test_integration
+    DEPENDS test_markdown_conversion test_mainfilelocator test_workspacemanager test_linkparser test_internal_links test_regexpatterns test_fileutils test_aiassist_dialog test_integration
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 

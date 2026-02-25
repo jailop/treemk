@@ -15,6 +15,10 @@ FileCreationResult createFileWithDirectories(
 
 bool ensureDirectoryExists(const QString& dirPath);
 
+bool isImageFile(const QString& filePath);
+
+bool isMarkdownFile(const QString& filePath);
+
 }  // namespace FileUtils
 
 #endif  // FILEUTILS_H

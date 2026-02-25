@@ -66,6 +66,8 @@ struct ThemeColors {
     QColor statusError = QColor(220, 120, 130);
     QColor statusWarning = QColor(230, 170, 110);
     QColor statusInfo = QColor(130, 160, 220);
+
+    QColor predictionText = QColor(150, 150, 160);
 };
 
 inline const ThemeColors& getLightTheme() {
@@ -101,7 +103,9 @@ inline const ThemeColors& getDarkTheme() {
         QColor(50, 50, 55),    QColor(150, 150, 160),
 
         QColor(150, 220, 180), QColor(255, 180, 190), QColor(250, 210, 160),
-        QColor(170, 190, 240)};
+        QColor(170, 190, 240),
+
+        QColor(120, 120, 130)};
     return dark;
 }
 
