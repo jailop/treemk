@@ -7,75 +7,75 @@
 #include <QString>
 
 class ShortcutManager : public QObject {
-  Q_OBJECT
+    Q_OBJECT
 
-public:
-  enum Action {
-    // Navigation
-    MoveToStartOfLine,
-    MoveToEndOfLine,
-    MoveToStartOfDocument,
-    MoveToEndOfDocument,
-    MoveWordLeft,
-    MoveWordRight,
-    MoveToPreviousParagraph,
-    MoveToNextParagraph,
-    MoveUpOnePage,
-    MoveDownOnePage,
-    MoveListItemUp,
-    MoveListItemDown,
+   public:
+    enum Action {
+        // Navigation
+        MoveToStartOfLine,
+        MoveToEndOfLine,
+        MoveToStartOfDocument,
+        MoveToEndOfDocument,
+        MoveWordLeft,
+        MoveWordRight,
+        MoveToPreviousParagraph,
+        MoveToNextParagraph,
+        MoveUpOnePage,
+        MoveDownOnePage,
+        MoveListItemUp,
+        MoveListItemDown,
 
-    // Selection + Navigation
-    SelectToStartOfLine,
-    SelectToEndOfLine,
-    SelectToStartOfDocument,
-    SelectToEndOfDocument,
-    SelectWordLeft,
-    SelectWordRight,
-    SelectToPreviousParagraph,
-    SelectToNextParagraph,
-    SelectUpOnePage,
-    SelectDownOnePage,
+        // Selection + Navigation
+        SelectToStartOfLine,
+        SelectToEndOfLine,
+        SelectToStartOfDocument,
+        SelectToEndOfDocument,
+        SelectWordLeft,
+        SelectWordRight,
+        SelectToPreviousParagraph,
+        SelectToNextParagraph,
+        SelectUpOnePage,
+        SelectDownOnePage,
 
-    // Editing
-    DeleteWordLeft,
-    DeleteWordRight,
-    DeleteToStartOfLine,
-    DeleteToEndOfLine,
+        // Editing
+        DeleteWordLeft,
+        DeleteWordRight,
+        DeleteToStartOfLine,
+        DeleteToEndOfLine,
 
-    // Tabs
-    SwitchToNextTab,
-    SwitchToPreviousTab,
-    CloseCurrentTab,
-    CloseAllTabs
-  };
-  Q_ENUM(Action)
+        // Tabs
+        SwitchToNextTab,
+        SwitchToPreviousTab,
+        CloseCurrentTab,
+        CloseAllTabs
+    };
+    Q_ENUM(Action)
 
-  static ShortcutManager *instance();
+    static ShortcutManager* instance();
 
-  QKeySequence getShortcut(Action action) const;
-  void setShortcut(Action action, const QKeySequence &sequence);
-  QString getActionName(Action action) const;
-  QString getActionDescription(Action action) const;
-  QString getActionCategory(Action action) const;
-  QList<Action> getAllActions() const;
+    QKeySequence getShortcut(Action action) const;
+    void setShortcut(Action action, const QKeySequence& sequence);
+    QString getActionName(Action action) const;
+    QString getActionDescription(Action action) const;
+    QString getActionCategory(Action action) const;
+    QList<Action> getAllActions() const;
 
-  void loadSettings();
-  void saveSettings();
-  void resetToDefaults();
+    void loadSettings();
+    void saveSettings();
+    void resetToDefaults();
 
-signals:
-  void shortcutsChanged();
+   signals:
+    void shortcutsChanged();
 
-private:
-  explicit ShortcutManager(QObject *parent = nullptr);
-  void initializeDefaults();
+   private:
+    explicit ShortcutManager(QObject* parent = nullptr);
+    void initializeDefaults();
 
-  static ShortcutManager *m_instance;
-  QMap<Action, QKeySequence> m_shortcuts;
-  QMap<Action, QString> m_actionNames;
-  QMap<Action, QString> m_actionDescriptions;
-  QMap<Action, QString> m_actionCategories;
+    static ShortcutManager* m_instance;
+    QMap<Action, QKeySequence> m_shortcuts;
+    QMap<Action, QString> m_actionNames;
+    QMap<Action, QString> m_actionDescriptions;
+    QMap<Action, QString> m_actionCategories;
 };
 
-#endif // SHORTCUTMANAGER_H
+#endif  // SHORTCUTMANAGER_H

@@ -9,24 +9,24 @@ class FormulaDialog;
 }
 
 class FormulaDialog : public QDialog {
-  Q_OBJECT
+    Q_OBJECT
 
-public:
-  explicit FormulaDialog(QWidget *parent = nullptr);
-  ~FormulaDialog();
+   public:
+    explicit FormulaDialog(QWidget* parent = nullptr);
+    ~FormulaDialog();
 
-  QString getFormula() const;
-  bool isBlockFormula() const;
+    QString getFormula() const;
+    bool isBlockFormula() const;
 
-private slots:
-  void insertTemplate();
-  void updatePreview();
+   private slots:
+    void insertTemplate();
+    void updatePreview();
 
-private:
-  void loadTemplates();
+   private:
+    void loadTemplates();
 
-  Ui::FormulaDialog *ui;
-  QMap<QString, QString> templates;
+    Ui::FormulaDialog* ui;
+    QMap<QString, QString> templates;
 };
 
-#endif // FORMULADIALOG_H
+#endif  // FORMULADIALOG_H

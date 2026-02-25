@@ -8,7 +8,7 @@
 class TocGenerator : public QObject {
     Q_OBJECT
 
-public:
+   public:
     struct TocEntry {
         int level;
         QString text;
@@ -18,8 +18,8 @@ public:
     static QString generateToc(const QString& markdownText);
     static QString removeToc(const QString& markdownText);
     static bool hasToc(const QString& markdownText);
-    
-private:
+
+   private:
     static QList<TocEntry> extractHeaders(const QString& markdownText);
     static QString generateAnchor(const QString& headerText);
     static int findTocPosition(const QString& markdownText);

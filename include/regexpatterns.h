@@ -201,7 +201,8 @@ constexpr char LEADING_TRAILING_DASH[] = R"(^-+|-+$)";
  *   - Capture group 1: URL/href attribute
  *   - Capture group 2: Link text
  *
- * HTML_CODE: Matches HTML code tags <code>content</code> with optional attributes
+ * HTML_CODE: Matches HTML code tags <code>content</code> with optional
+ * attributes
  *   - Capture group 1: Attributes (optional)
  *   - Capture group 2: Code content
  *
@@ -215,23 +216,31 @@ constexpr char LEADING_TRAILING_DASH[] = R"(^-+|-+$)";
  *   - Capture group 1: Target/data-target attribute
  *   - Capture group 2: Link text
  *
- * MD4C_WIKILINK_INCLUSION: Matches md4c output for inclusion wiki links [[!target]]
+ * MD4C_WIKILINK_INCLUSION: Matches md4c output for inclusion wiki links
+ * [[!target]]
  *   - Capture group 1: Target (without the ! marker)
  *   - Capture group 2: Display text
  */
 constexpr char HTML_HEADING[] = "<(h[1-6])([^>]*)>([^<]+)</\\1>";
 constexpr char HTML_ANCHOR[] = "<a href=\\\"([^\\\"]*)\\\"?>([^<]*)</a>";
 constexpr char HTML_CODE[] = "<code([^>]*)>([^<]*)</code>";
-constexpr char LATEX_DISPLAY_EQUATION[] = "<x-equation type=\\\"display\\\">([^<]*)</x-equation>";
+constexpr char LATEX_DISPLAY_EQUATION[] =
+    "<x-equation type=\\\"display\\\">([^<]*)</x-equation>";
 constexpr char LATEX_INLINE_EQUATION[] = "<x-equation>([^<]*)</x-equation>";
-constexpr char MD4C_WIKILINK[] = "<x-wikilink data-target=\\\"([^\\\"]+)\\\">([^<]+)</x-wikilink>";
-constexpr char MD4C_WIKILINK_INCLUSION[] = "<x-wikilink data-target=\\\"!([^\\\"]+)\\\">([^<]+)</x-wikilink>";
+constexpr char MD4C_WIKILINK[] =
+    "<x-wikilink data-target=\\\"([^\\\"]+)\\\">([^<]+)</x-wikilink>";
+constexpr char MD4C_WIKILINK_INCLUSION[] =
+    "<x-wikilink data-target=\\\"!([^\\\"]+)\\\">([^<]+)</x-wikilink>";
 
 // TOC patterns
-constexpr char TOC_HEADER_TABLE[] = R"((?:^|\n)## Table of Contents\s*\n(?:.*\n)*?(?=\n##|\n#[^#]|$))";
-constexpr char TOC_HEADER_CONTENTS[] = R"((?:^|\n)## Contents\s*\n(?:.*\n)*?(?=\n##|\n#[^#]|$))";
-constexpr char TOC_HTML_COMMENT[] = R"((?:^|\n)<!-- TOC -->.*?<!-- /TOC -->\n?)";
-constexpr char TOC_DETECT_HEADER[] = R"((?:^|\n)##\s+(?:Table of Contents|Contents)\s*\n)";
+constexpr char TOC_HEADER_TABLE[] =
+    R"((?:^|\n)## Table of Contents\s*\n(?:.*\n)*?(?=\n##|\n#[^#]|$))";
+constexpr char TOC_HEADER_CONTENTS[] =
+    R"((?:^|\n)## Contents\s*\n(?:.*\n)*?(?=\n##|\n#[^#]|$))";
+constexpr char TOC_HTML_COMMENT[] =
+    R"((?:^|\n)<!-- TOC -->.*?<!-- /TOC -->\n?)";
+constexpr char TOC_DETECT_HEADER[] =
+    R"((?:^|\n)##\s+(?:Table of Contents|Contents)\s*\n)";
 constexpr char TOC_DETECT_COMMENT[] = R"(<!-- TOC -->)";
 
 }  // namespace RegexPatterns
