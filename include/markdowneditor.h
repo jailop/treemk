@@ -90,6 +90,16 @@ private:
   void hidePrediction();
   void acceptPrediction();
 
+  /**
+   * Using a regular expression to extract the main title from a
+   * markdown file. If a title is not found, if falls back to an
+   * empty string. This function is used when a wik-link is
+   * automatically created based on the file name. The function
+   * tries to create a more user-friendly link label by using the main
+   * title of the markdown file instead of the raw file name.
+   */
+  QString extractMainTitle(const QString &filePath) const;
+
     void updateParentTask(const QTextBlock &block);
     QTextBlock findParentBlock(const QTextBlock &block, int currentIndent);
     void updateTaskState(const QTextBlock &block);
