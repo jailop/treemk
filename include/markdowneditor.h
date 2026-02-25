@@ -1,12 +1,12 @@
 #ifndef MARKDOWNEDITOR_H
 #define MARKDOWNEDITOR_H
 
-#include <QMap>
 #include <QTextEdit>
 
 class QSyntaxHighlighter;
 class LineNumberArea;
 class MarkdownHighlighter;
+class WordPredictor;
 
 class MarkdownEditor : public QTextEdit {
     Q_OBJECT
@@ -81,11 +81,6 @@ class MarkdownEditor : public QTextEdit {
     void setupEditor();
     QString saveImageFromClipboard(const QImage& image);
     void updateWordFrequency();
-    void updateDirectoryWordFrequency();
-    QString predictWord(const QString& prefix) const;
-    QString predictWordUnigram(const QString& prefix) const;
-    QString predictWordBigram(const QString& previousWord,
-                              const QString& prefix) const;
     void showPrediction();
     void hidePrediction();
     void acceptPrediction();
@@ -123,9 +118,7 @@ class MarkdownEditor : public QTextEdit {
     QString m_currentFilePath;
     class QTimer* m_formatTimer;
 
-    // Word prediction
-    QMap<QString, int> m_wordFrequency;                    // Unigram model
-    QMap<QPair<QString, QString>, int> m_bigramFrequency;  // Bigram model
+    WordPredictor* m_wordPredictor;
     QString m_currentPrediction;
     bool m_predictionEnabled;
     bool m_aiAssistEnabled;

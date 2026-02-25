@@ -33,6 +33,7 @@
 #include "defs.h"
 #include "logic/systemprompts.h"
 #include "markdownhighlighter.h"
+#include "wordpredictor.h"
 #include "regexpatterns.h"
 #include "regexutils.h"
 #include "shortcutmanager.h"
@@ -47,6 +48,7 @@ MarkdownEditor::MarkdownEditor(QWidget* parent)
       m_focusModeMaxWidth(900) {
     lineNumberArea = new LineNumberArea(this);
     m_highlighter = new MarkdownHighlighter(document());
+    m_wordPredictor = new WordPredictor();
 
     m_formatTimer = new QTimer(this);
     m_formatTimer->setSingleShot(true);
@@ -87,7 +89,9 @@ MarkdownEditor::MarkdownEditor(QWidget* parent)
     m_aiAssistEnabled = settings.value("ai/enabled", true).toBool();
 }
 
-MarkdownEditor::~MarkdownEditor() {}
+MarkdownEditor::~MarkdownEditor() {
+    delete m_wordPredictor;
+}
 
 void MarkdownEditor::onThemeChanged() {
     if (ThemeManager::instance()) {
@@ -272,152 +276,14 @@ void MarkdownEditor::mouseMoveEvent(QMouseEvent* event) {
 }
 
 void MarkdownEditor::updateWordFrequency() {
-    m_wordFrequency.clear();
-    m_bigramFrequency.clear();
-
     QString text = toPlainText();
-    QRegularExpression wordRegex(RegexPatterns::WORD_BOUNDARY);
-    QRegularExpressionMatchIterator it = wordRegex.globalMatch(text);
-
-    QStringList words;
-    while (it.hasNext()) {
-        QRegularExpressionMatch match = it.next();
-        QString word = match.captured(0).toLower();
-        words.append(word);
-        m_wordFrequency[word]++;
-    }
-
-    for (int i = 0; i < words.size() - 1; i++) {
-        QPair<QString, QString> bigram(words[i], words[i + 1]);
-        m_bigramFrequency[bigram]++;
-    }
-
-    updateDirectoryWordFrequency();
-}
-
-void MarkdownEditor::updateDirectoryWordFrequency() {
-    if (m_currentFilePath.isEmpty()) {
-        return;
-    }
-
-    QFileInfo fileInfo(m_currentFilePath);
-    QDir dir = fileInfo.absoluteDir();
+    m_wordPredictor->updateFromText(text);
     
-    QStringList filters;
-    filters << "*.md" << "*.markdown";
-    QFileInfoList files = dir.entryInfoList(filters, QDir::Files);
-
-    QRegularExpression wordRegex(RegexPatterns::WORD_BOUNDARY);
-
-    for (const QFileInfo& file : files) {
-        if (file.absoluteFilePath() == m_currentFilePath) {
-            continue;
-        }
-
-        QFile f(file.absoluteFilePath());
-        if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) {
-            continue;
-        }
-
-        QString content = QString::fromUtf8(f.readAll());
-        f.close();
-
-        QRegularExpressionMatchIterator it = wordRegex.globalMatch(content);
-        QStringList words;
-        
-        while (it.hasNext()) {
-            QRegularExpressionMatch match = it.next();
-            QString word = match.captured(0).toLower();
-            words.append(word);
-            m_wordFrequency[word]++;
-        }
-
-        for (int i = 0; i < words.size() - 1; i++) {
-            QPair<QString, QString> bigram(words[i], words[i + 1]);
-            m_bigramFrequency[bigram]++;
-        }
+    if (!m_currentFilePath.isEmpty()) {
+        QFileInfo fileInfo(m_currentFilePath);
+        m_wordPredictor->updateFromDirectory(fileInfo.absolutePath(), 
+                                             m_currentFilePath);
     }
-}
-
-QString MarkdownEditor::predictWordUnigram(const QString& prefix) const {
-    if (prefix.length() < 2) {
-        return QString();
-    }
-
-    QString bestMatch;
-    int maxFrequency = 0;
-
-    for (auto it = m_wordFrequency.constBegin();
-         it != m_wordFrequency.constEnd(); ++it) {
-        const QString& word = it.key();
-        if (word.startsWith(prefix, Qt::CaseInsensitive) &&
-            word.length() > prefix.length()) {
-            if (it.value() > maxFrequency) {
-                maxFrequency = it.value();
-                bestMatch = word;
-            }
-        }
-    }
-
-    return bestMatch;
-}
-
-QString MarkdownEditor::predictWordBigram(const QString& previousWord,
-                                          const QString& prefix) const {
-    if (previousWord.isEmpty() || prefix.length() < 1) {
-        return QString();
-    }
-
-    QString prevLower = previousWord.toLower();
-    QString prefixLower = prefix.toLower();
-
-    QString bestMatch;
-    int maxFrequency = 0;
-
-    for (auto it = m_bigramFrequency.constBegin();
-         it != m_bigramFrequency.constEnd(); ++it) {
-        const QPair<QString, QString>& bigram = it.key();
-
-        if (bigram.first == prevLower &&
-            bigram.second.startsWith(prefixLower) &&
-            bigram.second.length() > prefixLower.length()) {
-            if (it.value() > maxFrequency) {
-                maxFrequency = it.value();
-                bestMatch = bigram.second;
-            }
-        }
-    }
-
-    return bestMatch;
-}
-
-QString MarkdownEditor::predictWord(const QString& prefix) const {
-    if (prefix.length() < 1) {
-        return QString();
-    }
-
-    QTextCursor cursor = textCursor();
-    cursor.movePosition(QTextCursor::StartOfWord, QTextCursor::MoveAnchor);
-    cursor.movePosition(QTextCursor::PreviousWord, QTextCursor::MoveAnchor);
-    cursor.movePosition(QTextCursor::EndOfWord, QTextCursor::KeepAnchor);
-    QString previousWord = cursor.selectedText();
-
-    QString bigramPrediction = predictWordBigram(previousWord, prefix);
-
-    QString unigramPrediction = predictWordUnigram(prefix);
-
-    if (!bigramPrediction.isEmpty()) {
-        QString prevLower = previousWord.toLower();
-        QPair<QString, QString> bigram(prevLower, bigramPrediction.toLower());
-        int bigramFreq = m_bigramFrequency.value(bigram, 0);
-        int unigramFreq = m_wordFrequency.value(unigramPrediction.toLower(), 0);
-
-        if (bigramFreq * 2 >= unigramFreq || unigramPrediction.isEmpty()) {
-            return bigramPrediction;
-        }
-    }
-
-    return unigramPrediction;
 }
 
 void MarkdownEditor::showPrediction() {
@@ -442,7 +308,13 @@ void MarkdownEditor::showPrediction() {
     QString currentWord = cursor.selectedText();
 
     if (currentWord.length() >= 1) {
-        QString prediction = predictWord(currentWord);
+        QTextCursor prevCursor = textCursor();
+        prevCursor.movePosition(QTextCursor::StartOfWord, QTextCursor::MoveAnchor);
+        prevCursor.movePosition(QTextCursor::PreviousWord, QTextCursor::MoveAnchor);
+        prevCursor.movePosition(QTextCursor::EndOfWord, QTextCursor::KeepAnchor);
+        QString previousWord = prevCursor.selectedText();
+        
+        QString prediction = m_wordPredictor->predict(currentWord, previousWord);
         if (!prediction.isEmpty() &&
             prediction.toLower() != currentWord.toLower()) {
             m_currentPrediction = prediction.mid(currentWord.length());
