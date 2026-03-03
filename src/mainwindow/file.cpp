@@ -321,7 +321,7 @@ bool MainWindow::maybeSave() {
     return true;
 }
 
-bool MainWindow::loadFile(const QString& filePath) {
+bool MainWindow::loadFile(const QString& filePath, bool forceNewTab) {
     TabEditor* tab = findTabByPath(filePath);
     if (tab) {
         int index = tabWidget->indexOf(tab);
@@ -338,7 +338,16 @@ bool MainWindow::loadFile(const QString& filePath) {
     }
 
     if (!tab) {
-        tab = createNewTab();
+        if (forceNewTab) {
+            tab = createNewTab();
+        } else {
+            TabEditor* currentTab = currentTabEditor();
+            if (currentTab && !currentTab->isModified()) {
+                tab = currentTab;
+            } else {
+                tab = createNewTab();
+            }
+        }
     }
 
     if (tab->loadFile(filePath)) {
@@ -388,4 +397,13 @@ void MainWindow::print() {
 
     sharedPreview->page()->runJavaScript("window.print();");
     statusBar()->showMessage(tr("Opening print dialog..."), 2000);
+}
+
+void MainWindow::openInNewTab() {
+    if (treeView) {
+        QString selectedPath = treeView->currentFilePath();
+        if (!selectedPath.isEmpty()) {
+            loadFile(selectedPath, true);
+        }
+    }
 }

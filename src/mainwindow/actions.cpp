@@ -319,6 +319,12 @@ void MainWindow::createActions() {
     connect(closeAllTabsAction, &QAction::triggered, this,
             &MainWindow::closeAllTabs);
 
+    openInNewTabAction = createAction(
+        this, tr("Open in &New Tab"), tr("Open selected file in a new tab"));
+    openInNewTabAction->setShortcut(QKeySequence(tr("Ctrl+Shift+O")));
+    connect(openInNewTabAction, &QAction::triggered, this,
+            &MainWindow::openInNewTab);
+
     exitAction = createAction(this, tr("E&xit"), tr("Exit the application"));
     exitAction->setShortcuts(QKeySequence::Quit);
     connect(exitAction, &QAction::triggered, this, &QWidget::close);

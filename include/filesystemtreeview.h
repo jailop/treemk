@@ -42,6 +42,7 @@ class FileSystemTreeView : public QTreeView {
    signals:
     void fileSelected(const QString& filePath);
     void fileDoubleClicked(const QString& filePath);
+    void fileOpenInNewTabRequested(const QString& filePath);
     void fileModifiedExternally(const QString& filePath);
     void folderChanged(const QString& folderPath);
     void openInNewWindowRequested(const QString& path);
@@ -69,6 +70,7 @@ class FileSystemTreeView : public QTreeView {
     void setAsCurrentFolder();
     void goToParentFolder();
     void openInNewWindow();
+    void openInNewTab();
     void openFile();
     void openFileWith();
     void openInFileExplorer();
@@ -99,6 +101,7 @@ class FileSystemTreeView : public QTreeView {
     QAction* setCurrentFolderAction;
     QAction* goToParentAction;
     QAction* openInNewWindowAction;
+    QAction* openInNewTabAction;
     QAction* openAction;
     QAction* openWithAction;
     QAction* openInFileExplorerAction;

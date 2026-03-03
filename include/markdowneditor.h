@@ -46,6 +46,7 @@ class MarkdownEditor : public QTextEdit {
    signals:
     void wikiLinkClicked(const QString& linkTarget);
     void markdownLinkClicked(const QString& linkTarget);
+    void openLinkInNewTabRequested(const QString& linkTarget);
     void openLinkInNewWindowRequested(const QString& linkTarget);
     void aiAssistRequested();
     void aiAssistWithPromptRequested(const QString& promptText);

@@ -123,6 +123,9 @@ void FileSystemTreeView::createContextMenu() {
     openInNewWindowAction = new QAction(tr("Open in New Window"), this);
     connect(openInNewWindowAction, &QAction::triggered, this,
             &FileSystemTreeView::openInNewWindow);
+    openInNewTabAction = new QAction(tr("Open in New Tab"), this);
+    connect(openInNewTabAction, &QAction::triggered, this,
+            &FileSystemTreeView::openInNewTab);
     openAction = new QAction(tr("Open"), this);
     connect(openAction, &QAction::triggered, this,
             &FileSystemTreeView::openFile);
@@ -160,6 +163,7 @@ void FileSystemTreeView::createContextMenu() {
     if (openWithAction) {
         contextMenu->addAction(openWithAction);
     }
+    contextMenu->addAction(openInNewTabAction);
     contextMenu->addAction(openInNewWindowAction);
     contextMenu->addAction(openInFileExplorerAction);
     contextMenu->addSeparator();
@@ -300,7 +304,16 @@ void FileSystemTreeView::mouseDoubleClickEvent(QMouseEvent* event) {
             (suffix == "md" || suffix == "markdown" || suffix == "txt");
 
         if (isMarkdownFile) {
-            emit fileDoubleClicked(filePath);
+            bool ctrlPressed = (event->modifiers() & Qt::ControlModifier);
+            bool shiftPressed = (event->modifiers() & Qt::ShiftModifier);
+
+            if (ctrlPressed && shiftPressed) {
+                emit openInNewWindowRequested(filePath);
+            } else if (ctrlPressed) {
+                emit fileOpenInNewTabRequested(filePath);
+            } else {
+                emit fileDoubleClicked(filePath);
+            }
         } else {
             QDesktopServices::openUrl(QUrl::fromLocalFile(filePath));
         }
@@ -386,6 +399,9 @@ void FileSystemTreeView::contextMenuEvent(QContextMenuEvent* event) {
 
     // Open in new window - for md/txt files and directories
     openInNewWindowAction->setEnabled(hasSelection && (isMarkdownFile || isDirectory));
+
+    // Open in new tab - only for markdown files
+    openInNewTabAction->setEnabled(hasSelection && isMarkdownFile);
 
     // Folder navigation actions - only for directories
     setCurrentFolderAction->setEnabled(hasSelection && isDirectory);
@@ -713,6 +729,21 @@ void FileSystemTreeView::openInNewWindow() {
     QModelIndex sourceIndex = proxyModel->mapToSource(index);
     QString path = fileSystemModel->filePath(sourceIndex);
     emit openInNewWindowRequested(path);
+}
+
+void FileSystemTreeView::openInNewTab() {
+    QModelIndex index = currentIndex();
+    if (!index.isValid()) {
+        return;
+    }
+
+    QModelIndex sourceIndex = proxyModel->mapToSource(index);
+    QString filePath = fileSystemModel->filePath(sourceIndex);
+    QFileInfo fileInfo(filePath);
+
+    if (fileInfo.isFile()) {
+        emit fileOpenInNewTabRequested(filePath);
+    }
 }
 
 void FileSystemTreeView::openFile() {

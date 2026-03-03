@@ -47,7 +47,8 @@ class ShortcutManager : public QObject {
         SwitchToNextTab,
         SwitchToPreviousTab,
         CloseCurrentTab,
-        CloseAllTabs
+        CloseAllTabs,
+        OpenInNewTab
     };
     Q_ENUM(Action)
 

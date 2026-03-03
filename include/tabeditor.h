@@ -41,6 +41,7 @@ class TabEditor : public QWidget {
     void documentModified();
     void wikiLinkClicked(const QString& linkTarget);
     void markdownLinkClicked(const QString& linkTarget);
+    void openLinkInNewTabRequested(const QString& linkTarget);
     void openLinkInNewWindowRequested(const QString& linkTarget);
     void internalLinkClicked(const QString& anchor);
     void aiAssistRequested();

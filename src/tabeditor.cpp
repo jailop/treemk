@@ -46,6 +46,8 @@ void TabEditor::setupUI() {
             &TabEditor::wikiLinkClicked);
     connect(m_editor, &MarkdownEditor::markdownLinkClicked, this,
             &TabEditor::markdownLinkClicked);
+    connect(m_editor, &MarkdownEditor::openLinkInNewTabRequested, this,
+            &TabEditor::openLinkInNewTabRequested);
     connect(m_editor, &MarkdownEditor::openLinkInNewWindowRequested, this,
             &TabEditor::openLinkInNewWindowRequested);
     connect(m_editor, &MarkdownEditor::aiAssistRequested, this,

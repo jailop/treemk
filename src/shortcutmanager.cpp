@@ -176,6 +176,11 @@ void ShortcutManager::initializeDefaults() {
     m_actionNames[SwitchToPreviousTab] = "SwitchToPreviousTab";
     m_actionDescriptions[SwitchToPreviousTab] = tr("Switch to Previous Tab");
     m_actionCategories[SwitchToPreviousTab] = tr("Tabs");
+
+    m_shortcuts[OpenInNewTab] = QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_O);
+    m_actionNames[OpenInNewTab] = "OpenInNewTab";
+    m_actionDescriptions[OpenInNewTab] = tr("Open in New Tab");
+    m_actionCategories[OpenInNewTab] = tr("Tabs");
 }
 
 QKeySequence ShortcutManager::getShortcut(Action action) const {

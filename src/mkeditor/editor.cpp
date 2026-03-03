@@ -144,16 +144,26 @@ void MarkdownEditor::mousePressEvent(QMouseEvent* event) {
         }
 
         if (event->modifiers() & Qt::ControlModifier) {
+            bool shiftPressed = event->modifiers() & Qt::ShiftModifier;
+
             QString linkTarget = getLinkAtPosition(position);
             if (!linkTarget.isEmpty()) {
-                emit wikiLinkClicked(linkTarget);
+                if (shiftPressed) {
+                    emit openLinkInNewTabRequested("wiki:" + linkTarget);
+                } else {
+                    emit wikiLinkClicked(linkTarget);
+                }
                 event->accept();
                 return;
             }
 
             QString markdownLink = getMarkdownLinkAtPosition(position);
             if (!markdownLink.isEmpty()) {
-                emit markdownLinkClicked(markdownLink);
+                if (shiftPressed) {
+                    emit openLinkInNewTabRequested("markdown:" + markdownLink);
+                } else {
+                    emit markdownLinkClicked(markdownLink);
+                }
                 event->accept();
                 return;
             }
@@ -316,6 +326,19 @@ void MarkdownEditor::contextMenuEvent(QContextMenuEvent* event) {
         bool isLocalFile = fileInfo.exists() && fileInfo.isFile();
 
         menu->addSeparator();
+
+        QAction* openNewTabAction =
+            menu->addAction(tr("Open Link in New Tab"));
+        connect(openNewTabAction, &QAction::triggered, this,
+                [this, linkTarget]() {
+                    QString wikiLink = getLinkAtPosition(
+                        cursorForPosition(QCursor::pos()).position());
+                    if (!wikiLink.isEmpty()) {
+                        emit openLinkInNewTabRequested("wiki:" + linkTarget);
+                    } else {
+                        emit openLinkInNewTabRequested("markdown:" + linkTarget);
+                    }
+                });
 
         QAction* openNewWindowAction =
             menu->addAction(tr("Open Link in New Window"));

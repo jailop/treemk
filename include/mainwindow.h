@@ -69,11 +69,9 @@ class MainWindow : public QMainWindow {
     void find();
     void findAndReplace();
     void updatePreview();
-    // void setPreviewThemeLight();
-    // void setPreviewThemeDark();
-    // void setPreviewThemeSepia();
     void onWikiLinkClicked(const QString& linkTarget);
     void onMarkdownLinkClicked(const QString& linkTarget);
+    void onOpenLinkInNewTab(const QString& linkTarget);
     void onOpenLinkInNewWindow(const QString& linkTarget);
     void onInternalLinkClicked(const QString& anchor);
     void updateBacklinks();
@@ -106,6 +104,7 @@ class MainWindow : public QMainWindow {
     void switchToPreviousTab();
     void closeCurrentTab();
     void closeAllTabs();
+    void openInNewTab();
     void exportToHtml();
     void exportToPdf();
     void exportToDocx();
@@ -140,7 +139,7 @@ class MainWindow : public QMainWindow {
     void populateRecentFoldersMenu();
     bool maybeSave();
     bool saveFile(const QString& filePath);
-    bool loadFile(const QString& filePath);
+    bool loadFile(const QString& filePath, bool forceNewTab = false);
     void applyViewMode(ViewMode mode, bool showStatusMessage = true);
     void closeTabsFromOtherFolders();
 
@@ -210,6 +209,7 @@ class MainWindow : public QMainWindow {
     QAction* previousTabAction;
     QAction* closeTabAction;
     QAction* closeAllTabsAction;
+    QAction* openInNewTabAction;
     QAction* toggleSidebarAction;
     QAction* togglePreviewAction;
     QAction* cycleViewModeAction;

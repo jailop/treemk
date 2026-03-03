@@ -56,6 +56,8 @@ TabEditor* MainWindow::createNewTab() {
             &MainWindow::onWikiLinkClicked);
     connect(tab->editor(), &MarkdownEditor::markdownLinkClicked, this,
             &MainWindow::onMarkdownLinkClicked);
+    connect(tab->editor(), &MarkdownEditor::openLinkInNewTabRequested, this,
+            &MainWindow::onOpenLinkInNewTab);
     connect(tab->editor(), &MarkdownEditor::openLinkInNewWindowRequested, this,
             &MainWindow::onOpenLinkInNewWindow);
     connect(tab->editor(), &MarkdownEditor::aiAssistRequested, this,

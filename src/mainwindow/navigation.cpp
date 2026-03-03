@@ -5,6 +5,7 @@
 #include <QListWidget>
 #include <QLineEdit>
 #include <QProcess>
+#include <QSet>
 #include <QUrl>
 
 #include "defs.h"
@@ -63,9 +64,14 @@ void MainWindow::filterHistoryList() {
     historyView->clear();
 
     QVector<QString> history = tab->navigationHistory()->getHistory();
+    QSet<QString> addedFiles;
 
     for (int i = history.size() - 1; i >= 0; --i) {
         const QString& filePath = history[i];
+
+        if (addedFiles.contains(filePath)) {
+            continue;
+        }
 
         if (!filterText.isEmpty() &&
             !filePath.toLower().contains(filterText)) {
@@ -86,5 +92,7 @@ void MainWindow::filterHistoryList() {
         item->setData(Qt::UserRole, filePath);
         item->setToolTip(filePath);
         historyView->addItem(item);
+
+        addedFiles.insert(filePath);
     }
 }

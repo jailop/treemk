@@ -169,6 +169,8 @@ void MainWindow::createMenus() {
     goMenu->addSeparator();
     goMenu->addAction(quickOpenAction);
     goMenu->addSeparator();
+    goMenu->addAction(openInNewTabAction);
+    goMenu->addSeparator();
     goMenu->addAction(nextTabAction);
     goMenu->addAction(previousTabAction);
     goMenu->addAction(closeTabAction);
@@ -254,6 +256,8 @@ void MainWindow::createLayout() {
             &MainWindow::onFileSelected);
     connect(treeView, &FileSystemTreeView::fileDoubleClicked, this,
             &MainWindow::onFileDoubleClicked);
+    connect(treeView, &FileSystemTreeView::fileOpenInNewTabRequested, this,
+            [this](const QString& filePath) { loadFile(filePath, true); });
     connect(treeView, &FileSystemTreeView::fileModifiedExternally, this,
             &MainWindow::onFileModifiedExternally);
     connect(treeView, &FileSystemTreeView::folderChanged, this,
