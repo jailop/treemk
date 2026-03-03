@@ -665,6 +665,11 @@ void MarkdownEditor::setCurrentFilePath(const QString& filePath) {
 }
 
 void MarkdownEditor::insertFromMimeData(const QMimeData* source) {
+    // Safety check
+    if (!source) {
+        return;
+    }
+    
     if (source->hasImage()) {
         QImage image = qvariant_cast<QImage>(source->imageData());
         if (!image.isNull()) {
@@ -677,13 +682,30 @@ void MarkdownEditor::insertFromMimeData(const QMimeData* source) {
         }
     }
 
-    if (source->hasText()) {
-        QTextCursor cursor = textCursor();
-        cursor.insertText(source->text());
-        return;
+    // For large text pastes, temporarily disable highlighter and signals
+    // to prevent performance issues and crashes
+    bool highlighterWasEnabled = false;
+    if (m_highlighter) {
+        highlighterWasEnabled = true;
+        m_highlighter->setDocument(nullptr);  // Detach highlighter
     }
-
+    
+    // Block signals to prevent onTextChanged from firing repeatedly
+    blockSignals(true);
+    
+    // Paste text
     QTextEdit::insertFromMimeData(source);
+    
+    // Re-enable signals
+    blockSignals(false);
+    
+    // Re-attach highlighter and force full rehighlight
+    if (highlighterWasEnabled && m_highlighter) {
+        m_highlighter->setDocument(document());
+    }
+    
+    // Manually emit textChanged once
+    emit textChanged();
 }
 
 void MarkdownEditor::jumpToHeading(const QString& anchor) {
