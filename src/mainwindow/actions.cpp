@@ -439,6 +439,15 @@ void MainWindow::createActions() {
     connect(toggleSidebarAction, &QAction::triggered, this,
             &MainWindow::toggleSidebar);
 
+    toggleEditorAction = createAction(
+        this, iconWithFallback("document-edit", QStyle::SP_FileDialogContentsView),
+        tr("&Editor"), tr("Toggle editor panel"));
+    toggleEditorAction->setCheckable(true);
+    toggleEditorAction->setChecked(true);
+    toggleEditorAction->setShortcut(QKeySequence(tr("Ctrl+E")));
+    connect(toggleEditorAction, &QAction::triggered, this,
+            &MainWindow::toggleEditor);
+
     togglePreviewAction = createAction(
         this, iconWithFallback("document-preview", QStyle::SP_FileDialogContentsView),
         tr("&Preview"), tr("Toggle preview panel"));
@@ -447,16 +456,6 @@ void MainWindow::createActions() {
     togglePreviewAction->setShortcut(QKeySequence(tr("Ctrl+P")));
     connect(togglePreviewAction, &QAction::triggered, this,
             &MainWindow::togglePreview);
-
-    cycleViewModeAction = createAction(
-        this, iconWithFallback("view-split-left-right",
-                             QStyle::SP_FileDialogContentsView),
-        tr("Cycle View Mode (Next: Editor Only)"),
-        tr("Cycle between Editor+Preview / Editor Only / Preview Only"),
-        tr("Cycle view mode (Ctrl+Shift+P)"));
-    cycleViewModeAction->setShortcut(QKeySequence(tr("Ctrl+Shift+P")));
-    connect(cycleViewModeAction, &QAction::triggered, this,
-            &MainWindow::cycleViewMode);
 
     toggleFocusModeAction = createAction(
         this,

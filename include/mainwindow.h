@@ -4,12 +4,6 @@
 #include <QMainWindow>
 #include <QSettings>
 
-enum ViewMode {
-    ViewMode_Both,        // Editor + Preview visible (default)
-    ViewMode_EditorOnly,  // Only Editor visible
-    ViewMode_PreviewOnly  // Only Preview visible
-};
-
 class QAction;
 class QMenu;
 class QSplitter;
@@ -56,8 +50,8 @@ class MainWindow : public QMainWindow {
     void about();
     void showUserGuide();
     void toggleSidebar();
+    void toggleEditor();
     void togglePreview();
-    void cycleViewMode();
     void onFileSelected(const QString& filePath);
     void onFileDoubleClicked(const QString& filePath);
     void onFileModifiedExternally(const QString& filePath);
@@ -140,7 +134,6 @@ class MainWindow : public QMainWindow {
     bool maybeSave();
     bool saveFile(const QString& filePath);
     bool loadFile(const QString& filePath, bool forceNewTab = false);
-    void applyViewMode(ViewMode mode, bool showStatusMessage = true);
     void closeTabsFromOtherFolders();
 
     TabEditor* currentTabEditor() const;
@@ -211,14 +204,8 @@ class MainWindow : public QMainWindow {
     QAction* closeAllTabsAction;
     QAction* openInNewTabAction;
     QAction* toggleSidebarAction;
+    QAction* toggleEditorAction;
     QAction* togglePreviewAction;
-    QAction* cycleViewModeAction;
-    /* TODO to be removed. theme is general for all the app, not just
-     * preview.
-    QAction* previewThemeLightAction;
-    QAction* previewThemeDarkAction;
-    QAction* previewThemeSepiaAction;
-    */
     QAction* settingsAction;
     QAction* userGuideAction;
     QAction* aboutAction;
@@ -240,6 +227,7 @@ class MainWindow : public QMainWindow {
     QWidget* editorPanel;
     QTabWidget* tabWidget;
     MarkdownPreview* sharedPreview;
+    QSplitter* editorPreviewSplitter;
     QWidget* backlinksPanel;
     QWidget* historyPanel;
 
@@ -260,9 +248,9 @@ class MainWindow : public QMainWindow {
     QString m_startupFile;
 
     QSettings* settings;
-    ViewMode currentViewMode;
     bool focusModeActive;
-    ViewMode preFocusModeViewMode;
+    bool preFocusModeEditorVisible;
+    bool preFocusModePreviewVisible;
     bool preFocusModeSidebarVisible;
 };
 

@@ -69,19 +69,16 @@ MainWindow::MainWindow(QWidget* parent)
       closeTabAction(nullptr),
       closeAllTabsAction(nullptr),
       toggleSidebarAction(nullptr),
+      toggleEditorAction(nullptr),
       togglePreviewAction(nullptr),
-      cycleViewModeAction(nullptr),
-      // previewThemeLightAction(nullptr),
-      // previewThemeDarkAction(nullptr),
-      // previewThemeSepiaAction(nullptr),
       settingsAction(nullptr),
       userGuideAction(nullptr),
       aboutAction(nullptr),
       aboutQtAction(nullptr),
       keyboardShortcutsAction(nullptr),
-      currentViewMode(ViewMode_Both),
       focusModeActive(false),
-      preFocusModeViewMode(ViewMode_Both),
+      preFocusModeEditorVisible(true),
+      preFocusModePreviewVisible(true),
       preFocusModeSidebarVisible(true) {
     settings = new QSettings(APP_LABEL, APP_LABEL, this);
     linkParser = new LinkParser(this);

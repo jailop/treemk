@@ -49,6 +49,7 @@ class TabEditor : public QWidget {
    public slots:
     void updatePreview();
     void onEditorScrolled();
+    void setEditorScrollFromPreview(double percentage);
 
    private slots:
     void onDocumentModified();
@@ -63,6 +64,7 @@ class TabEditor : public QWidget {
     bool m_isModified;
     bool m_ownSaved;
     double m_lastScrollPercentage;
+    bool m_isScrollingFromPreview;
 };
 
 #endif  // TABEDITOR_H

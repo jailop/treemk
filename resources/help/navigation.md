@@ -180,16 +180,28 @@ TreeMk tracks your navigation history, allowing you to move backward and forward
 The **History** tab in the left sidebar shows your complete navigation history:
 
 - Most recent files appear at the top
+- **Per-tab history**: Each tab maintains its own independent history
 - Double-click any file to jump directly to it
+- No duplicate entries - shows only unique files you've visited
 - History persists across sessions
-- Maximum of 2048 entries (oldest are automatically removed)
+- Maximum of 2048 entries per tab (oldest are automatically removed)
+
+### Per-Tab History
+
+Each editor tab has its own independent navigation history:
+
+- When you switch tabs, the History panel shows that tab's history
+- Navigate back/forward within the current tab's history
+- History filters automatically remove duplicates for cleaner display
+- Create different navigation contexts for different tasks
 
 ### How History Works
 
-- Each time you open a file, it's added to your history
+- Each time you open a file in a tab, it's added to that tab's history
 - Navigate back and forward without re-adding to history
 - Opening a new file while in the middle of history clears forward entries
-- Prevents duplicate consecutive entries for cleaner history
+- No duplicate consecutive entries for cleaner history
+- History panel shows unique files only (most recent occurrence)
 
 ### Use Cases
 
@@ -280,6 +292,36 @@ These options are also available in the main menu under option `Go`
 - Session restoration on restart
 - Close tabs from other folders when switching workspaces
 - Drag tabs to reorder
+
+### Opening Files in New Tabs
+
+TreeMk intelligently manages tabs to reduce clutter while giving you control:
+
+**Default Behavior (Current Tab):**
+- Clicking wiki-links reuses the current tab if unmodified
+- Opening files from the file tree reuses unmodified tabs
+- Following backlinks reuses the current tab
+- This prevents tab proliferation when exploring links
+
+**Opening in New Tab Explicitly:**
+- **Ctrl+Shift+O**: Open selected file in new tab (from file tree or menu)
+- **Ctrl+Double-click**: Open file in new tab (file tree)
+- **Ctrl+Shift+Click**: Open link in new tab (on wiki-links and markdown links)
+- **Right-click → Open in New Tab**: Context menu option (file tree)
+- **Right-click on link → Open Link in New Tab**: Context menu in editor
+
+**Smart Tab Reuse:**
+- Modified tabs are never replaced without confirmation
+- Empty startup tabs are reused automatically
+- At least one tab always remains open
+
+This browser-like behavior keeps your workspace clean while giving you explicit control when you need multiple tabs.
+
+### Opening in New Windows
+
+For multi-monitor workflows:
+- **Ctrl+Shift+Double-click**: Open in new window (file tree)
+- **Right-click → Open in New Window**: Context menu option
 
 ## Recent Folders
 

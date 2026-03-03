@@ -21,7 +21,8 @@ TabEditor::TabEditor(QWidget* parent)
       m_navigationHistory(nullptr),
       m_isModified(false),
       m_ownSaved(false),
-      m_lastScrollPercentage(0.0) {
+      m_lastScrollPercentage(0.0),
+      m_isScrollingFromPreview(false) {
     m_navigationHistory = new NavigationHistory(this);
     setupUI();
 }
@@ -167,6 +168,10 @@ void TabEditor::updatePreview() {
 }
 
 void TabEditor::onEditorScrolled() {
+    if (m_isScrollingFromPreview) {
+        return;  // Prevent feedback loop
+    }
+    
     QScrollBar* scrollBar = m_editor->verticalScrollBar();
     int maximum = scrollBar->maximum();
     if (maximum > 0) {
@@ -177,4 +182,15 @@ void TabEditor::onEditorScrolled() {
             m_sharedPreview->scrollToPercentage(m_lastScrollPercentage);
         }
     }
+}
+
+void TabEditor::setEditorScrollFromPreview(double percentage) {
+    m_isScrollingFromPreview = true;
+    m_lastScrollPercentage = percentage;
+    
+    QScrollBar* scrollBar = m_editor->verticalScrollBar();
+    int targetValue = static_cast<int>(percentage * scrollBar->maximum());
+    scrollBar->setValue(targetValue);
+    
+    QTimer::singleShot(300, this, [this]() { m_isScrollingFromPreview = false; });
 }

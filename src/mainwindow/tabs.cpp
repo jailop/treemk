@@ -119,8 +119,6 @@ TabEditor* MainWindow::createNewTab() {
         outlineView->updateOutline(tab->editor()->toPlainText());
     }
 
-    applyViewMode(currentViewMode, false);
-
     return tab;
 }
 
@@ -187,8 +185,6 @@ void MainWindow::onTabChanged(int index) {
             setWindowTitle(APP_LABEL);
             statusBar()->clearMessage();
         }
-
-        applyViewMode(currentViewMode, false);
 
         if (focusModeActive && editor) {
             sharedPreview->hide();

@@ -14,7 +14,7 @@ Open a new file with **Ctrl+N**, and it appears as a new tab alongside your curr
 
 TreeMk pays attention to what you're doing and helps you maintain consistency. When you press Enter at the end of an indented line, the next line starts at the same indentation level. No need to manually align your text—the editor remembers where you are.
 
-Type an opening parenthesis `(`, bracket `[`, brace `{`, or backtick `` ` ``, and TreeMk immediately adds the closing character, placing your cursor between them. It's a small thing, but when you're typing mathematical expressions like `(a + b) * (c + d)` or code snippets with multiple `[[nested]]` structures, these micro-optimizations add up.
+Type an opening parenthesis `(`, bracket `[`, brace `{`, or backtick, and TreeMk immediately adds the closing character, placing your cursor between them. It's a small thing, but when you're typing mathematical expressions like `(a + b) * (c + d)` or code snippets with multiple `[[nested]]` structures, these micro-optimizations add up.
 
 ### Lists That Write Themselves
 
@@ -68,15 +68,9 @@ Need to write an equation? Press **Ctrl+Shift+M** to open the formula dialog. Yo
 
 ### Including External Files
 
-Here's where things get interesting. Imagine you're writing documentation and want to include an actual source code file, not just a copy that could get out of date. In a code block, type `[[!filename]]` where `filename` is your source file:
+Here's where things get interesting. Imagine you're writing documentation and want to include an actual source code file, not just a copy that could get out of date. In a code block, type `[[!filename]]` where `filename` is your source file.
 
-````markdown
-```python
-[[!calculate.py]]
-```
-````
-
-When the preview renders, TreeMk reads `calculate.py` and displays its contents right there in your code block. Update the source file, and the preview updates automatically. This works with any text file—Python scripts, configuration files, snippets of prose—anything you want to include dynamically.
+When the preview renders, TreeMk reads the file and displays its contents right there in your code block. Update the source file, and the preview updates automatically. This works with any text file—Python scripts, configuration files, snippets of prose—anything you want to include dynamically.
 
 You can also use `[[!filename]]` outside of code blocks to embed entire Markdown documents. Perfect for reusable snippets, shared sections, or modular documentation. Use `[[!snippet|Custom Title]]` if you want to override the display title.
 
@@ -108,6 +102,7 @@ Press **Ctrl+F** to search within the current document. A search bar appears at 
 Press **Ctrl+H** to open find-and-replace. Same options as Quick Find, plus:
 
 **Replace Options:**
+
 - **Replace** - Replace current match
 - **Replace All** - Replace every match in document
 - **Preview** - See what will change before committing
@@ -136,6 +131,7 @@ Need to find something across all your notes? Press **Ctrl+Shift+F**.
 The editor adapts to your preferences. Open **Edit → Preferences** to customize fonts, tab widths, and colors. Toggle auto-indent, auto-close brackets, or word prediction based on how you like to work. 
 
 **Line Breaking:** If you prefer lines to break at a specific column (like 80 characters for email-style text), go to **Edit → Preferences → Editor** and:
+
 1. Enable **Line Breaking**
 2. Set **Line Break Column** to your preferred width (60-120 characters)
 3. Press **Ctrl+Shift+B** to break long lines at word boundaries
@@ -143,6 +139,24 @@ The editor adapts to your preferences. Open **Edit → Preferences** to customiz
 Want TreeMk to remember your work session? Enable **Settings → General → Restore session on startup**, and next time you launch TreeMk, all your tabs, cursor positions, and window layout return exactly as you left them.
 
 Enable **Settings → General → Auto-save** to automatically save your work every minute (or whatever interval you prefer). Never lose a thought to an unexpected interruption.
+
+## View Modes: Customize Your Workspace
+
+TreeMk gives you flexible control over your workspace layout. You can show or hide the editor and preview panels independently to match your current task.
+
+### Toggle Editor Panel (Ctrl+E)
+
+- Hide the editor to see the preview in full width
+- Perfect for reading rendered documents
+- Menu: **View → Toggle Editor**
+- Toolbar: Editor button (document icon)
+
+### Toggle Preview Panel (Ctrl+P)
+
+- Hide the preview to see the editor in full width
+- Ideal for focused writing without distractions
+- Menu: **View → Toggle Preview**
+- Toolbar: Preview button (eye icon)
 
 ## Focus Mode: Writing Without Distractions
 
@@ -159,7 +173,7 @@ In Focus Mode, TreeMk centers your text with a maximum width of 900 pixels, no m
 - Text centered with comfortable max-width
 - Status bar briefly shows "Focus Mode: ON (F11 to exit)" then disappears
 
-Press **F11** again to exit Focus Mode. Everything returns to exactly how it was—your sidebar visibility, view mode, all restored. You can also access Focus Mode through **View → Focus Mode** in the menu.
+Press **F11** again to exit Focus Mode. Everything returns to exactly how it was—your sidebar visibility, panel visibility, all restored. You can also access Focus Mode through **View → Focus Mode** in the menu.
 
 **When to use it:** First drafts. Flow states. Timed writing sessions. Late-night journal entries. Anytime you want nothing between you and your writing.
 

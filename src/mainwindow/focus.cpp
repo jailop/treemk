@@ -16,8 +16,12 @@ void MainWindow::toggleFocusMode() {
     TabEditor* tab = currentTabEditor();
     
     if (focusModeActive) {
-        preFocusModeViewMode = currentViewMode;
-        
+        if (tabWidget) {
+            preFocusModeEditorVisible = tabWidget->isVisible();
+        }
+        if (sharedPreview) {
+            preFocusModePreviewVisible = sharedPreview->isVisible();
+        }
         if (sidebarPanel) {
             preFocusModeSidebarVisible = sidebarPanel->isVisible();
         }
@@ -35,17 +39,9 @@ void MainWindow::toggleFocusMode() {
             statusBar()->hide();
         }
         
-        if (tab) {
-            if (tab->editor()) {
-                tab->editor()->setVisible(true);
-                tab->editor()->setFocusModeEnabled(true);
-            }
-            if (sharedPreview) {
-                sharedPreview->hide();
-            }
-        }
-        
+        // Show tabWidget and editors in focus mode
         if (tabWidget) {
+            tabWidget->setVisible(true);
             for (int i = 0; i < tabWidget->count(); ++i) {
                 TabEditor* t = qobject_cast<TabEditor*>(tabWidget->widget(i));
                 if (t && t->editor()) {
@@ -53,6 +49,11 @@ void MainWindow::toggleFocusMode() {
                     t->editor()->setFocusModeEnabled(true);
                 }
             }
+        }
+        
+        // Hide preview in focus mode
+        if (sharedPreview) {
+            sharedPreview->hide();
         }
         
         if (statusBar()) {
@@ -89,7 +90,23 @@ void MainWindow::toggleFocusMode() {
             }
         }
         
-        applyViewMode(preFocusModeViewMode, false);
+        // Restore visibility states
+        if (tabWidget) {
+            tabWidget->setVisible(preFocusModeEditorVisible);
+        }
+        if (sharedPreview) {
+            sharedPreview->setVisible(preFocusModePreviewVisible);
+        }
+        
+        // Update action states after restoring visibility
+        if (toggleEditorAction) {
+            toggleEditorAction->setChecked(preFocusModeEditorVisible);
+            toggleEditorAction->setEnabled(preFocusModePreviewVisible);
+        }
+        if (togglePreviewAction) {
+            togglePreviewAction->setChecked(preFocusModePreviewVisible);
+            togglePreviewAction->setEnabled(preFocusModeEditorVisible);
+        }
         
         if (statusBar()) {
             statusBar()->showMessage(tr("Focus Mode: OFF"), 2000);

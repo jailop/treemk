@@ -154,7 +154,10 @@ void MainWindow::createMenus() {
 
     viewMenu = menuBar()->addMenu(tr("&View"));
     viewMenu->addAction(toggleSidebarAction);
-    viewMenu->addAction(cycleViewModeAction);
+    viewMenu->addSeparator();
+    viewMenu->addAction(toggleEditorAction);
+    viewMenu->addAction(togglePreviewAction);
+    viewMenu->addSeparator();
     viewMenu->addAction(toggleFocusModeAction);
     viewMenu->addSeparator();
     /*
@@ -229,7 +232,8 @@ void MainWindow::createToolbar() {
     mainToolbar->addSeparator();
 
     mainToolbar->addAction(toggleSidebarAction);
-    mainToolbar->addAction(cycleViewModeAction);
+    mainToolbar->addAction(toggleEditorAction);
+    mainToolbar->addAction(togglePreviewAction);
 }
 
 void MainWindow::createLayout() {
@@ -337,18 +341,20 @@ void MainWindow::createLayout() {
             this, &MainWindow::onOpenLinkInNewWindow);
     connect(sharedPreview, &MarkdownPreview::internalLinkClicked, this,
             &MainWindow::onInternalLinkClicked);
+    
+    // DISABLED: Preview to Editor scroll sync (causes feedback loop)
+    // Keeping editor to preview sync only (one-way synchronization)
+    /*
     connect(sharedPreview, &MarkdownPreview::scrollPercentageChanged, this,
             [this](double percentage) {
                 TabEditor* tab = currentTabEditor();
-                if (tab && tab->editor()) {
-                    QScrollBar* scrollBar = tab->editor()->verticalScrollBar();
-                    int targetValue =
-                        static_cast<int>(percentage * scrollBar->maximum());
-                    scrollBar->setValue(targetValue);
+                if (tab) {
+                    tab->setEditorScrollFromPreview(percentage);
                 }
             });
+    */
 
-    QSplitter* editorPreviewSplitter = new QSplitter(Qt::Horizontal, this);
+    editorPreviewSplitter = new QSplitter(Qt::Horizontal, this);
     editorPreviewSplitter->addWidget(tabWidget);
     editorPreviewSplitter->addWidget(sharedPreview);
     editorPreviewSplitter->setStretchFactor(0, 1);
@@ -379,23 +385,22 @@ void MainWindow::readSettings() {
     sidebarPanel->setVisible(sidebarVisible);
     toggleSidebarAction->setChecked(sidebarVisible);
 
-    int savedViewMode = settings->value("viewMode", ViewMode_Both).toInt();
-    currentViewMode = static_cast<ViewMode>(savedViewMode);
-
-    QString nextModeText;
-    switch (currentViewMode) {
-        case ViewMode_Both:
-            nextModeText = tr("Cycle View Mode (Next: Editor Only)");
-            break;
-        case ViewMode_EditorOnly:
-            nextModeText = tr("Cycle View Mode (Next: Preview Only)");
-            break;
-        case ViewMode_PreviewOnly:
-            nextModeText = tr("Cycle View Mode (Next: Both)");
-            break;
+    bool editorVisible = settings->value("editorVisible", true).toBool();
+    bool previewVisible = settings->value("previewVisible", true).toBool();
+    
+    // Ensure at least one is visible
+    if (!editorVisible && !previewVisible) {
+        editorVisible = true;
+        previewVisible = true;
     }
-    if (cycleViewModeAction) {
-        cycleViewModeAction->setText(nextModeText);
+
+    if (toggleEditorAction) {
+        toggleEditorAction->setChecked(editorVisible);
+        toggleEditorAction->setEnabled(previewVisible);
+    }
+    if (togglePreviewAction) {
+        togglePreviewAction->setChecked(previewVisible);
+        togglePreviewAction->setEnabled(editorVisible);
     }
 
     recentFolders = settings->value("recentFolders").toStringList();
@@ -487,8 +492,6 @@ void MainWindow::readSettings() {
         }
     }
 
-    applyViewMode(currentViewMode, false);
-    
     bool shouldRestoreFocusMode = settings->value("focusMode", false).toBool();
     if (shouldRestoreFocusMode && toggleFocusModeAction) {
         focusModeActive = false;
@@ -506,7 +509,12 @@ void MainWindow::writeSettings() {
     settings->setValue("size", size());
     settings->setValue("mainSplitter", mainSplitter->saveState());
     settings->setValue("sidebarVisible", leftTabWidget->isVisible());
-    settings->setValue("viewMode", static_cast<int>(currentViewMode));
+    if (tabWidget) {
+        settings->setValue("editorVisible", tabWidget->isVisible());
+    }
+    if (sharedPreview) {
+        settings->setValue("previewVisible", sharedPreview->isVisible());
+    }
     settings->setValue("lastFolder", currentFolder);
     settings->setValue("recentFolders", recentFolders);
     

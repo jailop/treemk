@@ -1,10 +1,15 @@
 # TreeMk - Integrated Markdown Editor
 
-TreeMk is a desktop Markdown editor that works directly with your file system—no proprietary vaults, no lock-in, just your files organized your way. Built with Qt, it combines a powerful text editor with a file explorer, wiki-style linking, and rich content rendering.
+TreeMk is a desktop Markdown editor that works directly with your file
+system—no proprietary vaults, no lock-in, just your files organized your
+way. Built with Qt, it combines a powerful text editor with a file
+explorer, wiki-style linking, and rich content rendering.
 
 **Work with your files, where they already are.**
 
-TreeMk doesn't move your notes into a special database or vault. It simply provides an integrated environment for editing and navigating Markdown files across any folder on your system.
+TreeMk doesn't move your notes into a special database or vault. It
+simply provides an integrated environment for editing and navigating
+Markdown files across any folder on your system.
 
 ![screenshot](screenshot.png)
 
@@ -13,13 +18,10 @@ TreeMk doesn't move your notes into a special database or vault. It simply provi
 **Editor**
 
 - Multi-tab editing with session management
-- Line numbers and line highlighting
+- Focus mode (F11) for distraction-free writing
 - Word prediction based on workspace vocabulary
 - Auto-indent and auto-close brackets/quotes
-- List continuation and hanging indent formatting
-- Customizable keyboard shortcuts
 - Paste images directly from clipboard
-- Smart text navigation
 - Line breaking and joining utilities
 - AI assistance (Ollama or OpenAI-like providers)
 
@@ -32,9 +34,9 @@ TreeMk doesn't move your notes into a special database or vault. It simply provi
 - Task lists with checkbox support
 - Drag & drop from the file explorer to create wiki-links
 - Backlinks panel - shows all notes linking to current document
+- Per-tab navigation history (Back/Forward with Alt+Left/Right)
 - Document outline panel with heading navigation
 - Quick open dialog (Ctrl+P) with fuzzy search
-- Full-text search across all files
 - Recent folders menu
 
 **Preview and Rendering**
@@ -45,12 +47,6 @@ TreeMk doesn't move your notes into a special database or vault. It simply provi
 - Code syntax highlighting in preview
 - Custom CSS support for preview styling
 - Configurable preview refresh rate
-
-**Theme and Appearance**
-
-- System, light, and dark theme support
-- Customizable fonts and sizes (editor and preview)
-- Theme-aware UI elements
 
 **Export**
 
@@ -90,7 +86,8 @@ bun install
 ./build-preview-bundle.sh
 ```
 
-The bundled files are included in the repository, so rebuilding is not required for normal builds.
+The bundled files are included in the repository, so rebuilding is not
+required for normal builds.
 
 To render Mermaid diagrams when exporting to HTML, PDF, or DOCX with Pandoc,
 you need to install `mermaid-filter`:
@@ -193,7 +190,7 @@ cmake --build .
 
 Comprehensive documentation is available online:
 
-**📚 [Read the Documentation](https://jailop.github.io/treemk)**
+**[Read the Documentation](https://jailop.github.io/treemk)**
 
 ### Building Documentation Locally
 

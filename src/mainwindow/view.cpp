@@ -3,6 +3,8 @@
 #include <QFileInfo>
 #include <QListWidget>
 #include <QMessageBox>
+#include <QScrollBar>
+#include <QSplitter>
 #include <QStatusBar>
 #include <QTimer>
 #include <QUrl>
@@ -20,79 +22,94 @@ void MainWindow::toggleSidebar() {
     sidebarPanel->setVisible(!sidebarPanel->isVisible());
 }
 
-void MainWindow::togglePreview() {
-    if (sharedPreview) {
-        sharedPreview->setVisible(!sharedPreview->isVisible());
-    }
-}
-
-void MainWindow::applyViewMode(ViewMode mode, bool showStatusMessage) {
+void MainWindow::toggleEditor() {
     TabEditor* tab = currentTabEditor();
     if (!tab) return;
 
-    switch (mode) {
-        case ViewMode_Both:
-            tab->editor()->setVisible(true);
-            sharedPreview->setVisible(true);
-            if (showStatusMessage) {
-                statusBar()->showMessage(tr("View Mode: Editor + Preview"),
-                                         2000);
-            }
-            break;
-        case ViewMode_EditorOnly:
-            tab->editor()->setVisible(true);
-            sharedPreview->setVisible(false);
-            if (showStatusMessage) {
-                statusBar()->showMessage(tr("View Mode: Editor Only"), 2000);
-            }
-            break;
-        case ViewMode_PreviewOnly:
-            tab->editor()->setVisible(false);
-            sharedPreview->setVisible(true);
-            if (showStatusMessage) {
-                statusBar()->showMessage(tr("View Mode: Preview Only"), 2000);
-            }
-            break;
+    bool editorVisible = tabWidget->isVisible();
+    bool previewVisible = sharedPreview->isVisible();
+
+    // Prevent hiding both
+    if (editorVisible && !previewVisible) {
+        // Editor is the only visible, can't hide it
+        statusBar()->showMessage(
+            tr("Cannot hide editor when preview is already hidden"), 2000);
+        return;
     }
 
-    currentViewMode = mode;
+    // Toggle editor (entire tabWidget)
+    bool newEditorVisible = !editorVisible;
+    tabWidget->setVisible(newEditorVisible);
+
+    // Update splitter sizes to force re-layout
+    if (!newEditorVisible && previewVisible) {
+        // Editor hidden - give all space to preview
+        QList<int> sizes = editorPreviewSplitter->sizes();
+        int total = sizes[0] + sizes[1];
+        editorPreviewSplitter->setSizes(QList<int>() << 0 << total);
+        statusBar()->showMessage(tr("Editor hidden"), 2000);
+    } else if (newEditorVisible && previewVisible) {
+        // Both visible - split equally
+        QList<int> sizes = editorPreviewSplitter->sizes();
+        int total = sizes[0] + sizes[1];
+        editorPreviewSplitter->setSizes(QList<int>() << total/2 << total/2);
+        statusBar()->showMessage(tr("Editor visible"), 2000);
+    }
+
+    // Update action checkstate
+    if (toggleEditorAction) {
+        toggleEditorAction->setChecked(newEditorVisible);
+    }
+    
+    // Enable/disable the preview toggle based on editor visibility
+    if (togglePreviewAction) {
+        togglePreviewAction->setEnabled(newEditorVisible);
+    }
 }
 
-void MainWindow::cycleViewMode() {
-    // Cycle through view modes
-    switch (currentViewMode) {
-        case ViewMode_Both:
-            currentViewMode = ViewMode_EditorOnly;
-            break;
-        case ViewMode_EditorOnly:
-            currentViewMode = ViewMode_PreviewOnly;
-            break;
-        case ViewMode_PreviewOnly:
-            currentViewMode = ViewMode_Both;
-            break;
+void MainWindow::togglePreview() {
+    TabEditor* tab = currentTabEditor();
+    if (!tab) return;
+
+    bool editorVisible = tabWidget->isVisible();
+    bool previewVisible = sharedPreview->isVisible();
+
+    // Prevent hiding both
+    if (!editorVisible && previewVisible) {
+        // Preview is the only visible, can't hide it
+        statusBar()->showMessage(
+            tr("Cannot hide preview when editor is already hidden"), 2000);
+        return;
     }
 
-    applyViewMode(currentViewMode);
+    // Toggle preview
+    bool newPreviewVisible = !previewVisible;
+    sharedPreview->setVisible(newPreviewVisible);
 
-    // Update action text to show next mode
-    QString nextModeText;
-    switch (currentViewMode) {
-        case ViewMode_Both:
-            nextModeText = tr("Cycle View Mode (Next: Editor Only)");
-            break;
-        case ViewMode_EditorOnly:
-            nextModeText = tr("Cycle View Mode (Next: Preview Only)");
-            break;
-        case ViewMode_PreviewOnly:
-            nextModeText = tr("Cycle View Mode (Next: Both)");
-            break;
-    }
-    if (cycleViewModeAction) {
-        cycleViewModeAction->setText(nextModeText);
+    // Update splitter sizes to force re-layout
+    if (editorVisible && !newPreviewVisible) {
+        // Preview hidden - give all space to editor
+        QList<int> sizes = editorPreviewSplitter->sizes();
+        int total = sizes[0] + sizes[1];
+        editorPreviewSplitter->setSizes(QList<int>() << total << 0);
+        statusBar()->showMessage(tr("Preview hidden"), 2000);
+    } else if (editorVisible && newPreviewVisible) {
+        // Both visible - split equally
+        QList<int> sizes = editorPreviewSplitter->sizes();
+        int total = sizes[0] + sizes[1];
+        editorPreviewSplitter->setSizes(QList<int>() << total/2 << total/2);
+        statusBar()->showMessage(tr("Preview visible"), 2000);
     }
 
-    // Save to settings
-    settings->setValue("viewMode", static_cast<int>(currentViewMode));
+    // Update action checkstate
+    if (togglePreviewAction) {
+        togglePreviewAction->setChecked(newPreviewVisible);
+    }
+    
+    // Enable/disable the editor toggle based on preview visibility
+    if (toggleEditorAction) {
+        toggleEditorAction->setEnabled(newPreviewVisible);
+    }
 }
 
 void MainWindow::onWikiLinkClicked(const QString& linkTarget) {
