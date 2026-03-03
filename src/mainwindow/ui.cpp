@@ -321,11 +321,29 @@ void MainWindow::createLayout() {
     connect(tabWidget, &QTabWidget::tabCloseRequested, this,
             &MainWindow::onTabCloseRequested);
 
+    sharedPreview = new MarkdownPreview(this);
+    sharedPreview->setMinimumWidth(300);
+
+    connect(sharedPreview, &MarkdownPreview::wikiLinkClicked, this,
+            &MainWindow::onWikiLinkClicked);
+    connect(sharedPreview, &MarkdownPreview::markdownLinkClicked, this,
+            &MainWindow::onMarkdownLinkClicked);
+    connect(sharedPreview, &MarkdownPreview::openLinkInNewWindowRequested,
+            this, &MainWindow::onOpenLinkInNewWindow);
+    connect(sharedPreview, &MarkdownPreview::internalLinkClicked, this,
+            &MainWindow::onInternalLinkClicked);
+
+    QSplitter* editorPreviewSplitter = new QSplitter(Qt::Horizontal, this);
+    editorPreviewSplitter->addWidget(tabWidget);
+    editorPreviewSplitter->addWidget(sharedPreview);
+    editorPreviewSplitter->setStretchFactor(0, 1);
+    editorPreviewSplitter->setStretchFactor(1, 1);
+
     mainSplitter = new QSplitter(Qt::Horizontal, this);
     mainSplitter->addWidget(sidebarPanel);
-    mainSplitter->addWidget(tabWidget);
-    mainSplitter->setStretchFactor(0, 0);  // Sidebar panel
-    mainSplitter->setStretchFactor(1, 1);  // Tab widget gets most space
+    mainSplitter->addWidget(editorPreviewSplitter);
+    mainSplitter->setStretchFactor(0, 0);
+    mainSplitter->setStretchFactor(1, 1);
 
     setCentralWidget(mainSplitter);
 
@@ -625,11 +643,8 @@ void MainWindow::applySettings() {
     if (ThemeManager::instance()) {
         theme = ThemeManager::instance()->getResolvedPreviewColorSchemeName();
     }
-    for (int i = 0; i < tabWidget->count(); ++i) {
-        TabEditor* tab = qobject_cast<TabEditor*>(tabWidget->widget(i));
-        if (tab && tab->preview()) {
-            tab->preview()->setTheme(theme);
-        }
+    if (sharedPreview) {
+        sharedPreview->setTheme(theme);
     }
     /* TODO to be removed. theme is general for all the app, not just
      * preview.

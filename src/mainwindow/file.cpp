@@ -326,7 +326,6 @@ bool MainWindow::loadFile(const QString& filePath) {
     if (tab) {
         int index = tabWidget->indexOf(tab);
         tabWidget->setCurrentIndex(index);
-        navigationHistory->addFile(filePath);
         return true;
     }
 
@@ -344,7 +343,6 @@ bool MainWindow::loadFile(const QString& filePath) {
 
     if (tab->loadFile(filePath)) {
         currentFilePath = filePath;
-        navigationHistory->addFile(filePath);
 
         if (!recentFiles.contains(filePath)) {
             recentFiles.prepend(filePath);
@@ -382,13 +380,12 @@ void MainWindow::print() {
         return;
     }
 
-    MarkdownPreview* preview = tab->preview();
-    if (!preview || !preview->page()) {
+    if (!sharedPreview || !sharedPreview->page()) {
         QMessageBox::warning(this, tr("No Preview"),
                             tr("Preview is not available."));
         return;
     }
 
-    preview->page()->runJavaScript("window.print();");
+    sharedPreview->page()->runJavaScript("window.print();");
     statusBar()->showMessage(tr("Opening print dialog..."), 2000);
 }

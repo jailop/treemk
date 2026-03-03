@@ -239,6 +239,7 @@ class MainWindow : public QMainWindow {
     QWidget* outlinePanel;
     QWidget* editorPanel;
     QTabWidget* tabWidget;
+    MarkdownPreview* sharedPreview;
     QWidget* backlinksPanel;
     QWidget* historyPanel;
 
@@ -248,7 +249,6 @@ class MainWindow : public QMainWindow {
     QListWidget* historyView;
     QLineEdit* historyFilterInput;
     LinkParser* linkParser;
-    NavigationHistory* navigationHistory;
 
     QStringList recentFiles;
     QStringList recentFolders;

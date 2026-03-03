@@ -6,6 +6,7 @@
 
 class MarkdownEditor;
 class MarkdownPreview;
+class NavigationHistory;
 class OutlinePanel;
 class QSplitter;
 class QTimer;
@@ -24,11 +25,14 @@ class TabEditor : public QWidget {
     bool saveFile();
     bool saveFileAs(const QString& filePath);
     MarkdownEditor* editor() const { return m_editor; }
-    MarkdownPreview* preview() const { return m_preview; }
     QString content() const;
     void setContent(const QString& content);
     bool ownSaved() { return m_ownSaved; }
     void clearOwnSaved() { m_ownSaved = false; }
+    void setSharedPreview(MarkdownPreview* preview);
+    void updatePreviewContent(MarkdownPreview* preview);
+    double scrollPercentage() const { return m_lastScrollPercentage; }
+    NavigationHistory* navigationHistory() const { return m_navigationHistory; }
 
    signals:
     void modificationChanged(bool modified);
@@ -43,19 +47,21 @@ class TabEditor : public QWidget {
 
    public slots:
     void updatePreview();
+    void onEditorScrolled();
+
    private slots:
     void onDocumentModified();
-    void syncPreviewScroll();
 
    private:
     void setupUI();
     MarkdownEditor* m_editor;
-    MarkdownPreview* m_preview;
-    QSplitter* m_splitter;
+    MarkdownPreview* m_sharedPreview;
     QTimer* m_previewTimer;
+    NavigationHistory* m_navigationHistory;
     QString m_filePath;
     bool m_isModified;
     bool m_ownSaved;
+    double m_lastScrollPercentage;
 };
 
 #endif  // TABEDITOR_H

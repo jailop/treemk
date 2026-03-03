@@ -10,27 +10,41 @@
 #include "defs.h"
 #include "mainwindow.h"
 #include "navigationhistory.h"
+#include "tabeditor.h"
 
 void MainWindow::navigateBack() {
-    QString filePath = navigationHistory->goBack();
+    TabEditor* tab = currentTabEditor();
+    if (!tab) return;
+
+    QString filePath = tab->navigationHistory()->goBack();
     if (!filePath.isEmpty()) {
         loadFile(filePath);
     }
 }
 
 void MainWindow::navigateForward() {
-    QString filePath = navigationHistory->goForward();
+    TabEditor* tab = currentTabEditor();
+    if (!tab) return;
+
+    QString filePath = tab->navigationHistory()->goForward();
     if (!filePath.isEmpty()) {
         loadFile(filePath);
     }
 }
 
 void MainWindow::updateNavigationActions() {
+    TabEditor* tab = currentTabEditor();
+    if (!tab) {
+        if (backAction) backAction->setEnabled(false);
+        if (forwardAction) forwardAction->setEnabled(false);
+        return;
+    }
+
     if (backAction) {
-        backAction->setEnabled(navigationHistory->canGoBack());
+        backAction->setEnabled(tab->navigationHistory()->canGoBack());
     }
     if (forwardAction) {
-        forwardAction->setEnabled(navigationHistory->canGoForward());
+        forwardAction->setEnabled(tab->navigationHistory()->canGoForward());
     }
 }
 
@@ -39,24 +53,27 @@ void MainWindow::filterHistoryList() {
         return;
     }
 
+    TabEditor* tab = currentTabEditor();
+    if (!tab) {
+        historyView->clear();
+        return;
+    }
+
     QString filterText = historyFilterInput->text().toLower();
     historyView->clear();
 
-    QVector<QString> history = navigationHistory->getHistory();
-    
-    // Iterate in reverse order to show most recent at the top
+    QVector<QString> history = tab->navigationHistory()->getHistory();
+
     for (int i = history.size() - 1; i >= 0; --i) {
         const QString& filePath = history[i];
-        
-        // Apply filter
-        if (!filterText.isEmpty() && 
+
+        if (!filterText.isEmpty() &&
             !filePath.toLower().contains(filterText)) {
             continue;
         }
 
         QFileInfo fileInfo(filePath);
 
-        // Show relative path if within current folder, otherwise show full path
         QString displayText;
         if (!currentFolder.isEmpty() &&
             filePath.startsWith(currentFolder + "/")) {

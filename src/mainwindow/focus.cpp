@@ -40,8 +40,8 @@ void MainWindow::toggleFocusMode() {
                 tab->editor()->setVisible(true);
                 tab->editor()->setFocusModeEnabled(true);
             }
-            if (tab->preview()) {
-                tab->preview()->hide();
+            if (sharedPreview) {
+                sharedPreview->hide();
             }
         }
         

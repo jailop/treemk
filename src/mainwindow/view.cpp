@@ -21,9 +21,8 @@ void MainWindow::toggleSidebar() {
 }
 
 void MainWindow::togglePreview() {
-    TabEditor* tab = currentTabEditor();
-    if (tab) {
-        tab->preview()->setVisible(!tab->preview()->isVisible());
+    if (sharedPreview) {
+        sharedPreview->setVisible(!sharedPreview->isVisible());
     }
 }
 
@@ -34,7 +33,7 @@ void MainWindow::applyViewMode(ViewMode mode, bool showStatusMessage) {
     switch (mode) {
         case ViewMode_Both:
             tab->editor()->setVisible(true);
-            tab->preview()->setVisible(true);
+            sharedPreview->setVisible(true);
             if (showStatusMessage) {
                 statusBar()->showMessage(tr("View Mode: Editor + Preview"),
                                          2000);
@@ -42,14 +41,14 @@ void MainWindow::applyViewMode(ViewMode mode, bool showStatusMessage) {
             break;
         case ViewMode_EditorOnly:
             tab->editor()->setVisible(true);
-            tab->preview()->setVisible(false);
+            sharedPreview->setVisible(false);
             if (showStatusMessage) {
                 statusBar()->showMessage(tr("View Mode: Editor Only"), 2000);
             }
             break;
         case ViewMode_PreviewOnly:
             tab->editor()->setVisible(false);
-            tab->preview()->setVisible(true);
+            sharedPreview->setVisible(true);
             if (showStatusMessage) {
                 statusBar()->showMessage(tr("View Mode: Preview Only"), 2000);
             }

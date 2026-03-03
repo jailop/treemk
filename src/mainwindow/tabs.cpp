@@ -9,6 +9,7 @@
 #include "markdowneditor.h"
 #include "markdownhighlighter.h"
 #include "markdownpreview.h"
+#include "navigationhistory.h"
 #include "outlinepanel.h"
 #include "tabeditor.h"
 #include "thememanager.h"
@@ -19,6 +20,8 @@ TabEditor* MainWindow::currentTabEditor() const {
 
 TabEditor* MainWindow::createNewTab() {
     TabEditor* tab = new TabEditor(this);
+
+    tab->setSharedPreview(sharedPreview);
 
     QString fontFamily =
         settings->value("editor/font", "Sans Serif").toString();
@@ -47,7 +50,7 @@ TabEditor* MainWindow::createNewTab() {
     }
 
     QString previewTheme = settings->value("previewTheme", "light").toString();
-    tab->preview()->setTheme(previewTheme);
+    sharedPreview->setTheme(previewTheme);
 
     connect(tab->editor(), &MarkdownEditor::wikiLinkClicked, this,
             &MainWindow::onWikiLinkClicked);
@@ -63,14 +66,6 @@ TabEditor* MainWindow::createNewTab() {
             &MainWindow::onEditorFileRenameRequested);
     connect(tab->editor(), &MarkdownEditor::fileDeleteRequested, this,
             &MainWindow::onEditorFileDeleteRequested);
-    connect(tab->preview(), &MarkdownPreview::wikiLinkClicked, this,
-            &MainWindow::onWikiLinkClicked);
-    connect(tab->preview(), &MarkdownPreview::markdownLinkClicked, this,
-            &MainWindow::onMarkdownLinkClicked);
-    connect(tab->preview(), &MarkdownPreview::openLinkInNewWindowRequested,
-            this, &MainWindow::onOpenLinkInNewWindow);
-    connect(tab->preview(), &MarkdownPreview::internalLinkClicked, this,
-            &MainWindow::onInternalLinkClicked);
 
     if (outlineView) {
         connect(outlineView, &OutlinePanel::headerClicked, this,
@@ -106,8 +101,17 @@ TabEditor* MainWindow::createNewTab() {
                 }
             });
 
+    connect(tab->navigationHistory(), &NavigationHistory::canGoBackChanged,
+            this, &MainWindow::updateNavigationActions);
+    connect(tab->navigationHistory(), &NavigationHistory::canGoForwardChanged,
+            this, &MainWindow::updateNavigationActions);
+    connect(tab->navigationHistory(), &NavigationHistory::historyChanged, this,
+            [this]() { filterHistoryList(); });
+
     int index = tabWidget->addTab(tab, tr("Untitled"));
     tabWidget->setCurrentIndex(index);
+
+    tab->updatePreviewContent(sharedPreview);
 
     if (outlineView) {
         outlineView->updateOutline(tab->editor()->toPlainText());
@@ -142,7 +146,12 @@ void MainWindow::onTabChanged(int index) {
     TabEditor* tab = qobject_cast<TabEditor*>(tabWidget->widget(index));
     if (tab) {
         currentFilePath = tab->filePath();
+
+        tab->updatePreviewContent(sharedPreview);
+
         updateBacklinks();
+        updateNavigationActions();
+        filterHistoryList();
 
         if (outlineView) {
             QString markdown = tab->editor()->toPlainText();
@@ -178,9 +187,9 @@ void MainWindow::onTabChanged(int index) {
         }
 
         applyViewMode(currentViewMode, false);
-        
+
         if (focusModeActive && editor) {
-            tab->preview()->hide();
+            sharedPreview->hide();
             editor->setFocusModeEnabled(true);
         }
     }

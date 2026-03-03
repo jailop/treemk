@@ -88,17 +88,6 @@ MainWindow::MainWindow(QWidget* parent)
     connect(linkParser, &LinkParser::indexBuildCompleted, this,
             &MainWindow::updateBacklinks);
 
-    navigationHistory = new NavigationHistory(this);
-    connect(navigationHistory, &NavigationHistory::canGoBackChanged, this,
-            &MainWindow::updateNavigationActions);
-    connect(navigationHistory, &NavigationHistory::canGoForwardChanged, this,
-            &MainWindow::updateNavigationActions);
-    connect(
-        navigationHistory, &NavigationHistory::historyChanged, this, [this]() {
-            // Update history panel display using filter function
-            filterHistoryList();
-        });
-
     setWindowTitle("TreeMk - Markdown Editor");
     setWindowIcon(QIcon::fromTheme("text-editor"));
 

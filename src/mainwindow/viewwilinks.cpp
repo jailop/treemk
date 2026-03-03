@@ -121,7 +121,7 @@ void MainWindow::onInternalLinkClicked(const QString& anchor) {
     if (!currentTab) {
         return;
     }
-    
+
     currentTab->editor()->jumpToHeading(anchor);
-    currentTab->preview()->scrollToAnchor(anchor);
+    sharedPreview->scrollToAnchor(anchor);
 }
