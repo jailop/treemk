@@ -1,6 +1,7 @@
 #include "quickopendialog.h"
 
 #include <QDir>
+#include <QDirIterator>
 #include <QFileInfo>
 #include <QKeyEvent>
 #include <QLineEdit>
@@ -15,8 +16,7 @@ QuickOpenDialog::QuickOpenDialog(const QString& path, const QStringList& recent,
 
     setupUI();
 
-    // Scan all markdown files
-    scanFiles(rootPath, allFiles);
+    scanFilesIterative(rootPath, allFiles, 10);
 
     updateFileList();
 }
@@ -132,23 +132,26 @@ void QuickOpenDialog::onItemDoubleClicked() {
 
 QString QuickOpenDialog::getSelectedFile() const { return selectedFile; }
 
-void QuickOpenDialog::scanFiles(const QString& dirPath, QList<QString>& files) {
-    QDir dir(dirPath);
-
+void QuickOpenDialog::scanFilesIterative(const QString& dirPath,
+                                         QList<QString>& files, int maxDepth) {
     QStringList filters;
     filters << "*.md" << "*.markdown";
 
-    QFileInfoList fileList =
-        dir.entryInfoList(filters, QDir::Files, QDir::Name);
-    for (const QFileInfo& info : fileList) {
-        files.append(info.absoluteFilePath());
-    }
+    QDirIterator it(dirPath, filters, QDir::Files | QDir::NoSymLinks,
+                    QDirIterator::Subdirectories);
 
-    // Recursively scan subdirectories
-    QFileInfoList subdirs =
-        dir.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name);
-    for (const QFileInfo& subdir : subdirs) {
-        scanFiles(subdir.absoluteFilePath(), files);
+    QDir rootDir(dirPath);
+
+    while (it.hasNext()) {
+        QString filePath = it.next();
+
+        QString relativePath = rootDir.relativeFilePath(filePath);
+        int depth = relativePath.count('/');
+        if (depth > maxDepth) {
+            continue;
+        }
+
+        files.append(filePath);
     }
 }
 

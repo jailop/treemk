@@ -40,9 +40,9 @@ class SearchDialog : public QDialog {
    private:
     QList<SearchResult> searchInFiles(const QString& query, bool caseSensitive,
                                       bool wholeWord);
-    void scanDirectory(const QString& dirPath, const QString& query,
-                       bool caseSensitive, bool wholeWord,
-                       QList<SearchResult>& results);
+    void scanDirectoryIterative(const QString& dirPath, const QString& query,
+                                bool caseSensitive, bool wholeWord,
+                                QList<SearchResult>& results, int maxDepth = 10);
 
     Ui::SearchDialog* ui;
     QString rootPath;

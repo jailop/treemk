@@ -66,7 +66,7 @@ class LinkParser : public QObject {
     bool enforceHomeBoundary;
     mutable QMutex mutex;
 
-    void scanDirectory(const QString& dirPath, int currentDepth);
+    void scanDirectoryIterative(const QString& dirPath);
     void processFile(const QString& filePath);
     bool isWithinHomeDirectory(const QString& path) const;
     void searchInDirectory(const QString& dirPath,

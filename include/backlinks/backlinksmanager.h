@@ -1,6 +1,7 @@
 #ifndef BACKLINKSMANAGER_H
 #define BACKLINKSMANAGER_H
 
+#include <QHash>
 #include <QMap>
 #include <QMutex>
 #include <QObject>
@@ -43,8 +44,11 @@ class BacklinksManager : public QObject {
    private:
     QMap<QString, QVector<QString>> backLinksMap;
     mutable QMutex mutex;
+    QHash<QString, QString> normalizedPathCache;
 
     QString normalizePath(const QString& path) const;
+    QString getCachedNormalizedPath(const QString& path);
+    void clearCache();
 };
 
 #endif  // BACKLINKSMANAGER_H

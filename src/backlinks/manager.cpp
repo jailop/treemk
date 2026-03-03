@@ -11,8 +11,23 @@ void BacklinksManager::buildBacklinks(
     const QMap<QString, QVector<QString>>& forwardLinks) {
     QMutexLocker locker(&mutex);
     backLinksMap.clear();
+    normalizedPathCache.clear();
 
-    // For each scanned file
+    QHash<QString, QString> fileNormalizedMap;
+    for (auto it = forwardLinks.constBegin(); it != forwardLinks.constEnd();
+         ++it) {
+        const QString& filePath = it.key();
+        QString normalized = normalizePath(filePath);
+        fileNormalizedMap[filePath] = normalized;
+        normalizedPathCache[filePath] = normalized;
+    }
+
+    QHash<QString, QString> normalizedToFile;
+    for (auto it = fileNormalizedMap.constBegin();
+         it != fileNormalizedMap.constEnd(); ++it) {
+        normalizedToFile[it.value()] = it.key();
+    }
+
     for (auto it = forwardLinks.constBegin(); it != forwardLinks.constEnd();
          ++it) {
         const QString& sourceFile = it.key();
@@ -20,48 +35,53 @@ void BacklinksManager::buildBacklinks(
         QFileInfo sourceInfo(sourceFile);
         QDir sourceDir = sourceInfo.dir();
 
-        // For each link in this file
         for (const QString& linkTarget : linkTargets) {
             QString link = linkTarget.trimmed();
 
-            // Build possible absolute paths for this link
             QStringList candidatePaths;
             QFileInfo linkInfo(link);
 
             if (linkInfo.suffix().isEmpty()) {
-                // No extension - try .md and .markdown
                 candidatePaths << sourceDir.filePath(link + ".md");
                 candidatePaths << sourceDir.filePath(link + ".markdown");
                 candidatePaths << sourceDir.filePath(link);
             } else {
-                // Has extension - use as-is
                 candidatePaths << sourceDir.filePath(link);
             }
 
-            // Normalize candidate paths
-            QStringList normalizedCandidates;
             for (const QString& candidate : candidatePaths) {
-                normalizedCandidates << normalizePath(candidate);
-            }
+                QString candidateNorm = getCachedNormalizedPath(candidate);
 
-            // Check each candidate against scanned files
-            for (const QString& candidateNorm : normalizedCandidates) {
-                for (auto fit = forwardLinks.constBegin();
-                     fit != forwardLinks.constEnd(); ++fit) {
-                    const QString& scannedFile = fit.key();
-                    QString scannedNorm = normalizePath(scannedFile);
+                if (normalizedToFile.contains(candidateNorm)) {
+                    QString targetFile = normalizedToFile[candidateNorm];
+                    QString targetNorm = fileNormalizedMap[targetFile];
 
-                    if (candidateNorm.compare(scannedNorm,
-                                              Qt::CaseInsensitive) == 0) {
-                        // Use normalized path as key for consistent lookups
-                        if (!backLinksMap[scannedNorm].contains(sourceFile)) {
-                            backLinksMap[scannedNorm].append(sourceFile);
+                    if (!backLinksMap[targetNorm].contains(sourceFile)) {
+                        backLinksMap[targetNorm].append(sourceFile);
+                    }
+                    break;
+                }
+
+                bool foundMatch = false;
+                for (auto fit = normalizedToFile.constBegin();
+                     fit != normalizedToFile.constEnd(); ++fit) {
+                    if (candidateNorm.compare(fit.key(), Qt::CaseInsensitive) ==
+                        0) {
+                        QString targetFile = fit.value();
+                        QString targetNorm = fileNormalizedMap[targetFile];
+
+                        if (!backLinksMap[targetNorm].contains(sourceFile)) {
+                            backLinksMap[targetNorm].append(sourceFile);
                         }
-                        goto next_link;  // Found match, move to next link
+                        foundMatch = true;
+                        break;
                     }
                 }
+
+                if (foundMatch) {
+                    break;
+                }
             }
-        next_link:;
         }
     }
 
@@ -97,6 +117,7 @@ QVector<QString> BacklinksManager::getBacklinks(const QString& filePath) const {
 void BacklinksManager::clear() {
     QMutexLocker locker(&mutex);
     backLinksMap.clear();
+    normalizedPathCache.clear();
     emit backlinksUpdated();
 }
 
@@ -106,4 +127,18 @@ QString BacklinksManager::normalizePath(const QString& path) const {
         return canonical;
     }
     return QFileInfo(path).absoluteFilePath();
+}
+
+QString BacklinksManager::getCachedNormalizedPath(const QString& path) {
+    if (normalizedPathCache.contains(path)) {
+        return normalizedPathCache[path];
+    }
+    QString normalized = normalizePath(path);
+    normalizedPathCache[path] = normalized;
+    return normalized;
+}
+
+void BacklinksManager::clearCache() {
+    QMutexLocker locker(&mutex);
+    normalizedPathCache.clear();
 }

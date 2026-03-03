@@ -31,7 +31,8 @@ class QuickOpenDialog : public QDialog {
 
    private:
     void setupUI();
-    void scanFiles(const QString& dirPath, QList<QString>& files);
+    void scanFilesIterative(const QString& dirPath, QList<QString>& files,
+                            int maxDepth = 10);
     bool fuzzyMatch(const QString& pattern, const QString& text) const;
 
     QString rootPath;
