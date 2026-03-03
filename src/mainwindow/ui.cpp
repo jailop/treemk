@@ -15,6 +15,7 @@
 #include <QToolButton>
 #include <QVBoxLayout>
 
+#include "defs.h"
 #include "filesystemtreeview.h"
 #include "helpdialog.h"
 #include "linkparser.h"
@@ -289,7 +290,31 @@ void MainWindow::createLayout() {
             [this](QListWidgetItem* item) {
                 QString filePath = item->data(Qt::UserRole).toString();
                 if (!filePath.isEmpty()) {
-                    loadFile(filePath);
+                    // Check if file is already open in another tab
+                    TabEditor* existingTab = findTabByPath(filePath);
+                    if (existingTab) {
+                        // Switch to existing tab
+                        int index = tabWidget->indexOf(existingTab);
+                        tabWidget->setCurrentIndex(index);
+                    } else {
+                        // Open in current tab (reuse it even if modified, after confirmation)
+                        TabEditor* currentTab = currentTabEditor();
+                        if (currentTab && currentTab->isModified() && 
+                            !currentTab->filePath().isEmpty()) {
+                            // Temporarily switch to this tab to call maybeSave
+                            if (!maybeSave()) {
+                                return;  // User cancelled
+                            }
+                        }
+                        // Now load the file in current tab
+                        if (currentTab) {
+                            currentTab->loadFile(filePath);
+                            currentFilePath = filePath;
+                            updateBacklinks();
+                            setWindowTitle(QString("%1 - %2").arg(
+                                QFileInfo(filePath).fileName(), APP_LABEL));
+                        }
+                    }
                 }
             });
     
