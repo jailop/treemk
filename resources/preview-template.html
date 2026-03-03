@@ -45,6 +45,19 @@ document.addEventListener('DOMContentLoaded', function() {
   if (savedScrollPercentage > 0) {
     window.scrollTo(0, document.body.scrollHeight * savedScrollPercentage);
   }
+  
+  // Emit scroll events back to C++ via console (intercepted by Qt)
+  let scrollTimeout;
+  window.addEventListener('scroll', function() {
+    clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(function() {
+      const scrollPercentage = window.scrollY / (document.body.scrollHeight - window.innerHeight);
+      // Use document.title as a communication channel
+      const oldTitle = document.title;
+      document.title = 'SCROLL:' + scrollPercentage;
+      setTimeout(function() { document.title = oldTitle; }, 10);
+    }, 100);
+  });
 });
 </script>
 </head>

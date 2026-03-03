@@ -23,11 +23,13 @@ class MarkdownPreview : public QWebEngineView {
     void markdownLinkClicked(const QString& linkTarget);
     void openLinkInNewWindowRequested(const QString& linkTarget);
     void internalLinkClicked(const QString& anchor);
+    void scrollPercentageChanged(double percentage);
 
    private slots:
     void showContextMenu(const QPoint& pos);
     void reloadPreview();
     void onThemeChanged();
+    void checkScrollPosition();
 
    private:
     QString convertMarkdownToHtml(const QString& markdown);
@@ -44,6 +46,8 @@ class MarkdownPreview : public QWebEngineView {
     bool latexEnabled;
     double lastScrollPercentage;
     QString lastMarkdownContent;
+    QTimer* scrollCheckTimer;
+    bool isScrollingFromEditor;
 };
 
 #endif  // MARKDOWNPREVIEW_H

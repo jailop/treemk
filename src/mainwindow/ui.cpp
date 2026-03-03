@@ -6,6 +6,7 @@
 #include <QListWidget>
 #include <QMenu>
 #include <QMenuBar>
+#include <QScrollBar>
 #include <QSplitter>
 #include <QStatusBar>
 #include <QTabWidget>
@@ -336,6 +337,16 @@ void MainWindow::createLayout() {
             this, &MainWindow::onOpenLinkInNewWindow);
     connect(sharedPreview, &MarkdownPreview::internalLinkClicked, this,
             &MainWindow::onInternalLinkClicked);
+    connect(sharedPreview, &MarkdownPreview::scrollPercentageChanged, this,
+            [this](double percentage) {
+                TabEditor* tab = currentTabEditor();
+                if (tab && tab->editor()) {
+                    QScrollBar* scrollBar = tab->editor()->verticalScrollBar();
+                    int targetValue =
+                        static_cast<int>(percentage * scrollBar->maximum());
+                    scrollBar->setValue(targetValue);
+                }
+            });
 
     QSplitter* editorPreviewSplitter = new QSplitter(Qt::Horizontal, this);
     editorPreviewSplitter->addWidget(tabWidget);

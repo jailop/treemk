@@ -172,5 +172,9 @@ void TabEditor::onEditorScrolled() {
     if (maximum > 0) {
         m_lastScrollPercentage =
             static_cast<double>(scrollBar->value()) / maximum;
+        
+        if (m_sharedPreview) {
+            m_sharedPreview->scrollToPercentage(m_lastScrollPercentage);
+        }
     }
 }
