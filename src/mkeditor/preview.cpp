@@ -499,6 +499,13 @@ void MarkdownPreview::showContextMenu(const QPoint& pos) {
         QString href = linkInfo.value("href").toString();
 
         if (isLink && !href.isEmpty()) {
+            QAction* openNewTabAction =
+                contextMenu.addAction(tr("Open Link in New Tab"));
+            connect(openNewTabAction, &QAction::triggered, this,
+                    [this, href]() {
+                        emit openLinkInNewTabRequested(href);
+                    });
+            
             QAction* openNewWindowAction =
                 contextMenu.addAction(tr("Open Link in New Window"));
             connect(openNewWindowAction, &QAction::triggered, this,

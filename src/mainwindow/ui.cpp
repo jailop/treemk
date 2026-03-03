@@ -339,6 +339,8 @@ void MainWindow::createLayout() {
             &MainWindow::onMarkdownLinkClicked);
     connect(sharedPreview, &MarkdownPreview::openLinkInNewWindowRequested,
             this, &MainWindow::onOpenLinkInNewWindow);
+    connect(sharedPreview, &MarkdownPreview::openLinkInNewTabRequested,
+            this, &MainWindow::onOpenLinkInNewTab);
     connect(sharedPreview, &MarkdownPreview::internalLinkClicked, this,
             &MainWindow::onInternalLinkClicked);
     
@@ -463,8 +465,20 @@ void MainWindow::readSettings() {
             }
         }
 
+        // Only restore files that belong to the current folder
+        // This prevents opening unrelated files when opening in new window
         for (const QString& filePath : openFiles) {
             if (QFileInfo::exists(filePath)) {
+                // Check if file belongs to current folder
+                QFileInfo fileInfo(filePath);
+                QString fileFolder = fileInfo.absolutePath();
+                
+                // Only load if in current folder hierarchy
+                if (!folderToOpen.isEmpty() && 
+                    !fileFolder.startsWith(folderToOpen)) {
+                    continue;  // Skip files outside current folder
+                }
+                
                 loadFile(filePath);
             }
         }

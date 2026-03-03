@@ -237,3 +237,4 @@ Documentation:
 - Preview scrolling syncs to editor (200ms polling)
 - Loop prevention for smooth user experience
 - Focus mode properly restores individual panel states
+- Open in new window fixed (now opens as a new process)

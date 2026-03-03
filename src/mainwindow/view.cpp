@@ -181,20 +181,50 @@ void MainWindow::onOpenLinkInNewWindow(const QString& linkTarget) {
     }
 
     QString actualTarget = linkTarget;
+    bool isWikiLink = false;
+
     if (actualTarget.startsWith("wiki:")) {
         actualTarget = actualTarget.mid(5);
+        isWikiLink = true;
     } else if (actualTarget.startsWith("markdown:")) {
         actualTarget = actualTarget.mid(9);
     }
 
-    int depth = getLinkSearchDepth();
-    QString targetFile =
-        linkParser->resolveLinkTarget(actualTarget, currentFilePath, depth);
+    QString targetFile;
 
-    if (targetFile.isEmpty()) {
-        statusBar()->showMessage(
-            tr("Cannot resolve link: %1").arg(actualTarget), 3000);
-        return;
+    if (isWikiLink) {
+        int depth = getLinkSearchDepth();
+        targetFile =
+            linkParser->resolveLinkTarget(actualTarget, currentFilePath, depth);
+
+        if (targetFile.isEmpty()) {
+            QFileInfo currentFileInfo(currentFilePath);
+            QDir currentDir = currentFileInfo.dir();
+            targetFile = currentDir.filePath(actualTarget);
+
+            if (QFileInfo(targetFile).suffix().isEmpty()) {
+                targetFile += ".md";
+            }
+        }
+    } else {
+        // Handle markdown links
+        LinkTarget parsed = LinkParser::parseLinkTarget(actualTarget);
+
+        if (parsed.isInternalOnly) {
+            statusBar()->showMessage(
+                tr("Cannot open internal anchor in new window"), 3000);
+            return;
+        }
+
+        QString resolvedPath;
+        if (QFileInfo(parsed.filePath).isAbsolute()) {
+            resolvedPath = parsed.filePath;
+        } else {
+            QFileInfo currentFileInfo(currentFilePath);
+            QDir currentDir = currentFileInfo.dir();
+            resolvedPath = currentDir.filePath(parsed.filePath);
+        }
+        targetFile = QFileInfo(resolvedPath).absoluteFilePath();
     }
 
     QFileInfo info(targetFile);
@@ -203,10 +233,22 @@ void MainWindow::onOpenLinkInNewWindow(const QString& linkTarget) {
         if (!createFileFromLink(targetFile, actualTarget)) {
             return;
         }
+        // Refresh info after creating file
+        info.setFile(targetFile);
     }
 
+    // Ensure we have valid paths
+    if (!info.exists()) {
+        statusBar()->showMessage(
+            tr("File does not exist: %1").arg(targetFile), 3000);
+        return;
+    }
+
+    QString folderPath = info.absolutePath();
+    QString filePath = info.absoluteFilePath();
+
     // Open in new window
-    WindowManager::instance()->createWindow(info.absolutePath(), targetFile);
+    WindowManager::instance()->createWindow(folderPath, filePath);
 }
 
 bool MainWindow::createFileFromLink(const QString& targetFile,

@@ -151,8 +151,12 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    // Create first window via WindowManager
-    WindowManager::instance()->createWindow(startupPath, startupFile);
+    // Create first window directly (not via WindowManager)
+    // WindowManager::createWindow() launches new processes, only for additional windows
+    MainWindow* mainWindow = new MainWindow();
+    mainWindow->setStartupArguments(startupPath, startupFile);
+    mainWindow->initializeSettings();
+    mainWindow->show();
 
     return app.exec();
 }

@@ -13,6 +13,7 @@
 #include "defs.h"
 #include "filesystemtreeview.h"
 #include "linkparser.h"
+#include "markdownpreview.h"
 #include "navigationhistory.h"
 #include "tabeditor.h"
 
@@ -114,7 +115,14 @@ MainWindow::MainWindow(QWidget* parent)
     // Note: readSettings() is called after setStartupArguments() in main.cpp
 }
 
-MainWindow::~MainWindow() {}
+MainWindow::~MainWindow() {
+    // Properly cleanup QWebEngineView to avoid profile warning
+    if (sharedPreview) {
+        sharedPreview->setPage(nullptr);  // Release page first
+        delete sharedPreview;
+        sharedPreview = nullptr;
+    }
+}
 
 void MainWindow::setStartupArguments(const QString& path, const QString& file) {
     m_startupPath = path;

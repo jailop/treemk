@@ -22,6 +22,7 @@ class MarkdownPreview : public QWebEngineView {
     void wikiLinkClicked(const QString& linkTarget);
     void markdownLinkClicked(const QString& linkTarget);
     void openLinkInNewWindowRequested(const QString& linkTarget);
+    void openLinkInNewTabRequested(const QString& linkTarget);
     void internalLinkClicked(const QString& anchor);
     void scrollPercentageChanged(double percentage);
 
