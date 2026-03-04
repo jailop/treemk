@@ -112,7 +112,7 @@ MainWindow::MainWindow(QWidget* parent)
     createAIAssistMenu();
     createMenus();
     createToolbar();
-    // Note: readSettings() is called after setStartupArguments() in main.cpp
+    // Note: readSettings() and initial tab creation happen in initializeSettings()
 }
 
 MainWindow::~MainWindow() {
@@ -132,6 +132,10 @@ void MainWindow::setStartupArguments(const QString& path, const QString& file) {
 void MainWindow::initializeSettings() {
     readSettings();
     applySettings();
+    // Create initial tab after window is shown to avoid Qt WebEngine initialization issues
+    if (tabWidget && tabWidget->count() == 0) {
+        createNewTab();
+    }
 }
 
 void MainWindow::closeEvent(QCloseEvent* event) {

@@ -394,8 +394,8 @@ void MainWindow::createLayout() {
     mainSplitter->setStretchFactor(1, 1);
 
     setCentralWidget(mainSplitter);
-
-    createNewTab();
+    
+    // Note: createNewTab() is called from initializeSettings() after window is shown
 }
 
 void MainWindow::readSettings() {

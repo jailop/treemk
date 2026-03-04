@@ -59,6 +59,8 @@ int main(int argc, char* argv[]) {
     qInstallMessageHandler(messageHandler);
 
     QApplication app(argc, argv);
+    fprintf(stderr, "QApplication created\n");
+    fflush(stderr);
     app.setApplicationName(APP_LABEL);
     app.setOrganizationName(APP_LABEL);
     app.setApplicationVersion(APP_VERSION);
@@ -153,10 +155,12 @@ int main(int argc, char* argv[]) {
 
     // Create first window directly (not via WindowManager)
     // WindowManager::createWindow() launches new processes, only for additional windows
-    MainWindow mainWindow;
-    mainWindow.setStartupArguments(startupPath, startupFile);
-    mainWindow.initializeSettings();
-    mainWindow.show();
+    MainWindow* mainWindow = new MainWindow();
+    mainWindow->setStartupArguments(startupPath, startupFile);
+    mainWindow->show();
+    mainWindow->initializeSettings();
 
-    return app.exec();
+    int result = app.exec();
+    delete mainWindow;
+    return result;
 }
