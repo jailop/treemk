@@ -23,6 +23,10 @@ void MarkdownEditor::keyPressEvent(QKeyEvent* event) {
                                          ? QTextCursor::KeepAnchor
                                          : QTextCursor::MoveAnchor;
 
+    /* Here we handle shortcuts for moving list items up and down. It is
+     * at the top of the function because we want these shortcuts to
+     * have precedence over the default cursor movement shortcuts.
+     */
     if (pressed == sm->getShortcut(ShortcutManager::MoveListItemUp)) {
         moveListItemUp();
         event->accept();
@@ -33,6 +37,11 @@ void MarkdownEditor::keyPressEvent(QKeyEvent* event) {
         return;
     }
 
+    /* Here is the basic navigation through the document. We have
+     * movements for moving to the start and end of lines, words,
+     * paragraphs, and the whole document. These are all implemented by
+     * moving the cursor to the appropriate position.
+     */
     if (pressed == sm->getShortcut(ShortcutManager::MoveToStartOfLine)) {
         cursor.movePosition(QTextCursor::StartOfLine, moveMode);
         setTextCursor(cursor);
@@ -79,6 +88,10 @@ void MarkdownEditor::keyPressEvent(QKeyEvent* event) {
         return;
     }
 
+    /* These are delete shortcuts. They are implemented by first moving
+     * the cursor to select the text that should be deleted, and then
+     * removing the selected text.
+     */
     if (pressed == sm->getShortcut(ShortcutManager::DeleteWordLeft)) {
         cursor.beginEditBlock();
         cursor.movePosition(QTextCursor::PreviousWord, QTextCursor::KeepAnchor);
@@ -110,6 +123,12 @@ void MarkdownEditor::keyPressEvent(QKeyEvent* event) {
         return;
     }
 
+    /* Here we're handling a critical feature of the editor, opening
+     * links by pressing Ctrl+Enter. The cursor position is used to
+     * check if the context is a wiki link, a markdown link, or an
+     * external link, and the appropriate signal is emitted or action
+     * taken.
+     */
     if ((event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter) &&
         (event->modifiers() & Qt::ControlModifier)) {
         int position = cursor.position();
@@ -140,13 +159,22 @@ void MarkdownEditor::keyPressEvent(QKeyEvent* event) {
     bool autoIndent = settings.value("editor/autoIndent", true).toBool();
     bool autoCloseBrackets =
         settings.value("editor/autoCloseBrackets", true).toBool();
-
     if (autoIndent &&
         (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter)) {
         QTextCursor cursor = textCursor();
         QString currentLine = cursor.block().text();
         int cursorPosInBlock = cursor.positionInBlock();
 
+        /* For task items, we want to continue the task item if the
+         * cursor is at the end of the line, but if it is in the middle,
+         * we just want to insert a newline with the same indentation,
+         * without adding a new task item. If the cursor is at the end
+         * of a task item, we want to check if the content after the
+         * checkbox is empty. If it is empty, we should exit the task
+         * item by inserting a blank line. If it is not empty, we should
+         * continue the task item by inserting a new task item with the
+         * same bullet and an unchecked checkbox.
+         */
         if (RegexUtils::isTaskItem(currentLine)) {
             RegexUtils::TaskItemInfo taskInfo =
                 RegexUtils::parseTaskItem(currentLine);
@@ -175,6 +203,18 @@ void MarkdownEditor::keyPressEvent(QKeyEvent* event) {
             }
         }
 
+        /* For lists, we want to continue the list if the cursor is at
+         * the end of the line, but if it is in the middle, we just want
+         * to insert a newline with the same indentation, without adding
+         * a new list item.
+         *
+         * If the cursor is at the end of a list item, we want to check
+         * if the content after the bullet is empty. If it is empty, we
+         * should exit the list by inserting a blank line.  If it is not
+         * empty, we should continue the list by inserting a new list
+         * item with the same bullet or incremented number for ordered
+         * lists.
+         */
         if (RegexUtils::isListItem(currentLine)) {
             RegexUtils::ListItemInfo listInfo =
                 RegexUtils::parseListItem(currentLine);
@@ -195,6 +235,11 @@ void MarkdownEditor::keyPressEvent(QKeyEvent* event) {
                     event->accept();
                     return;
                 } else {
+                    if (listInfo.isOrdered) {
+                        int number = listInfo.marker
+                            .left(listInfo.marker.length() - 1).toInt();
+                        bullet = QString::number(number + 1) + ".";
+                    }
                     cursor.insertText("\n" + whitespace + bullet + " ");
                     setTextCursor(cursor);
                     event->accept();
@@ -227,6 +272,15 @@ void MarkdownEditor::keyPressEvent(QKeyEvent* event) {
         return;
     }
 
+    /* Here we're handling the auto-closing of brackets and quotes. When
+     * the user types an opening bracket or quote, we check if the
+     * character after the cursor is whitespace or the end of the line.
+     * If it is, we insert the corresponding closing character and move
+     * the cursor back to be between the two characters. If the user
+     * types a closing bracket or quote and the character after the
+     * cursor is the same closing character, we move the cursor over it
+     * instead of inserting a new character.
+     */
     if (autoCloseBrackets) {
         QString closingChar;
         bool shouldClose = false;
@@ -276,6 +330,11 @@ void MarkdownEditor::keyPressEvent(QKeyEvent* event) {
         }
     }
 
+    /* Indenting and unindenting list items with Tab and Shift+Tab. If
+     * the current line is a list item, pressing Tab will add two spaces
+     * at the beginning of the line to indent it, and pressing Shift+Tab
+     * will remove up to two spaces from the beginning of the line.
+     */
     if (event->key() == Qt::Key_Tab || event->key() == Qt::Key_Backtab) {
         QTextCursor cursor = textCursor();
         QString line = cursor.block().text();
@@ -306,6 +365,12 @@ void MarkdownEditor::keyPressEvent(QKeyEvent* event) {
         }
     }
 
+    /* Toggling task items with Ctrl+Space. If the current line is a
+     * task item, pressing Ctrl+Space will toggle the checkbox between
+     * checked and unchecked. This is done by finding the position of
+     * the checkbox marker in the line and replacing it with the
+     * opposite character.
+     */
     if (event->key() == Qt::Key_Space &&
         (event->modifiers() == Qt::ControlModifier ||
          event->modifiers() == (Qt::ControlModifier | Qt::KeypadModifier))) {
@@ -323,6 +388,12 @@ void MarkdownEditor::keyPressEvent(QKeyEvent* event) {
         return;
     }
 
+    /* Hiding the autocomplete prediction when pressing navigation keys
+     * or Escape. This is important to ensure that the prediction
+     * doesn't interfere with normal navigation and can be dismissed
+     * easily when the user wants to continue typing without accepting
+     * the prediction.
+     */
     if (event->key() == Qt::Key_Left || event->key() == Qt::Key_Right ||
         event->key() == Qt::Key_Up || event->key() == Qt::Key_Down ||
         event->key() == Qt::Key_Home || event->key() == Qt::Key_End ||

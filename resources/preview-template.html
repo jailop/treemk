@@ -18,14 +18,18 @@ CUSTOM_STYLESHEET
 <script>
 var savedScrollPercentage = SCROLL_PERCENTAGE;
 document.addEventListener('DOMContentLoaded', function() {
-  window.renderMathInElement(document.body, {
-    delimiters: [
-      {left: '$$', right: '$$', display: true},
-      {left: '$', right: '$', display: false}
-    ],
-    throwOnError: false,
-    strict: false
-  });
+  // Protect renderMathInElement call specifically
+  if (document.body) {
+    window.renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ],
+      throwOnError: false,
+      strict: false
+    });
+  }
+  
   document.querySelectorAll('pre code').forEach((block) => {
     if (block.classList.contains('language-mermaid')) {
       const pre = block.parentElement;
@@ -42,9 +46,25 @@ document.addEventListener('DOMContentLoaded', function() {
       window.hljs.highlightElement(block);
     }
   });
-  if (savedScrollPercentage > 0) {
+  
+  if (savedScrollPercentage > 0 && document.body) {
     window.scrollTo(0, document.body.scrollHeight * savedScrollPercentage);
   }
+  
+  // Emit scroll events back to C++ via console (intercepted by Qt)
+  let scrollTimeout;
+  window.addEventListener('scroll', function() {
+    clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(function() {
+      if (!document.body) return;
+      const scrollPercentage = window.scrollY /
+            (document.body.scrollHeight - window.innerHeight);
+      // Use document.title as a communication channel
+      const oldTitle = document.title;
+      document.title = 'SCROLL:' + scrollPercentage;
+      setTimeout(function() { document.title = oldTitle; }, 10);
+    }, 100);
+  });
 });
 </script>
 </head>

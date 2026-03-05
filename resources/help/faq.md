@@ -1,6 +1,6 @@
 # Frequently Asked Questions
 
-Honest answers to common questions about TreeMk.
+Answers to common questions about TreeMk.
 
 ## General Questions
 
@@ -63,25 +63,24 @@ VS Code is a programming IDE. TreeMk is a note-taking editor. They serve differe
 
 **Officially supported:**
 
-- Linux (primary development platform)
+- Linux and FreeBSD (primary development platforms)
 - Windows 10/11
 - macOS (10.15+)
 
-**Reality check:** TreeMk is developed primarily on Linux. Windows and macOS builds exist but receive less testing. Platform-specific issues should be reported—fixes depend on maintainer availability and resources.
+**Reality check:** TreeMk is developed primarily on Linux and FreeBSD. Windows and macOS builds exist but receive less testing and lack a better integration with the OS. Contributions are specially welcome to improve user experience in Windows and MacOS.
 
 ### What are the system requirements?
 
 **Minimum:**
 
 - 4GB RAM
-- 100MB disk space
+- 256MB disk space
 - 1280×720 display
 
 **Recommended:**
 
 - 8GB RAM (for large workspaces with thousands of files)
 - SSD for better file indexing performance
-- 1920×1080 or higher display
 
 **Reality:** TreeMk runs on modest hardware. Performance depends on workspace size and search/indexing frequency.
 
@@ -102,30 +101,6 @@ Honestly? It depends.
 - Wiki-link resolution in deeply nested directories: Slightly slower but usually acceptable
 
 **TreeMk doesn't scale to 100,000 files gracefully.** For workspaces that large, consider organizing into separate smaller workspaces or using specialized tools designed for massive datasets.
-
-### How do wiki links work across directories?
-
-When typing `[[note]]`, TreeMk searches for matching files using a depth-based strategy from the current file's location:
-
-**Search pattern:**
-
-- Depth 0 (current directory): Searches current folder + all subdirectories recursively
-- Depth 1 (one up): Goes up one folder, searches that folder + all its subdirectories
-- Depth 2 (default): Goes up two folders, searches those folders + all their subdirectories
-
-**File matching priority:**
-
-1. Exact match: `note.md` or `note.markdown`
-2. Fuzzy match: Any file containing "note" in the name
-3. Case-insensitive matching
-
-**Search depth:** Configurable in settings (default: 2 levels up). Setting it to 0 limits search to current directory tree only. Higher values search more of the workspace but take longer.
-
-**Performance:** Link resolution uses caching. First click may take milliseconds for deeply nested structures, subsequent clicks are instant. Typical workspaces (hundreds of files) feel instant.
-
-**Limitation:** Search starts from the current file's location, not the workspace root. This is intentional—it keeps link resolution fast and predictable by searching nearby files first.
-
-**Technical approach:** The link resolver navigates up the folder hierarchy. At each level, it searches the directory and all subdirectories with recursive flags. Search stops when a match is found or the maximum depth is reached. The algorithm prioritizes closer files (same directory first) before searching parent directories, making relative wiki links like `[[../other-folder/note]]` work as expected. Home directory boundaries are enforced to prevent escaping outside the user's file system area.
 
 ### How are backlinks tracked?
 
@@ -149,7 +124,7 @@ TreeMk builds an index of all `[[wiki-links]]` in files within the configured se
 
 ### Can TreeMk work with Git repositories?
 
-Yes! TreeMk edits files in place. Git doesn't care what editor is used.
+Yes. TreeMk edits files in place. Git doesn't care what editor is used.
 
 **What TreeMk does:**
 
@@ -175,6 +150,7 @@ Files are regular Markdown files. Any existing sync solution works:
 - Google Drive
 - Syncthing
 - Git
+- unison
 - rsync
 - iCloud
 - NextCloud
@@ -197,13 +173,13 @@ No. TreeMk doesn't have a plugin system.
 
 Probably not.
 
-Building quality mobile apps is a completely different engineering effort. TreeMk is a desktop application. Attempting mobile would dilute focus and resources.
+Building high-quality mobile apps represents a fundamentally different engineering undertaking. TreeMk is currently a desktop application. Attempting to develop a mobile version would spread our focus and resources too thinly. Furthermore, the concept of having direct control over local files is well-established in desktop environments, but not in mobile devices. Based on solid reasoning, both iPhone and Android devices consider direct access to the file system as a security vulnerability.
 
 **Alternatives:** Any Markdown editor on mobile can edit synced files. Notes are portable Markdown—they're not locked to TreeMk.
 
 ### Can TreeMk handle images and attachments?
 
-**Images:** Yes. Paste from clipboard (Ctrl+V), drag-drop, or link manually. TreeMk saves them in the document folder.
+**Images:** Yes. Paste from clipboard (Ctrl+V), drag-drop, or link manually. TreeMk saves them in the document folder and render the images in the preview panel.
 
 **PDFs:** TreeMk won't display them inline, but linking to them works. Clicking opens them with the system's default application.
 
@@ -213,7 +189,7 @@ Building quality mobile apps is a completely different engineering effort. TreeM
 
 ### How does word prediction work?
 
-TreeMk offers context-aware word completion based on the current document's content.
+TreeMk offers context-aware word completion based on the current document folder's content.
 
 **What it does:**
 
@@ -250,6 +226,8 @@ TreeMk integrates with AI providers through a plugin-like provider system, curre
 
 **Configuration:** Edit → Preferences → AI Assistant sets the provider, endpoint URL, API key, model name, and parameters (temperature, max tokens).
 
+**Reality check**: Basic text editing tasks, such as grammar checking, summarization, or translation into other languages, don't require the most advanced models. A local model running through Ollama can handle most needs. For more advanced AI-assisted text editing features, such as full text generation, it's better to use a different tool.
+
 ### Does TreeMk have end-to-end encryption?
 
 No. Files are stored as plain Markdown on the file system.
@@ -266,9 +244,9 @@ TreeMk is not a security tool. It's a text editor. Encryption is the operating s
 
 ### Is TreeMk production-ready?
 
-**It works.** It is used daily for real work, but it is not stable yet.
+**It works.** It's used daily for real work, but many things still need or could be improved.
 
-**However:** TreeMk is a community project, not a commercial product. Expect:
+**However:** TreeMk is a one-person-maintained project and not a commercial product. Expect:
 
 - Core features functional
 - Regular bug fixes
@@ -279,9 +257,7 @@ TreeMk is not a security tool. It's a text editor. Encryption is the operating s
 
 ### How often is TreeMk updated?
 
-**Reality:** Updates happen when maintainers have time. Sometimes weekly, sometimes monthly, sometimes longer gaps.
-
-TreeMk is maintained by volunteers with day jobs. Bugs get fixed, features get added, improvements happen—but on volunteer schedules, not corporate release calendars.
+The maintainer has consistently reviewed reported issues and requested improvements, but updates have not followed a fixed release schedule. Recently, code changes have been added to the project at least once a week, although this pace is not guaranteed to be constant.
 
 **Check activity:** The GitHub repository commit history shows the real picture.
 
@@ -316,20 +292,22 @@ Yes. GPL-3.0 license. Full source code is available.
 - Free to redistribute
 - Must keep source open if distributing modified versions
 
-**Commercial use:** Allowed. TreeMk can be used for business. No fees, no restrictions.
+**Commercial use:** Allowed. TreeMk can be used for business. There are no fees or restrictions. It is only required to observe the license terms.
 
 ### Can contributions be made?
 
-**Yes!** See the contributing guidelines.
+**Yes!**, they are very welcome. See the contributing guidelines.
 
 **Realistic expectations:**
 
-- Pull requests are reviewed when maintainers have time
+- Pull requests are reviewed when maintainer have time
 - Code quality standards matter (C++/Qt best practices)
 - Small, focused changes merge faster than big rewrites
 - Documentation contributions are especially welcome
 
 **Not sure where to start?** Look for "good first issue" labels in GitHub Issues.
+
+Check the contributing section.
 
 ## The Honest Bottom Line
 
@@ -350,13 +328,13 @@ Yes. GPL-3.0 license. Full source code is available.
 - Polished commercial software is preferred
 - Tolerance for occasional rough edges is low
 
-**Best approach:** Install it, test with a small workspace, see if it fits the workflow. TreeMk isn't for everyone. That's acceptable.
+**Best approach:** Install it, test with a small workspace, and see if it fits your workflow. TreeMk isn’t for everyone. Use the tool that works best for you – that’s what freedom is about.
 
 ### What's TreeMk's long-term future?
 
 **Honest answer:** Unknown.
 
-TreeMk exists as long as maintainers have time and interest. It might grow, it might stay small, it might eventually stop being updated.
+TreeMk exists as long as the maintainer have time and interest. It might grow, it might stay small, it might eventually stop being updated.
 
 **But notes are Markdown files.** They'll outlive any software. That's the point.
 

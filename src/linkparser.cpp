@@ -1,6 +1,7 @@
 #include "linkparser.h"
 
 #include <QDir>
+#include <QDirIterator>
 #include <QFile>
 #include <QFileInfo>
 #include <QMutexLocker>
@@ -82,9 +83,8 @@ void LinkParser::buildLinkIndex(const QString& path, int depth) {
     forwardLinks.clear();
     locker.unlock();
 
-    scanDirectory(path, 0);
+    scanDirectoryIterative(path);
 
-    // Build backlinks using the BacklinksManager
     backlinksManager->buildBacklinks(forwardLinks);
 
     emit indexBuildCompleted();
@@ -142,35 +142,43 @@ QString LinkParser::resolveLinkTarget(const QString& linkTarget,
     return QString();
 }
 
-void LinkParser::scanDirectory(const QString& dirPath, int currentDepth) {
-    if (currentDepth > maxDepth ||
-        (enforceHomeBoundary && !isWithinHomeDirectory(dirPath))) {
-        return;
-    }
-
-    QDir dir(dirPath);
+void LinkParser::scanDirectoryIterative(const QString& dirPath) {
     QStringList filters;
     for (int i = 0; i < MARKDOWN_FILTER_COUNT; ++i) {
         filters << MARKDOWN_FILTERS[i];
     }
 
-    QFileInfoList files = dir.entryInfoList(filters, QDir::Files, QDir::Name);
-    for (const QFileInfo& fileInfo : files) {
-        processFile(fileInfo.absoluteFilePath());
-    }
+    QDirIterator it(dirPath, filters, QDir::Files | QDir::NoSymLinks,
+                    QDirIterator::Subdirectories);
 
-    QFileInfoList subdirs =
-        dir.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name);
-    for (const QFileInfo& subdirInfo : subdirs) {
-        scanDirectory(subdirInfo.absoluteFilePath(), currentDepth + 1);
+    QDir rootDir(dirPath);
+    int fileCount = 0;
+
+    while (it.hasNext()) {
+        QString filePath = it.next();
+
+        if (enforceHomeBoundary && !isWithinHomeDirectory(filePath)) {
+            continue;
+        }
+
+        QString relativePath = rootDir.relativeFilePath(filePath);
+        int depth = relativePath.count('/');
+        if (depth > maxDepth) {
+            continue;
+        }
+
+        processFile(filePath);
+        fileCount++;
+
+        if (fileCount % 100 == 0) {
+            emit indexBuildProgress(fileCount, -1);
+        }
     }
 }
 
 void LinkParser::processFile(const QString& filePath) {
     QVector<QString> links = extractLinksFromFile(filePath);
 
-    // Always add file to forward links, even if empty
-    // This is needed so BacklinksManager knows about all scanned files
     QMutexLocker locker(&mutex);
     forwardLinks[filePath] = links;
 }

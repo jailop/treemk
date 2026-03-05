@@ -6,6 +6,7 @@
 #include <QListWidget>
 #include <QMenu>
 #include <QMenuBar>
+#include <QScrollBar>
 #include <QSplitter>
 #include <QStatusBar>
 #include <QTabWidget>
@@ -14,6 +15,7 @@
 #include <QToolButton>
 #include <QVBoxLayout>
 
+#include "defs.h"
 #include "filesystemtreeview.h"
 #include "helpdialog.h"
 #include "linkparser.h"
@@ -153,7 +155,10 @@ void MainWindow::createMenus() {
 
     viewMenu = menuBar()->addMenu(tr("&View"));
     viewMenu->addAction(toggleSidebarAction);
-    viewMenu->addAction(cycleViewModeAction);
+    viewMenu->addSeparator();
+    viewMenu->addAction(toggleEditorAction);
+    viewMenu->addAction(togglePreviewAction);
+    viewMenu->addSeparator();
     viewMenu->addAction(toggleFocusModeAction);
     viewMenu->addSeparator();
     /*
@@ -168,6 +173,8 @@ void MainWindow::createMenus() {
     goMenu->addAction(forwardAction);
     goMenu->addSeparator();
     goMenu->addAction(quickOpenAction);
+    goMenu->addSeparator();
+    goMenu->addAction(openInNewTabAction);
     goMenu->addSeparator();
     goMenu->addAction(nextTabAction);
     goMenu->addAction(previousTabAction);
@@ -226,7 +233,8 @@ void MainWindow::createToolbar() {
     mainToolbar->addSeparator();
 
     mainToolbar->addAction(toggleSidebarAction);
-    mainToolbar->addAction(cycleViewModeAction);
+    mainToolbar->addAction(toggleEditorAction);
+    mainToolbar->addAction(togglePreviewAction);
 }
 
 void MainWindow::createLayout() {
@@ -254,6 +262,8 @@ void MainWindow::createLayout() {
             &MainWindow::onFileSelected);
     connect(treeView, &FileSystemTreeView::fileDoubleClicked, this,
             &MainWindow::onFileDoubleClicked);
+    connect(treeView, &FileSystemTreeView::fileOpenInNewTabRequested, this,
+            [this](const QString& filePath) { loadFile(filePath, true); });
     connect(treeView, &FileSystemTreeView::fileModifiedExternally, this,
             &MainWindow::onFileModifiedExternally);
     connect(treeView, &FileSystemTreeView::folderChanged, this,
@@ -280,7 +290,31 @@ void MainWindow::createLayout() {
             [this](QListWidgetItem* item) {
                 QString filePath = item->data(Qt::UserRole).toString();
                 if (!filePath.isEmpty()) {
-                    loadFile(filePath);
+                    // Check if file is already open in another tab
+                    TabEditor* existingTab = findTabByPath(filePath);
+                    if (existingTab) {
+                        // Switch to existing tab
+                        int index = tabWidget->indexOf(existingTab);
+                        tabWidget->setCurrentIndex(index);
+                    } else {
+                        // Open in current tab (reuse it even if modified, after confirmation)
+                        TabEditor* currentTab = currentTabEditor();
+                        if (currentTab && currentTab->isModified() && 
+                            !currentTab->filePath().isEmpty()) {
+                            // Temporarily switch to this tab to call maybeSave
+                            if (!maybeSave()) {
+                                return;  // User cancelled
+                            }
+                        }
+                        // Now load the file in current tab
+                        if (currentTab) {
+                            currentTab->loadFile(filePath);
+                            currentFilePath = filePath;
+                            updateBacklinks();
+                            setWindowTitle(QString("%1 - %2").arg(
+                                QFileInfo(filePath).fileName(), APP_LABEL));
+                        }
+                    }
                 }
             });
     
@@ -321,15 +355,47 @@ void MainWindow::createLayout() {
     connect(tabWidget, &QTabWidget::tabCloseRequested, this,
             &MainWindow::onTabCloseRequested);
 
+    sharedPreview = new MarkdownPreview(this);
+    sharedPreview->setMinimumWidth(300);
+
+    connect(sharedPreview, &MarkdownPreview::wikiLinkClicked, this,
+            &MainWindow::onWikiLinkClicked);
+    connect(sharedPreview, &MarkdownPreview::markdownLinkClicked, this,
+            &MainWindow::onMarkdownLinkClicked);
+    connect(sharedPreview, &MarkdownPreview::openLinkInNewWindowRequested,
+            this, &MainWindow::onOpenLinkInNewWindow);
+    connect(sharedPreview, &MarkdownPreview::openLinkInNewTabRequested,
+            this, &MainWindow::onOpenLinkInNewTab);
+    connect(sharedPreview, &MarkdownPreview::internalLinkClicked, this,
+            &MainWindow::onInternalLinkClicked);
+    
+    // DISABLED: Preview to Editor scroll sync (causes feedback loop)
+    // Keeping editor to preview sync only (one-way synchronization)
+    /*
+    connect(sharedPreview, &MarkdownPreview::scrollPercentageChanged, this,
+            [this](double percentage) {
+                TabEditor* tab = currentTabEditor();
+                if (tab) {
+                    tab->setEditorScrollFromPreview(percentage);
+                }
+            });
+    */
+
+    editorPreviewSplitter = new QSplitter(Qt::Horizontal, this);
+    editorPreviewSplitter->addWidget(tabWidget);
+    editorPreviewSplitter->addWidget(sharedPreview);
+    editorPreviewSplitter->setStretchFactor(0, 1);
+    editorPreviewSplitter->setStretchFactor(1, 1);
+
     mainSplitter = new QSplitter(Qt::Horizontal, this);
     mainSplitter->addWidget(sidebarPanel);
-    mainSplitter->addWidget(tabWidget);
-    mainSplitter->setStretchFactor(0, 0);  // Sidebar panel
-    mainSplitter->setStretchFactor(1, 1);  // Tab widget gets most space
+    mainSplitter->addWidget(editorPreviewSplitter);
+    mainSplitter->setStretchFactor(0, 0);
+    mainSplitter->setStretchFactor(1, 1);
 
     setCentralWidget(mainSplitter);
-
-    createNewTab();
+    
+    // Note: createNewTab() is called from initializeSettings() after window is shown
 }
 
 void MainWindow::readSettings() {
@@ -346,23 +412,22 @@ void MainWindow::readSettings() {
     sidebarPanel->setVisible(sidebarVisible);
     toggleSidebarAction->setChecked(sidebarVisible);
 
-    int savedViewMode = settings->value("viewMode", ViewMode_Both).toInt();
-    currentViewMode = static_cast<ViewMode>(savedViewMode);
-
-    QString nextModeText;
-    switch (currentViewMode) {
-        case ViewMode_Both:
-            nextModeText = tr("Cycle View Mode (Next: Editor Only)");
-            break;
-        case ViewMode_EditorOnly:
-            nextModeText = tr("Cycle View Mode (Next: Preview Only)");
-            break;
-        case ViewMode_PreviewOnly:
-            nextModeText = tr("Cycle View Mode (Next: Both)");
-            break;
+    bool editorVisible = settings->value("editorVisible", true).toBool();
+    bool previewVisible = settings->value("previewVisible", true).toBool();
+    
+    // Ensure at least one is visible
+    if (!editorVisible && !previewVisible) {
+        editorVisible = true;
+        previewVisible = true;
     }
-    if (cycleViewModeAction) {
-        cycleViewModeAction->setText(nextModeText);
+
+    if (toggleEditorAction) {
+        toggleEditorAction->setChecked(editorVisible);
+        toggleEditorAction->setEnabled(previewVisible);
+    }
+    if (togglePreviewAction) {
+        togglePreviewAction->setChecked(previewVisible);
+        togglePreviewAction->setEnabled(editorVisible);
     }
 
     recentFolders = settings->value("recentFolders").toStringList();
@@ -425,8 +490,20 @@ void MainWindow::readSettings() {
             }
         }
 
+        // Only restore files that belong to the current folder
+        // This prevents opening unrelated files when opening in new window
         for (const QString& filePath : openFiles) {
             if (QFileInfo::exists(filePath)) {
+                // Check if file belongs to current folder
+                QFileInfo fileInfo(filePath);
+                QString fileFolder = fileInfo.absolutePath();
+                
+                // Only load if in current folder hierarchy
+                if (!folderToOpen.isEmpty() && 
+                    !fileFolder.startsWith(folderToOpen)) {
+                    continue;  // Skip files outside current folder
+                }
+                
                 loadFile(filePath);
             }
         }
@@ -454,8 +531,6 @@ void MainWindow::readSettings() {
         }
     }
 
-    applyViewMode(currentViewMode, false);
-    
     bool shouldRestoreFocusMode = settings->value("focusMode", false).toBool();
     if (shouldRestoreFocusMode && toggleFocusModeAction) {
         focusModeActive = false;
@@ -473,7 +548,12 @@ void MainWindow::writeSettings() {
     settings->setValue("size", size());
     settings->setValue("mainSplitter", mainSplitter->saveState());
     settings->setValue("sidebarVisible", leftTabWidget->isVisible());
-    settings->setValue("viewMode", static_cast<int>(currentViewMode));
+    if (tabWidget) {
+        settings->setValue("editorVisible", tabWidget->isVisible());
+    }
+    if (sharedPreview) {
+        settings->setValue("previewVisible", sharedPreview->isVisible());
+    }
     settings->setValue("lastFolder", currentFolder);
     settings->setValue("recentFolders", recentFolders);
     
@@ -625,11 +705,8 @@ void MainWindow::applySettings() {
     if (ThemeManager::instance()) {
         theme = ThemeManager::instance()->getResolvedPreviewColorSchemeName();
     }
-    for (int i = 0; i < tabWidget->count(); ++i) {
-        TabEditor* tab = qobject_cast<TabEditor*>(tabWidget->widget(i));
-        if (tab && tab->preview()) {
-            tab->preview()->setTheme(theme);
-        }
+    if (sharedPreview) {
+        sharedPreview->setTheme(theme);
     }
     /* TODO to be removed. theme is general for all the app, not just
      * preview.

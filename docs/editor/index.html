@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
     
     
       
@@ -908,6 +908,56 @@
     <span class="md-ellipsis">
       
         Making TreeMk Yours
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#view-modes-customize-your-workspace" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        View Modes: Customize Your Workspace
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="View Modes: Customize Your Workspace">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#toggle-editor-panel-ctrle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Toggle Editor Panel (Ctrl+E)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#toggle-preview-panel-ctrlp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Toggle Preview Panel (Ctrl+P)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#focus-mode-writing-without-distractions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Focus Mode: Writing Without Distractions
       
     </span>
   </a>
@@ -1798,6 +1848,56 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#view-modes-customize-your-workspace" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        View Modes: Customize Your Workspace
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="View Modes: Customize Your Workspace">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#toggle-editor-panel-ctrle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Toggle Editor Panel (Ctrl+E)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#toggle-preview-panel-ctrlp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Toggle Preview Panel (Ctrl+P)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#focus-mode-writing-without-distractions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Focus Mode: Writing Without Distractions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#writing-with-ai-assistance" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1847,7 +1947,7 @@
 <h2 id="smart-writing-assistance">Smart Writing Assistance<a class="headerlink" href="#smart-writing-assistance" title="Permanent link">&para;</a></h2>
 <h3 id="the-editor-that-anticipates-your-needs">The Editor That Anticipates Your Needs<a class="headerlink" href="#the-editor-that-anticipates-your-needs" title="Permanent link">&para;</a></h3>
 <p>TreeMk pays attention to what you're doing and helps you maintain consistency. When you press Enter at the end of an indented line, the next line starts at the same indentation level. No need to manually align your text—the editor remembers where you are.</p>
-<p>Type an opening parenthesis <code>(</code>, bracket <code>[</code>, brace <code>{</code>, or backtick <code>`</code>, and TreeMk immediately adds the closing character, placing your cursor between them. It's a small thing, but when you're typing mathematical expressions like <code>(a + b) * (c + d)</code> or code snippets with multiple <code>[[nested]]</code> structures, these micro-optimizations add up.</p>
+<p>Type an opening parenthesis <code>(</code>, bracket <code>[</code>, brace <code>{</code>, or backtick, and TreeMk immediately adds the closing character, placing your cursor between them. It's a small thing, but when you're typing mathematical expressions like <code>(a + b) * (c + d)</code> or code snippets with multiple <code>[[nested]]</code> structures, these micro-optimizations add up.</p>
 <h3 id="lists-that-write-themselves">Lists That Write Themselves<a class="headerlink" href="#lists-that-write-themselves" title="Permanent link">&para;</a></h3>
 <p>Start a list by typing <code>-</code> or <code>*</code> or <code>+</code> at the beginning of a line. Press Enter, and TreeMk continues the list automatically. Working with numbered lists? Type <code>1.</code> and each Enter gives you the next number. Creating a task list? Type <code>- [ ]</code> for a checkbox or <code>- [x]</code> for a completed task—TreeMk keeps adding checkboxes as you go.</p>
 <p>When you've finished your list, just press Enter twice on an empty list item, and TreeMk understands you're done.</p>
@@ -1874,12 +1974,8 @@
 <h3 id="mathematical-expressions">Mathematical Expressions<a class="headerlink" href="#mathematical-expressions" title="Permanent link">&para;</a></h3>
 <p>Need to write an equation? Press <strong>Ctrl+Shift+M</strong> to open the formula dialog. You can insert inline math like <code>$E = mc^2$</code> or display equations like <code>$$\int_0^\infty e^{-x} dx = 1$$</code>. The preview panel renders them beautifully using LaTeX notation.</p>
 <h3 id="including-external-files">Including External Files<a class="headerlink" href="#including-external-files" title="Permanent link">&para;</a></h3>
-<p>Here's where things get interesting. Imagine you're writing documentation and want to include an actual source code file, not just a copy that could get out of date. In a code block, type <code>[[!filename]]</code> where <code>filename</code> is your source file:</p>
-<div class="language-markdown highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="sb">```python</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="p">[[</span><span class="err">!</span><span class="n">calculate</span><span class="o">.</span><span class="n">py</span><span class="p">]]</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="sb">```</span>
-</span></code></pre></div>
-<p>When the preview renders, TreeMk reads <code>calculate.py</code> and displays its contents right there in your code block. Update the source file, and the preview updates automatically. This works with any text file—Python scripts, configuration files, snippets of prose—anything you want to include dynamically.</p>
+<p>Here's where things get interesting. Imagine you're writing documentation and want to include an actual source code file, not just a copy that could get out of date. In a code block, type <code>[[!filename]]</code> where <code>filename</code> is your source file.</p>
+<p>When the preview renders, TreeMk reads the file and displays its contents right there in your code block. Update the source file, and the preview updates automatically. This works with any text file—Python scripts, configuration files, snippets of prose—anything you want to include dynamically.</p>
 <p>You can also use <code>[[!filename]]</code> outside of code blocks to embed entire Markdown documents. Perfect for reusable snippets, shared sections, or modular documentation. Use <code>[[!snippet|Custom Title]]</code> if you want to override the display title.</p>
 <h3 id="dates-and-times">Dates and Times<a class="headerlink" href="#dates-and-times" title="Permanent link">&para;</a></h3>
 <p>Writing a journal entry? Meeting notes? Press <strong>Alt+D</strong> to insert today's date. TreeMk remembers your preferred format (YYYY-MM-DD, DD/MM/YYYY, "February 14, 2026", etc.) and uses it next time. Similarly, <strong>Alt+T</strong> inserts the current time in your preferred format. Small conveniences that make daily note-taking feel effortless.</p>
@@ -1899,10 +1995,12 @@
 - <code>\[\[.*\]\]</code> - Find all wiki links</p>
 <h3 id="find-and-replace">Find and Replace<a class="headerlink" href="#find-and-replace" title="Permanent link">&para;</a></h3>
 <p>Press <strong>Ctrl+H</strong> to open find-and-replace. Same options as Quick Find, plus:</p>
-<p><strong>Replace Options:</strong>
-- <strong>Replace</strong> - Replace current match
-- <strong>Replace All</strong> - Replace every match in document
-- <strong>Preview</strong> - See what will change before committing</p>
+<p><strong>Replace Options:</strong></p>
+<ul>
+<li><strong>Replace</strong> - Replace current match</li>
+<li><strong>Replace All</strong> - Replace every match in document</li>
+<li><strong>Preview</strong> - See what will change before committing</li>
+</ul>
 <p><strong>Use Case:</strong> Rename a term throughout your document. Search for "quantum mechanics" and replace with "QM" everywhere. One click.</p>
 <h3 id="search-across-files">Search Across Files<a class="headerlink" href="#search-across-files" title="Permanent link">&para;</a></h3>
 <p>Need to find something across all your notes? Press <strong>Ctrl+Shift+F</strong>.</p>
@@ -1918,12 +2016,44 @@
 <p><strong>Power Tip:</strong> Use regex here too. Find all notes mentioning a person: <code>(Alice|Bob|Charlie)</code>. Find all empty headings: <code>^#+\s*$</code>.</p>
 <h2 id="making-treemk-yours">Making TreeMk Yours<a class="headerlink" href="#making-treemk-yours" title="Permanent link">&para;</a></h2>
 <p>The editor adapts to your preferences. Open <strong>Edit → Preferences</strong> to customize fonts, tab widths, and colors. Toggle auto-indent, auto-close brackets, or word prediction based on how you like to work. </p>
-<p><strong>Line Breaking:</strong> If you prefer lines to break at a specific column (like 80 characters for email-style text), go to <strong>Edit → Preferences → Editor</strong> and:
-1. Enable <strong>Line Breaking</strong>
-2. Set <strong>Line Break Column</strong> to your preferred width (60-120 characters)
-3. Press <strong>Ctrl+Shift+B</strong> to break long lines at word boundaries</p>
+<p><strong>Line Breaking:</strong> If you prefer lines to break at a specific column (like 80 characters for email-style text), go to <strong>Edit → Preferences → Editor</strong> and:</p>
+<ol>
+<li>Enable <strong>Line Breaking</strong></li>
+<li>Set <strong>Line Break Column</strong> to your preferred width (60-120 characters)</li>
+<li>Press <strong>Ctrl+Shift+B</strong> to break long lines at word boundaries</li>
+</ol>
 <p>Want TreeMk to remember your work session? Enable <strong>Settings → General → Restore session on startup</strong>, and next time you launch TreeMk, all your tabs, cursor positions, and window layout return exactly as you left them.</p>
 <p>Enable <strong>Settings → General → Auto-save</strong> to automatically save your work every minute (or whatever interval you prefer). Never lose a thought to an unexpected interruption.</p>
+<h2 id="view-modes-customize-your-workspace">View Modes: Customize Your Workspace<a class="headerlink" href="#view-modes-customize-your-workspace" title="Permanent link">&para;</a></h2>
+<p>TreeMk gives you flexible control over your workspace layout. You can show or hide the editor and preview panels independently to match your current task.</p>
+<h3 id="toggle-editor-panel-ctrle">Toggle Editor Panel (Ctrl+E)<a class="headerlink" href="#toggle-editor-panel-ctrle" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Hide the editor to see the preview in full width</li>
+<li>Perfect for reading rendered documents</li>
+<li>Menu: <strong>View → Toggle Editor</strong></li>
+<li>Toolbar: Editor button (document icon)</li>
+</ul>
+<h3 id="toggle-preview-panel-ctrlp">Toggle Preview Panel (Ctrl+P)<a class="headerlink" href="#toggle-preview-panel-ctrlp" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Hide the preview to see the editor in full width</li>
+<li>Ideal for focused writing without distractions</li>
+<li>Menu: <strong>View → Toggle Preview</strong></li>
+<li>Toolbar: Preview button (eye icon)</li>
+</ul>
+<h2 id="focus-mode-writing-without-distractions">Focus Mode: Writing Without Distractions<a class="headerlink" href="#focus-mode-writing-without-distractions" title="Permanent link">&para;</a></h2>
+<p>Sometimes you need to tune out everything except your words. Press <strong>F11</strong> to enter Focus Mode—a distraction-free environment where the menu bar, toolbar, sidebar, and preview all disappear, leaving only your editor and your thoughts.</p>
+<p>In Focus Mode, TreeMk centers your text with a maximum width of 900 pixels, no matter how wide your window is. This creates a comfortable reading width that doesn't force your eyes to track across an entire monitor. It's the digital equivalent of a blank page on a clean desk.</p>
+<p><strong>What happens in Focus Mode:</strong></p>
+<ul>
+<li>Menu bar hidden</li>
+<li>Toolbar hidden  </li>
+<li>Sidebar (files, outline, backlinks, history) hidden</li>
+<li>Preview panel hidden</li>
+<li>Text centered with comfortable max-width</li>
+<li>Status bar briefly shows "Focus Mode: ON (F11 to exit)" then disappears</li>
+</ul>
+<p>Press <strong>F11</strong> again to exit Focus Mode. Everything returns to exactly how it was—your sidebar visibility, panel visibility, all restored. You can also access Focus Mode through <strong>View → Focus Mode</strong> in the menu.</p>
+<p><strong>When to use it:</strong> First drafts. Flow states. Timed writing sessions. Late-night journal entries. Anytime you want nothing between you and your writing.</p>
 <h2 id="writing-with-ai-assistance">Writing with AI Assistance<a class="headerlink" href="#writing-with-ai-assistance" title="Permanent link">&para;</a></h2>
 <p>Sometimes you need a second opinion on your writing, or a quick translation, or help expanding a rough outline into full sentences. TreeMk integrates with AI services to provide exactly that kind of help.</p>
 <p>Configure your preferred provider in <strong>Edit → Preferences → AI Assistant</strong>:</p>
@@ -1967,7 +2097,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="February 14, 2026 18:41:20 UTC">February 14, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 3, 2026 15:06:58 UTC">March 3, 2026</span>
   </span>
 
     

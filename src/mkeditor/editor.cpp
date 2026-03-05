@@ -29,10 +29,12 @@
 #include <QTextCursor>
 #include <QTimer>
 #include <QUrl>
+#include <memory>
 
 #include "defs.h"
 #include "logic/systemprompts.h"
 #include "markdownhighlighter.h"
+#include "wordpredictor.h"
 #include "regexpatterns.h"
 #include "regexutils.h"
 #include "shortcutmanager.h"
@@ -47,8 +49,8 @@ MarkdownEditor::MarkdownEditor(QWidget* parent)
       m_focusModeMaxWidth(900) {
     lineNumberArea = new LineNumberArea(this);
     m_highlighter = new MarkdownHighlighter(document());
+    m_wordPredictor = std::make_unique<WordPredictor>();
 
-    // Initialize formatting timer for deferred hanging indent application
     m_formatTimer = new QTimer(this);
     m_formatTimer->setSingleShot(true);
     m_formatTimer->setInterval(100);  // Wait 100ms after user stops typing
@@ -57,7 +59,6 @@ MarkdownEditor::MarkdownEditor(QWidget* parent)
 
     setupEditor();
 
-    // Enable mouse tracking for cursor changes over checkboxes
     setMouseTracking(true);
     viewport()->setMouseTracking(true);
 
@@ -74,7 +75,6 @@ MarkdownEditor::MarkdownEditor(QWidget* parent)
     connect(document(), &QTextDocument::modificationChanged, this,
             &MarkdownEditor::setModified);
 
-    // Connect to theme changes
     if (ThemeManager::instance()) {
         connect(ThemeManager::instance(), &ThemeManager::themeChanged, this,
                 &MarkdownEditor::onThemeChanged);
@@ -83,36 +83,30 @@ MarkdownEditor::MarkdownEditor(QWidget* parent)
                 &MarkdownEditor::onThemeChanged);
     }
 
-    // Apply initial theme
     onThemeChanged();
 
-    // Load prediction setting
     QSettings settings(APP_LABEL, APP_LABEL);
     m_predictionEnabled = settings.value("editor/enableWordPrediction", true).toBool();
     m_aiAssistEnabled = settings.value("ai/enabled", true).toBool();
 }
 
-MarkdownEditor::~MarkdownEditor() {}
+MarkdownEditor::~MarkdownEditor() = default;
 
 void MarkdownEditor::onThemeChanged() {
-    // Update editor palette and stylesheet from ThemeManager
     if (ThemeManager::instance()) {
         setPalette(ThemeManager::instance()->getEditorPalette());
         setStyleSheet(ThemeManager::instance()->getEditorStyleSheet());
 
-        // Update highlighter color scheme
         if (m_highlighter) {
             QString resolvedScheme =
                 ThemeManager::instance()->getResolvedEditorColorSchemeName();
             m_highlighter->setColorScheme(resolvedScheme);
         }
 
-        // Update line number area to repaint with new colors
         if (lineNumberArea) {
             lineNumberArea->update();
         }
 
-        // Update current line highlighting
         highlightCurrentLine();
     }
 }
@@ -138,150 +132,42 @@ MarkdownHighlighter* MarkdownEditor::getHighlighter() const {
     return m_highlighter;
 }
 
-QString MarkdownEditor::getLinkAtPosition(int position) const {
-    QString dummy;
-    return getLinkAtPosition(position, dummy);
-}
-
-QString MarkdownEditor::getLinkAtPosition(int position, QString& displayText) const {
-    QTextCursor cursor(document());
-    cursor.setPosition(position);
-
-    QString line = cursor.block().text();
-    int posInBlock = cursor.positionInBlock();
-
-    // Pattern for [[target]] or [[target|display]] or ![[target]] or
-    // ![[target|display]]
-    QRegularExpression wikiLinkPattern(
-        "!?\\[\\[([^\\]|]+)(\\|([^\\]]+))?\\]\\]");
-    QRegularExpressionMatchIterator matchIterator =
-        wikiLinkPattern.globalMatch(line);
-
-    while (matchIterator.hasNext()) {
-        QRegularExpressionMatch match = matchIterator.next();
-        int start = match.capturedStart();
-        int end = start + match.capturedLength();
-
-        if (posInBlock >= start && posInBlock <= end) {
-            displayText = match.captured(3).trimmed();
-            return match.captured(1).trimmed();
-        }
-    }
-
-    displayText.clear();
-    return QString();
-}
-
-QString MarkdownEditor::getExternalLinkAtPosition(int position) const {
-    QTextCursor cursor(document());
-    cursor.setPosition(position);
-
-    QString line = cursor.block().text();
-    int posInBlock = cursor.positionInBlock();
-
-    // Pattern for [text](url)
-    QRegularExpression markdownLinkPattern("\\[([^\\]]+)\\]\\(([^\\)]+)\\)");
-    QRegularExpressionMatchIterator matchIterator =
-        markdownLinkPattern.globalMatch(line);
-
-    while (matchIterator.hasNext()) {
-        QRegularExpressionMatch match = matchIterator.next();
-        int start = match.capturedStart();
-        int end = start + match.capturedLength();
-
-        if (posInBlock >= start && posInBlock <= end) {
-            QString url = match.captured(2).trimmed();
-            // Check if it's an external link (http/https)
-            if (url.startsWith("http://") || url.startsWith("https://")) {
-                return url;
-            }
-        }
-    }
-
-    // Pattern for plain URLs (http:// or https://)
-    QRegularExpression urlPattern("(https?://[^\\s]+)");
-    QRegularExpressionMatchIterator urlIterator = urlPattern.globalMatch(line);
-
-    while (urlIterator.hasNext()) {
-        QRegularExpressionMatch match = urlIterator.next();
-        int start = match.capturedStart();
-        int end = start + match.capturedLength();
-
-        if (posInBlock >= start && posInBlock < end) {
-            return match.captured(1);
-        }
-    }
-
-    return QString();
-}
-
-QString MarkdownEditor::getMarkdownLinkAtPosition(int position) const {
-    QString dummy;
-    return getMarkdownLinkAtPosition(position, dummy);
-}
-
-QString MarkdownEditor::getMarkdownLinkAtPosition(int position, QString& labelText) const {
-    QTextCursor cursor(document());
-    cursor.setPosition(position);
-
-    QString line = cursor.block().text();
-    int posInBlock = cursor.positionInBlock();
-
-    // Pattern for [text](url) or ![text](url) (markdown links and images)
-    QRegularExpression markdownLinkPattern("!?\\[([^\\]]+)\\]\\(([^\\)]+)\\)");
-    QRegularExpressionMatchIterator matchIterator =
-        markdownLinkPattern.globalMatch(line);
-
-    while (matchIterator.hasNext()) {
-        QRegularExpressionMatch match = matchIterator.next();
-        int start = match.capturedStart();
-        int end = start + match.capturedLength();
-
-        if (posInBlock >= start && posInBlock <= end) {
-            QString url = match.captured(2).trimmed();
-            // Return any markdown link that is not an external URL
-            if (!url.startsWith("http://") && !url.startsWith("https://")) {
-                labelText = match.captured(1).trimmed();
-                return url;
-            }
-        }
-    }
-
-    labelText.clear();
-    return QString();
-}
-
 void MarkdownEditor::mousePressEvent(QMouseEvent* event) {
     if (event->button() == Qt::LeftButton) {
         QTextCursor cursor = cursorForPosition(event->pos());
         int position = cursor.position();
 
-        // Check if clicking on a task checkbox (with or without Ctrl)
         if (isClickOnCheckbox(position)) {
             toggleTaskAtPosition(position);
             event->accept();
             return;
         }
 
-        // Ctrl+Click for links
         if (event->modifiers() & Qt::ControlModifier) {
-            // Try wiki link
+            bool shiftPressed = event->modifiers() & Qt::ShiftModifier;
+
             QString linkTarget = getLinkAtPosition(position);
             if (!linkTarget.isEmpty()) {
-                emit wikiLinkClicked(linkTarget);
+                if (shiftPressed) {
+                    emit openLinkInNewTabRequested("wiki:" + linkTarget);
+                } else {
+                    emit wikiLinkClicked(linkTarget);
+                }
                 event->accept();
                 return;
             }
 
-            // Try markdown link
             QString markdownLink = getMarkdownLinkAtPosition(position);
             if (!markdownLink.isEmpty()) {
-                emit markdownLinkClicked(markdownLink);
+                if (shiftPressed) {
+                    emit openLinkInNewTabRequested("markdown:" + markdownLink);
+                } else {
+                    emit markdownLinkClicked(markdownLink);
+                }
                 event->accept();
                 return;
             }
 
-            // Try external link
             QString externalUrl = getExternalLinkAtPosition(position);
             if (!externalUrl.isEmpty()) {
                 QDesktopServices::openUrl(QUrl(externalUrl));
@@ -295,7 +181,6 @@ void MarkdownEditor::mousePressEvent(QMouseEvent* event) {
 }
 
 void MarkdownEditor::mouseMoveEvent(QMouseEvent* event) {
-    // Change cursor to pointer when hovering over checkboxes
     QTextCursor cursor = cursorForPosition(event->pos());
     int position = cursor.position();
 
@@ -309,170 +194,14 @@ void MarkdownEditor::mouseMoveEvent(QMouseEvent* event) {
 }
 
 void MarkdownEditor::updateWordFrequency() {
-    m_wordFrequency.clear();
-    m_bigramFrequency.clear();
-
-    // Process current file
     QString text = toPlainText();
-    QRegularExpression wordRegex("\\b[a-zA-Z]{3,}\\b");
-    QRegularExpressionMatchIterator it = wordRegex.globalMatch(text);
-
-    QStringList words;
-    while (it.hasNext()) {
-        QRegularExpressionMatch match = it.next();
-        QString word = match.captured(0).toLower();
-        words.append(word);
-        m_wordFrequency[word]++;
-    }
-
-    // Build bigram model from current file
-    for (int i = 0; i < words.size() - 1; i++) {
-        QPair<QString, QString> bigram(words[i], words[i + 1]);
-        m_bigramFrequency[bigram]++;
-    }
-
-    // Add words from other markdown files in the directory
-    updateDirectoryWordFrequency();
-}
-
-void MarkdownEditor::updateDirectoryWordFrequency() {
-    if (m_currentFilePath.isEmpty()) {
-        return;
-    }
-
-    QFileInfo fileInfo(m_currentFilePath);
-    QDir dir = fileInfo.absoluteDir();
+    m_wordPredictor->updateFromText(text);
     
-    // Get all markdown files in the directory
-    QStringList filters;
-    filters << "*.md" << "*.markdown";
-    QFileInfoList files = dir.entryInfoList(filters, QDir::Files);
-
-    QRegularExpression wordRegex("\\b[a-zA-Z]{3,}\\b");
-
-    for (const QFileInfo& file : files) {
-        // Skip the current file (already processed)
-        if (file.absoluteFilePath() == m_currentFilePath) {
-            continue;
-        }
-
-        // Read the file
-        QFile f(file.absoluteFilePath());
-        if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) {
-            continue;
-        }
-
-        QString content = QString::fromUtf8(f.readAll());
-        f.close();
-
-        // Process words from this file
-        QRegularExpressionMatchIterator it = wordRegex.globalMatch(content);
-        QStringList words;
-        
-        while (it.hasNext()) {
-            QRegularExpressionMatch match = it.next();
-            QString word = match.captured(0).toLower();
-            words.append(word);
-            m_wordFrequency[word]++;
-        }
-
-        // Build bigram model from this file
-        for (int i = 0; i < words.size() - 1; i++) {
-            QPair<QString, QString> bigram(words[i], words[i + 1]);
-            m_bigramFrequency[bigram]++;
-        }
+    if (!m_currentFilePath.isEmpty()) {
+        QFileInfo fileInfo(m_currentFilePath);
+        m_wordPredictor->updateFromDirectory(fileInfo.absolutePath(), 
+                                             m_currentFilePath);
     }
-}
-
-QString MarkdownEditor::predictWordUnigram(const QString& prefix) const {
-    if (prefix.length() < 2) {
-        return QString();
-    }
-
-    QString bestMatch;
-    int maxFrequency = 0;
-
-    for (auto it = m_wordFrequency.constBegin();
-         it != m_wordFrequency.constEnd(); ++it) {
-        const QString& word = it.key();
-        if (word.startsWith(prefix, Qt::CaseInsensitive) &&
-            word.length() > prefix.length()) {
-            if (it.value() > maxFrequency) {
-                maxFrequency = it.value();
-                bestMatch = word;
-            }
-        }
-    }
-
-    return bestMatch;
-}
-
-QString MarkdownEditor::predictWordBigram(const QString& previousWord,
-                                          const QString& prefix) const {
-    if (previousWord.isEmpty() || prefix.length() < 1) {
-        return QString();
-    }
-
-    QString prevLower = previousWord.toLower();
-    QString prefixLower = prefix.toLower();
-
-    QString bestMatch;
-    int maxFrequency = 0;
-
-    for (auto it = m_bigramFrequency.constBegin();
-         it != m_bigramFrequency.constEnd(); ++it) {
-        const QPair<QString, QString>& bigram = it.key();
-
-        // Check if this bigram starts with the previous word and the second
-        // word matches prefix
-        if (bigram.first == prevLower &&
-            bigram.second.startsWith(prefixLower) &&
-            bigram.second.length() > prefixLower.length()) {
-            if (it.value() > maxFrequency) {
-                maxFrequency = it.value();
-                bestMatch = bigram.second;
-            }
-        }
-    }
-
-    return bestMatch;
-}
-
-QString MarkdownEditor::predictWord(const QString& prefix) const {
-    if (prefix.length() < 1) {
-        return QString();
-    }
-
-    // Get the previous word for bigram prediction
-    QTextCursor cursor = textCursor();
-    cursor.movePosition(QTextCursor::StartOfWord, QTextCursor::MoveAnchor);
-    cursor.movePosition(QTextCursor::PreviousWord, QTextCursor::MoveAnchor);
-    cursor.movePosition(QTextCursor::EndOfWord, QTextCursor::KeepAnchor);
-    QString previousWord = cursor.selectedText();
-
-    // Try bigram prediction first (more context-specific)
-    QString bigramPrediction = predictWordBigram(previousWord, prefix);
-
-    // Try unigram prediction
-    QString unigramPrediction = predictWordUnigram(prefix);
-
-    // Choose the best prediction
-    // Prioritize bigram if it exists (more contextual)
-    if (!bigramPrediction.isEmpty()) {
-        // If bigram frequency is high enough, prefer it
-        QString prevLower = previousWord.toLower();
-        QPair<QString, QString> bigram(prevLower, bigramPrediction.toLower());
-        int bigramFreq = m_bigramFrequency.value(bigram, 0);
-        int unigramFreq = m_wordFrequency.value(unigramPrediction.toLower(), 0);
-
-        // Prefer bigram if it appears at least half as often as unigram
-        // or if unigram doesn't exist
-        if (bigramFreq * 2 >= unigramFreq || unigramPrediction.isEmpty()) {
-            return bigramPrediction;
-        }
-    }
-
-    return unigramPrediction;
 }
 
 void MarkdownEditor::showPrediction() {
@@ -497,7 +226,13 @@ void MarkdownEditor::showPrediction() {
     QString currentWord = cursor.selectedText();
 
     if (currentWord.length() >= 1) {
-        QString prediction = predictWord(currentWord);
+        QTextCursor prevCursor = textCursor();
+        prevCursor.movePosition(QTextCursor::StartOfWord, QTextCursor::MoveAnchor);
+        prevCursor.movePosition(QTextCursor::PreviousWord, QTextCursor::MoveAnchor);
+        prevCursor.movePosition(QTextCursor::EndOfWord, QTextCursor::KeepAnchor);
+        QString previousWord = prevCursor.selectedText();
+        
+        QString prediction = m_wordPredictor->predict(currentWord, previousWord);
         if (!prediction.isEmpty() &&
             prediction.toLower() != currentWord.toLower()) {
             m_currentPrediction = prediction.mid(currentWord.length());
@@ -529,21 +264,18 @@ void MarkdownEditor::onTextChanged() {
     static int changeCount = 0;
     changeCount++;
 
-    // Update word frequency every 10 changes to avoid performance issues
     if (changeCount % 10 == 0) {
         updateWordFrequency();
     }
 
     showPrediction();
 
-    // Apply hanging indent to current block only (doesn't affect undo/redo)
     applyListHangingIndentToCurrentBlock();
 }
 
 void MarkdownEditor::paintEvent(QPaintEvent* event) {
     QTextEdit::paintEvent(event);
 
-    // Draw prediction in gray
     if (!m_currentPrediction.isEmpty()) {
         QTextCursor cursor = textCursor();
         QRect rect = cursorRect(cursor);
@@ -553,7 +285,16 @@ void MarkdownEditor::paintEvent(QPaintEvent* event) {
 
         QPainter painter(viewport());
         painter.setFont(font);
-        painter.setPen(QColor(128, 128, 128, 180));  // Gray with transparency
+        
+        QString scheme = m_highlighter->getColorScheme();
+        QColor predictionColor;
+        if (scheme.contains("dark", Qt::CaseInsensitive)) {
+            predictionColor = ColorPalette::getDarkTheme().predictionText;
+        } else {
+            predictionColor = ColorPalette::getLightTheme().predictionText;
+        }
+        predictionColor.setAlpha(180);
+        painter.setPen(predictionColor);
 
         int x = rect.right();
         int y = rect.bottom();
@@ -565,18 +306,15 @@ void MarkdownEditor::paintEvent(QPaintEvent* event) {
 void MarkdownEditor::contextMenuEvent(QContextMenuEvent* event) {
     QMenu* menu = createStandardContextMenu();
 
-    // Check if cursor is on a wiki-link or markdown link
     QTextCursor cursor = cursorForPosition(event->pos());
     int position = cursor.position();
     QString linkTarget = getLinkAtPosition(position);
 
-    // If not a wiki-link, check for markdown link
     if (linkTarget.isEmpty()) {
         linkTarget = getMarkdownLinkAtPosition(position);
     }
 
     if (!linkTarget.isEmpty()) {
-        // Resolve to absolute path if it's a relative link
         QString absolutePath = linkTarget;
         if (!m_currentFilePath.isEmpty() &&
             QFileInfo(linkTarget).isRelative()) {
@@ -584,11 +322,23 @@ void MarkdownEditor::contextMenuEvent(QContextMenuEvent* event) {
             absolutePath = currentDir.absoluteFilePath(linkTarget);
         }
 
-        // Check if it's a local file that exists
         QFileInfo fileInfo(absolutePath);
         bool isLocalFile = fileInfo.exists() && fileInfo.isFile();
 
         menu->addSeparator();
+
+        QAction* openNewTabAction =
+            menu->addAction(tr("Open Link in New Tab"));
+        connect(openNewTabAction, &QAction::triggered, this,
+                [this, linkTarget]() {
+                    QString wikiLink = getLinkAtPosition(
+                        cursorForPosition(QCursor::pos()).position());
+                    if (!wikiLink.isEmpty()) {
+                        emit openLinkInNewTabRequested("wiki:" + linkTarget);
+                    } else {
+                        emit openLinkInNewTabRequested("markdown:" + linkTarget);
+                    }
+                });
 
         QAction* openNewWindowAction =
             menu->addAction(tr("Open Link in New Window"));
@@ -597,7 +347,6 @@ void MarkdownEditor::contextMenuEvent(QContextMenuEvent* event) {
                     emit openLinkInNewWindowRequested(linkTarget);
                 });
 
-        // Always show Rename and Delete actions for local (non-http) links
         if (!linkTarget.startsWith("http://") &&
             !linkTarget.startsWith("https://")) {
             QAction* renameAction = menu->addAction(
@@ -626,12 +375,10 @@ void MarkdownEditor::contextMenuEvent(QContextMenuEvent* event) {
         }
     }
 
-    // Add AI Assist submenu (only if AI is enabled)
     if (m_aiAssistEnabled) {
         menu->addSeparator();
         QMenu* aiMenu = menu->addMenu(QIcon::fromTheme("edit-ai"), tr("AI Assist"));
 
-        // Add predefined prompts
         QList<SystemPrompt> prompts =
             SystemPrompts::instance()->getEnabledPrompts();
         for (const SystemPrompt& prompt : prompts) {
@@ -641,7 +388,6 @@ void MarkdownEditor::contextMenuEvent(QContextMenuEvent* event) {
             });
         }
 
-        // Add Custom option
         if (!prompts.isEmpty()) {
             aiMenu->addSeparator();
         }
@@ -670,46 +416,69 @@ void MarkdownEditor::dragMoveEvent(QDragMoveEvent* event) {
     }
 }
 
+/**
+ * If the file cannot be read or doesn't contain a valid
+ * H1 header, this function returns an empty string. The function looks
+ * for the first line that matches the pattern of a markdown H1 header
+ * (e.g., "# Title").
+ */
+QString MarkdownEditor::extractMainTitle(const QString& filePath) const {
+    QFile file(filePath);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        return QString();
+    }
+    QTextStream in(&file);
+    QRegularExpression headerPattern(RegexPatterns::HEADER_H1);
+    while (!in.atEnd()) {
+        QString line = in.readLine().trimmed();
+        QRegularExpressionMatch match = headerPattern.match(line);
+        if (match.hasMatch()) {
+            file.close();
+            return match.captured(1).trimmed();
+        }
+    }
+    file.close();
+    return QString();
+}
+
 void MarkdownEditor::dropEvent(QDropEvent* event) {
     if (event->mimeData()->hasUrls()) {
         QList<QUrl> urls = event->mimeData()->urls();
-
-        // Get drop position
         QTextCursor cursor = cursorForPosition(event->position().toPoint());
         setTextCursor(cursor);
-
         for (const QUrl& url : urls) {
             if (url.isLocalFile()) {
                 QString filePath = url.toLocalFile();
                 QFileInfo fileInfo(filePath);
-
-                // Calculate relative path if current file path is set
                 QString linkPath = filePath;
                 if (!m_currentFilePath.isEmpty()) {
                     QFileInfo currentFileInfo(m_currentFilePath);
                     QDir currentDir = currentFileInfo.absoluteDir();
                     linkPath = currentDir.relativeFilePath(filePath);
                 }
-
-                // Check if it's an image
                 QStringList imageExtensions;
                 imageExtensions << "png" << "jpg" << "jpeg" << "gif" << "bmp"
                                 << "svg";
-
                 if (imageExtensions.contains(fileInfo.suffix().toLower())) {
-                    // Insert as image
                     QString imageMarkdown =
                         QString("![%1](%2)").arg(fileInfo.baseName(), linkPath);
                     cursor.insertText(imageMarkdown);
                 } else {
-                    // Insert as link
+                    QString linkLabel = fileInfo.fileName();
+                    QStringList markdownExtensions;
+                    markdownExtensions << "md" << "markdown" << "txt";
+                    if (markdownExtensions.contains(fileInfo.suffix().toLower())) {
+                        QString mainTitle = extractMainTitle(filePath);
+                        if (!mainTitle.isEmpty()) {
+                            linkLabel = mainTitle;
+                        }
+                    }
                     QString linkMarkdown =
-                        QString("[%1](%2)").arg(fileInfo.fileName(), linkPath);
+                        QString("[%1](%2)").arg(linkLabel, linkPath);
                     cursor.insertText(linkMarkdown);
                 }
             }
         }
-
         event->acceptProposedAction();
     } else {
         QTextEdit::dropEvent(event);
@@ -729,10 +498,7 @@ void MarkdownEditor::setupEditor() {
     setLineWrapMode(QTextEdit::WidgetWidth);
     setWordWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);
 
-    // Explicitly enable undo/redo
     setUndoRedoEnabled(true);
-
-    // Theme is applied via onThemeChanged() - no hardcoded colors here
 }
 
 int MarkdownEditor::lineNumberAreaWidth() {
@@ -899,13 +665,16 @@ void MarkdownEditor::setCurrentFilePath(const QString& filePath) {
 }
 
 void MarkdownEditor::insertFromMimeData(const QMimeData* source) {
-    // Check if clipboard contains an image
+    // Safety check
+    if (!source) {
+        return;
+    }
+    
     if (source->hasImage()) {
         QImage image = qvariant_cast<QImage>(source->imageData());
         if (!image.isNull()) {
             QString imagePath = saveImageFromClipboard(image);
             if (!imagePath.isEmpty()) {
-                // Insert markdown image syntax
                 QTextCursor cursor = textCursor();
                 cursor.insertText(QString("![image](%1)").arg(imagePath));
                 return;
@@ -913,15 +682,30 @@ void MarkdownEditor::insertFromMimeData(const QMimeData* source) {
         }
     }
 
-    // Always paste as plain text (strip HTML formatting)
-    if (source->hasText()) {
-        QTextCursor cursor = textCursor();
-        cursor.insertText(source->text());
-        return;
+    // For large text pastes, temporarily disable highlighter and signals
+    // to prevent performance issues and crashes
+    bool highlighterWasEnabled = false;
+    if (m_highlighter) {
+        highlighterWasEnabled = true;
+        m_highlighter->setDocument(nullptr);  // Detach highlighter
     }
-
-    // Fallback to default behavior for other content types
+    
+    // Block signals to prevent onTextChanged from firing repeatedly
+    blockSignals(true);
+    
+    // Paste text
     QTextEdit::insertFromMimeData(source);
+    
+    // Re-enable signals
+    blockSignals(false);
+    
+    // Re-attach highlighter and force full rehighlight
+    if (highlighterWasEnabled && m_highlighter) {
+        m_highlighter->setDocument(document());
+    }
+    
+    // Manually emit textChanged once
+    emit textChanged();
 }
 
 void MarkdownEditor::jumpToHeading(const QString& anchor) {

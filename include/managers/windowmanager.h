@@ -12,29 +12,29 @@ class MainWindow;
  */
 class WindowManager : public QObject {
     Q_OBJECT
-    
-public:
+
+   public:
     static WindowManager* instance();
-    
+
     /**
      * @brief Create new window with optional folder/file
      * @param folder Folder path to open (empty = no folder)
      * @param file File path to open (empty = no file)
      * @return Pointer to created window
      */
-    MainWindow* createWindow(const QString &folder = QString(), 
-                            const QString &file = QString());
-    
+    MainWindow* createWindow(const QString& folder = QString(),
+                             const QString& file = QString());
+
     QList<MainWindow*> windows() const { return m_windows; }
     bool hasOpenWindows() const { return !m_windows.isEmpty(); }
-    
-private:
+
+   private:
     WindowManager();
     static WindowManager* s_instance;
     QList<MainWindow*> m_windows;
     int m_windowOffset;
-    
-    void onWindowDestroyed(QObject *obj);
+
+    void onWindowDestroyed(QObject* obj);
 };
 
-#endif // WINDOWMANAGER_H
+#endif  // WINDOWMANAGER_H

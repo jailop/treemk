@@ -13,6 +13,7 @@
 #include "defs.h"
 #include "filesystemtreeview.h"
 #include "linkparser.h"
+#include "markdownpreview.h"
 #include "navigationhistory.h"
 #include "tabeditor.h"
 
@@ -69,66 +70,54 @@ MainWindow::MainWindow(QWidget* parent)
       closeTabAction(nullptr),
       closeAllTabsAction(nullptr),
       toggleSidebarAction(nullptr),
+      toggleEditorAction(nullptr),
       togglePreviewAction(nullptr),
-      cycleViewModeAction(nullptr),
-      // previewThemeLightAction(nullptr),
-      // previewThemeDarkAction(nullptr),
-      // previewThemeSepiaAction(nullptr),
       settingsAction(nullptr),
       userGuideAction(nullptr),
       aboutAction(nullptr),
       aboutQtAction(nullptr),
       keyboardShortcutsAction(nullptr),
-      currentViewMode(ViewMode_Both),
       focusModeActive(false),
-      preFocusModeViewMode(ViewMode_Both),
+      preFocusModeEditorVisible(true),
+      preFocusModePreviewVisible(true),
       preFocusModeSidebarVisible(true) {
     settings = new QSettings(APP_LABEL, APP_LABEL, this);
     linkParser = new LinkParser(this);
     connect(linkParser, &LinkParser::indexBuildCompleted, this,
             &MainWindow::updateBacklinks);
 
-    navigationHistory = new NavigationHistory(this);
-    connect(navigationHistory, &NavigationHistory::canGoBackChanged, this,
-            &MainWindow::updateNavigationActions);
-    connect(navigationHistory, &NavigationHistory::canGoForwardChanged, this,
-            &MainWindow::updateNavigationActions);
-    connect(
-        navigationHistory, &NavigationHistory::historyChanged, this, [this]() {
-            // Update history panel display using filter function
-            filterHistoryList();
-        });
-
     setWindowTitle("TreeMk - Markdown Editor");
     setWindowIcon(QIcon::fromTheme("text-editor"));
 
-    // Setup progress bar in status bar
     progressBar = new QProgressBar(this);
     progressBar->setMaximumWidth(200);
     progressBar->setVisible(false);
     statusBar()->addPermanentWidget(progressBar);
     statusBar()->showMessage(tr("Ready"));
 
-    // Setup auto-save timer
     autoSaveTimer = new QTimer(this);
     connect(autoSaveTimer, &QTimer::timeout, this, &MainWindow::autoSave);
 
-    // Setup preview update timer
     previewUpdateTimer = new QTimer(this);
     previewUpdateTimer->setSingleShot(true);
     connect(previewUpdateTimer, &QTimer::timeout, this,
             &MainWindow::updatePreview);
 
-    // Create UI components in order
     createLayout();
     createActions();
     createAIAssistMenu();
     createMenus();
     createToolbar();
-    // Note: readSettings() is called after setStartupArguments() in main.cpp
+    // readSettings() and initial tab creation happen in initializeSettings()
 }
 
-MainWindow::~MainWindow() {}
+MainWindow::~MainWindow() {
+    if (sharedPreview) {
+        sharedPreview->setPage(nullptr);
+        delete sharedPreview;
+        sharedPreview = nullptr;
+    }
+}
 
 void MainWindow::setStartupArguments(const QString& path, const QString& file) {
     m_startupPath = path;
@@ -138,6 +127,10 @@ void MainWindow::setStartupArguments(const QString& path, const QString& file) {
 void MainWindow::initializeSettings() {
     readSettings();
     applySettings();
+    // Create initial tab after window is shown to avoid Qt WebEngine initialization issues
+    if (tabWidget && tabWidget->count() == 0) {
+        createNewTab();
+    }
 }
 
 void MainWindow::closeEvent(QCloseEvent* event) {

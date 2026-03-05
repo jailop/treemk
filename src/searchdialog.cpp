@@ -1,6 +1,7 @@
 #include "searchdialog.h"
 
 #include <QDir>
+#include <QDirIterator>
 #include <QFile>
 #include <QFileInfo>
 #include <QRegularExpression>
@@ -79,22 +80,34 @@ QList<SearchResult> SearchDialog::searchInFiles(const QString& query,
                                                 bool caseSensitive,
                                                 bool wholeWord) {
     QList<SearchResult> results;
-    scanDirectory(rootPath, query, caseSensitive, wholeWord, results);
+    scanDirectoryIterative(rootPath, query, caseSensitive, wholeWord, results,
+                           10);
     return results;
 }
 
-void SearchDialog::scanDirectory(const QString& dirPath, const QString& query,
-                                 bool caseSensitive, bool wholeWord,
-                                 QList<SearchResult>& results) {
-    QDir dir(dirPath);
-
-    // Process markdown files
+void SearchDialog::scanDirectoryIterative(const QString& dirPath,
+                                          const QString& query,
+                                          bool caseSensitive, bool wholeWord,
+                                          QList<SearchResult>& results,
+                                          int maxDepth) {
     QStringList filters;
     filters << "*.md" << "*.markdown";
 
-    QFileInfoList files = dir.entryInfoList(filters, QDir::Files, QDir::Name);
-    for (const QFileInfo& fileInfo : files) {
-        QString filePath = fileInfo.absoluteFilePath();
+    QDirIterator it(dirPath, filters, QDir::Files | QDir::NoSymLinks,
+                    QDirIterator::Subdirectories);
+
+    QDir rootDir(dirPath);
+
+    while (it.hasNext()) {
+        QString filePath = it.next();
+
+        QString relativePath = rootDir.relativeFilePath(filePath);
+        int depth = relativePath.count('/');
+        if (depth > maxDepth) {
+            continue;
+        }
+
+        QFileInfo fileInfo(filePath);
 
         QFile file(filePath);
         if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
@@ -132,13 +145,5 @@ void SearchDialog::scanDirectory(const QString& dirPath, const QString& query,
         }
 
         file.close();
-    }
-
-    // Recursively scan subdirectories
-    QFileInfoList subdirs =
-        dir.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name);
-    for (const QFileInfo& subdirInfo : subdirs) {
-        scanDirectory(subdirInfo.absoluteFilePath(), query, caseSensitive,
-                      wholeWord, results);
     }
 }

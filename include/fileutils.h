@@ -10,10 +10,15 @@ struct FileCreationResult {
     QString errorMessage;
 };
 
-FileCreationResult createFileWithDirectories(const QString &filePath, const QString &initialContent = QString());
+FileCreationResult createFileWithDirectories(
+    const QString& filePath, const QString& initialContent = QString());
 
-bool ensureDirectoryExists(const QString &dirPath);
+bool ensureDirectoryExists(const QString& dirPath);
 
-} // namespace FileUtils
+bool isImageFile(const QString& filePath);
 
-#endif // FILEUTILS_H
+bool isMarkdownFile(const QString& filePath);
+
+}  // namespace FileUtils
+
+#endif  // FILEUTILS_H

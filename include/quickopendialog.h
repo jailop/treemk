@@ -9,38 +9,39 @@ class QLineEdit;
 class QListWidget;
 
 class QuickOpenDialog : public QDialog {
-  Q_OBJECT
+    Q_OBJECT
 
-public:
-  explicit QuickOpenDialog(const QString &rootPath,
-                           const QStringList &recentFiles,
-                           QWidget *parent = nullptr);
-  ~QuickOpenDialog();
+   public:
+    explicit QuickOpenDialog(const QString& rootPath,
+                             const QStringList& recentFiles,
+                             QWidget* parent = nullptr);
+    ~QuickOpenDialog();
 
-  QString getSelectedFile() const;
+    QString getSelectedFile() const;
 
-signals:
-  void fileSelected(const QString &filePath);
+   signals:
+    void fileSelected(const QString& filePath);
 
-protected:
-  bool eventFilter(QObject *obj, QEvent *event) override;
+   protected:
+    bool eventFilter(QObject* obj, QEvent* event) override;
 
-private slots:
-  void updateFileList();
-  void onItemDoubleClicked();
+   private slots:
+    void updateFileList();
+    void onItemDoubleClicked();
 
-private:
-  void setupUI();
-  void scanFiles(const QString &dirPath, QList<QString> &files);
-  bool fuzzyMatch(const QString &pattern, const QString &text) const;
+   private:
+    void setupUI();
+    void scanFilesIterative(const QString& dirPath, QList<QString>& files,
+                            int maxDepth = 10);
+    bool fuzzyMatch(const QString& pattern, const QString& text) const;
 
-  QString rootPath;
-  QStringList recentFiles;
-  QList<QString> allFiles;
+    QString rootPath;
+    QStringList recentFiles;
+    QList<QString> allFiles;
 
-  QLineEdit *searchEdit;
-  QListWidget *fileListWidget;
-  QString selectedFile;
+    QLineEdit* searchEdit;
+    QListWidget* fileListWidget;
+    QString selectedFile;
 };
 
-#endif // QUICKOPENDIALOG_H
+#endif  // QUICKOPENDIALOG_H

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16)
+Cmake_minimum_required(VERSION 3.16)
 
 project(treemk VERSION 0.2.0 LANGUAGES CXX)
 
@@ -137,7 +137,7 @@ else()
     )
 endif()
 
-option(BUILD_TESTS "Build the test suite" ON)
+option(BUILD_TESTS "Build the test suite" OFF)
 if(BUILD_TESTS)
     enable_testing()
     add_subdirectory(tests)

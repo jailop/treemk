@@ -66,6 +66,7 @@ Complete list of keyboard shortcuts available in TreeMk.
 | Back | Alt+Left |
 | Forward | Alt+Right |
 | Quick Open | Ctrl+P |
+| Open in New Tab | Ctrl+Shift+O |
 | Next Tab | Ctrl+Tab |
 | Previous Tab | Ctrl+Shift+Tab |
 | Go to Line | Ctrl+G |
@@ -86,8 +87,8 @@ Complete list of keyboard shortcuts available in TreeMk.
 | Action | Shortcut |
 |--------|----------|
 | Toggle Sidebar | Ctrl+B (when not editing) |
-| Toggle Preview | Ctrl+R |
-| Cycle View Mode | Ctrl+\ |
+| Toggle Editor | Ctrl+E |
+| Toggle Preview | Ctrl+P |
 | Focus Mode | F11 |
 | Zoom In | Ctrl++ |
 | Zoom Out | Ctrl+- |

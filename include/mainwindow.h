@@ -4,12 +4,6 @@
 #include <QMainWindow>
 #include <QSettings>
 
-enum ViewMode {
-    ViewMode_Both,        // Editor + Preview visible (default)
-    ViewMode_EditorOnly,  // Only Editor visible
-    ViewMode_PreviewOnly  // Only Preview visible
-};
-
 class QAction;
 class QMenu;
 class QSplitter;
@@ -56,8 +50,8 @@ class MainWindow : public QMainWindow {
     void about();
     void showUserGuide();
     void toggleSidebar();
+    void toggleEditor();
     void togglePreview();
-    void cycleViewMode();
     void onFileSelected(const QString& filePath);
     void onFileDoubleClicked(const QString& filePath);
     void onFileModifiedExternally(const QString& filePath);
@@ -69,11 +63,9 @@ class MainWindow : public QMainWindow {
     void find();
     void findAndReplace();
     void updatePreview();
-    // void setPreviewThemeLight();
-    // void setPreviewThemeDark();
-    // void setPreviewThemeSepia();
     void onWikiLinkClicked(const QString& linkTarget);
     void onMarkdownLinkClicked(const QString& linkTarget);
+    void onOpenLinkInNewTab(const QString& linkTarget);
     void onOpenLinkInNewWindow(const QString& linkTarget);
     void onInternalLinkClicked(const QString& anchor);
     void updateBacklinks();
@@ -106,6 +98,7 @@ class MainWindow : public QMainWindow {
     void switchToPreviousTab();
     void closeCurrentTab();
     void closeAllTabs();
+    void openInNewTab();
     void exportToHtml();
     void exportToPdf();
     void exportToDocx();
@@ -140,8 +133,7 @@ class MainWindow : public QMainWindow {
     void populateRecentFoldersMenu();
     bool maybeSave();
     bool saveFile(const QString& filePath);
-    bool loadFile(const QString& filePath);
-    void applyViewMode(ViewMode mode, bool showStatusMessage = true);
+    bool loadFile(const QString& filePath, bool forceNewTab = false);
     void closeTabsFromOtherFolders();
 
     TabEditor* currentTabEditor() const;
@@ -210,15 +202,10 @@ class MainWindow : public QMainWindow {
     QAction* previousTabAction;
     QAction* closeTabAction;
     QAction* closeAllTabsAction;
+    QAction* openInNewTabAction;
     QAction* toggleSidebarAction;
+    QAction* toggleEditorAction;
     QAction* togglePreviewAction;
-    QAction* cycleViewModeAction;
-    /* TODO to be removed. theme is general for all the app, not just
-     * preview.
-    QAction* previewThemeLightAction;
-    QAction* previewThemeDarkAction;
-    QAction* previewThemeSepiaAction;
-    */
     QAction* settingsAction;
     QAction* userGuideAction;
     QAction* aboutAction;
@@ -239,6 +226,8 @@ class MainWindow : public QMainWindow {
     QWidget* outlinePanel;
     QWidget* editorPanel;
     QTabWidget* tabWidget;
+    MarkdownPreview* sharedPreview;
+    QSplitter* editorPreviewSplitter;
     QWidget* backlinksPanel;
     QWidget* historyPanel;
 
@@ -248,7 +237,6 @@ class MainWindow : public QMainWindow {
     QListWidget* historyView;
     QLineEdit* historyFilterInput;
     LinkParser* linkParser;
-    NavigationHistory* navigationHistory;
 
     QStringList recentFiles;
     QStringList recentFolders;
@@ -260,9 +248,9 @@ class MainWindow : public QMainWindow {
     QString m_startupFile;
 
     QSettings* settings;
-    ViewMode currentViewMode;
     bool focusModeActive;
-    ViewMode preFocusModeViewMode;
+    bool preFocusModeEditorVisible;
+    bool preFocusModePreviewVisible;
     bool preFocusModeSidebarVisible;
 };
 

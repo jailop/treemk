@@ -1,114 +1,126 @@
 #ifndef MARKDOWNEDITOR_H
 #define MARKDOWNEDITOR_H
 
-#include <QMap>
 #include <QTextEdit>
+#include <memory>
 
 class QSyntaxHighlighter;
 class LineNumberArea;
 class MarkdownHighlighter;
+class WordPredictor;
 
 class MarkdownEditor : public QTextEdit {
-  Q_OBJECT
+    Q_OBJECT
 
-public:
-  explicit MarkdownEditor(QWidget *parent = nullptr);
-  ~MarkdownEditor();
+   public:
+    explicit MarkdownEditor(QWidget* parent = nullptr);
+    ~MarkdownEditor();
 
-  void lineNumberAreaPaintEvent(QPaintEvent *event);
-  int lineNumberAreaWidth();
+    void lineNumberAreaPaintEvent(QPaintEvent* event);
+    int lineNumberAreaWidth();
 
-  void setLineNumbersVisible(bool visible);
-  void setPredictionEnabled(bool enabled);
-  void setAIAssistEnabled(bool enabled);
-  void setFocusModeEnabled(bool enabled);
-  void setFocusModeMaxWidth(int maxWidth);
+    void setLineNumbersVisible(bool visible);
+    void setPredictionEnabled(bool enabled);
+    void setAIAssistEnabled(bool enabled);
+    void setFocusModeEnabled(bool enabled);
+    void setFocusModeMaxWidth(int maxWidth);
 
-  bool isModified() const;
-  void setModified(bool modified);
+    bool isModified() const;
+    void setModified(bool modified);
 
-  MarkdownHighlighter *getHighlighter() const;
-  MarkdownHighlighter *highlighter() const { return getHighlighter(); }
+    MarkdownHighlighter* getHighlighter() const;
+    MarkdownHighlighter* highlighter() const { return getHighlighter(); }
 
-   QString getLinkAtPosition(int position) const;
-   QString getLinkAtPosition(int position, QString& displayText) const;
-   QString getExternalLinkAtPosition(int position) const;
-   QString getMarkdownLinkAtPosition(int position) const;
-   QString getMarkdownLinkAtPosition(int position, QString& labelText) const;
-  QString getTaskMarkerAtPosition(int position) const;
-  bool isClickOnCheckbox(int position) const;
-  void toggleTaskAtPosition(int position);
-  void jumpToHeading(const QString &anchor);
+    QString getLinkAtPosition(int position) const;
+    QString getLinkAtPosition(int position, QString& displayText) const;
+    QString getExternalLinkAtPosition(int position) const;
+    QString getMarkdownLinkAtPosition(int position) const;
+    QString getMarkdownLinkAtPosition(int position, QString& labelText) const;
+    QString getTaskMarkerAtPosition(int position) const;
+    bool isClickOnCheckbox(int position) const;
+    void toggleTaskAtPosition(int position);
+    void jumpToHeading(const QString& anchor);
 
-  void setCurrentFilePath(const QString &filePath);
+    void setCurrentFilePath(const QString& filePath);
 
-signals:
-  void wikiLinkClicked(const QString &linkTarget);
-  void markdownLinkClicked(const QString &linkTarget);
-  void openLinkInNewWindowRequested(const QString &linkTarget);
-  void aiAssistRequested();
-  void aiAssistWithPromptRequested(const QString &promptText);
-  void fileDeleteRequested(const QString &filePath);
-  void fileRenameRequested(const QString &filePath);
+   signals:
+    void wikiLinkClicked(const QString& linkTarget);
+    void markdownLinkClicked(const QString& linkTarget);
+    void openLinkInNewTabRequested(const QString& linkTarget);
+    void openLinkInNewWindowRequested(const QString& linkTarget);
+    void aiAssistRequested();
+    void aiAssistWithPromptRequested(const QString& promptText);
+    void fileDeleteRequested(const QString& filePath);
+    void fileRenameRequested(const QString& filePath);
 
-protected:
-  void resizeEvent(QResizeEvent *event) override;
-  void mousePressEvent(QMouseEvent *event) override;
-  void mouseMoveEvent(QMouseEvent *event) override;
-  void keyPressEvent(QKeyEvent *event) override;
-  void dragEnterEvent(QDragEnterEvent *event) override;
-  void dragMoveEvent(QDragMoveEvent *event) override;
-  void dropEvent(QDropEvent *event) override;
-  void insertFromMimeData(const QMimeData *source) override;
-  void paintEvent(QPaintEvent *event) override;
-  void contextMenuEvent(QContextMenuEvent *event) override;
+   protected:
+    void resizeEvent(QResizeEvent* event) override;
+    void mousePressEvent(QMouseEvent* event) override;
+    void mouseMoveEvent(QMouseEvent* event) override;
 
- private slots:
-  void updateLineNumberAreaWidth(int newBlockCount);
-  void highlightCurrentLine();
-  void updateLineNumberArea(const QRect &rect, int dy);
-  void onTextChanged();
-  void onThemeChanged();
+    /**
+     * Handles key press events for the editor. This includes among other
+     * things: standard text input and editing, movement commands, list
+     * and task management, wiki-link actions, and auto-closing of
+     * brackets and quotes.
+     */
+    void keyPressEvent(QKeyEvent* event) override;
+    void dragEnterEvent(QDragEnterEvent* event) override;
+    void dragMoveEvent(QDragMoveEvent* event) override;
+    void dropEvent(QDropEvent* event) override;
+    void insertFromMimeData(const QMimeData* source) override;
+    void paintEvent(QPaintEvent* event) override;
+    void contextMenuEvent(QContextMenuEvent* event) override;
 
-private:
-  void setupEditor();
-  QString saveImageFromClipboard(const QImage &image);
-  void updateWordFrequency();
-  void updateDirectoryWordFrequency();
-  QString predictWord(const QString &prefix) const;
-  QString predictWordUnigram(const QString &prefix) const;
-  QString predictWordBigram(const QString &previousWord,
-                            const QString &prefix) const;
-  void showPrediction();
-  void hidePrediction();
-  void acceptPrediction();
+   private slots:
+    void updateLineNumberAreaWidth(int newBlockCount);
+    void highlightCurrentLine();
+    void updateLineNumberArea(const QRect& rect, int dy);
+    void onTextChanged();
+    void onThemeChanged();
 
-    void updateParentTask(const QTextBlock &block);
-    QTextBlock findParentBlock(const QTextBlock &block, int currentIndent);
-    void updateTaskState(const QTextBlock &block);
-    void uncheckChildTasks(const QTextBlock &block);
-    QVector<QTextBlock> findChildBlocks(const QTextBlock &block);
-    int getIndentLevel(const QTextBlock &block);
-    void applyListHangingIndent(const QTextBlock &block);
+   private:
+    void setupEditor();
+    QString saveImageFromClipboard(const QImage& image);
+    void updateWordFrequency();
+    void showPrediction();
+    void hidePrediction();
+    void acceptPrediction();
+
+    /**
+     * Using a regular expression to extract the main title from a
+     * markdown file. If a title is not found, if falls back to an
+     * empty string. This function is used when a wik-link is
+     * automatically created based on the file name. The function
+     * tries to create a more user-friendly link label by using the main
+     * title of the markdown file instead of the raw file name.
+     */
+    QString extractMainTitle(const QString& filePath) const;
+
+    void updateParentTask(const QTextBlock& block);
+    QTextBlock findParentBlock(const QTextBlock& block, int currentIndent);
+    void updateTaskState(const QTextBlock& block);
+    void uncheckChildTasks(const QTextBlock& block);
+    QVector<QTextBlock> findChildBlocks(const QTextBlock& block);
+    int getIndentLevel(const QTextBlock& block);
+    void applyListHangingIndent(const QTextBlock& block);
     void applyListHangingIndentToCurrentBlock();
 
     bool isCurrentLineListItem() const;
     void moveListItemUp();
     void moveListItemDown();
-    void swapTextBlocks(QTextBlock &block1, QTextBlock &block2);
+    void swapTextBlocks(QTextBlock& block1, QTextBlock& block2);
 
-  private slots:
+   private slots:
     void applyDeferredFormatting();
 
-  private:
-    LineNumberArea *lineNumberArea;
-    MarkdownHighlighter *m_highlighter;
+   private:
+    LineNumberArea* lineNumberArea;
+    MarkdownHighlighter* m_highlighter;
     QString m_currentFilePath;
-    class QTimer *m_formatTimer;
+    class QTimer* m_formatTimer;
 
-    // Word prediction
-    QMap<QString, int> m_wordFrequency;                   // Unigram model
-    QMap<QPair<QString, QString>, int> m_bigramFrequency; // Bigram model
+    std::unique_ptr<WordPredictor> m_wordPredictor;
     QString m_currentPrediction;
     bool m_predictionEnabled;
     bool m_aiAssistEnabled;
@@ -118,23 +130,23 @@ private:
 };
 
 class LineNumberArea : public QWidget {
-  Q_OBJECT
+    Q_OBJECT
 
-public:
-  LineNumberArea(MarkdownEditor *editor)
-      : QWidget(editor), codeEditor(editor) {}
+   public:
+    LineNumberArea(MarkdownEditor* editor)
+        : QWidget(editor), codeEditor(editor) {}
 
-  QSize sizeHint() const override {
-    return QSize(codeEditor->lineNumberAreaWidth(), 0);
-  }
+    QSize sizeHint() const override {
+        return QSize(codeEditor->lineNumberAreaWidth(), 0);
+    }
 
-protected:
-  void paintEvent(QPaintEvent *event) override {
-    codeEditor->lineNumberAreaPaintEvent(event);
-  }
+   protected:
+    void paintEvent(QPaintEvent* event) override {
+        codeEditor->lineNumberAreaPaintEvent(event);
+    }
 
-private:
-  MarkdownEditor *codeEditor;
+   private:
+    MarkdownEditor* codeEditor;
 };
 
-#endif // MARKDOWNEDITOR_H
+#endif  // MARKDOWNEDITOR_H

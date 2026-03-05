@@ -13,13 +13,10 @@ TreeMk doesn't move your notes into a special database or vault. It simply provi
 **Editor**
 
 - Multi-tab editing with session management
-- Line numbers and line highlighting
+- Focus mode (F11) for distraction-free writing
 - Word prediction based on workspace vocabulary
 - Auto-indent and auto-close brackets/quotes
-- List continuation and hanging indent formatting
-- Customizable keyboard shortcuts
 - Paste images directly from clipboard
-- Smart text navigation
 - Line breaking and joining utilities
 - AI assistance (Ollama or OpenAI-like providers)
 
@@ -32,9 +29,9 @@ TreeMk doesn't move your notes into a special database or vault. It simply provi
 - Task lists with checkbox support
 - Drag & drop from the file explorer to create wiki-links
 - Backlinks panel - shows all notes linking to current document
+- Per-tab navigation history (Back/Forward with Alt+Left/Right)
 - Document outline panel with heading navigation
 - Quick open dialog (Ctrl+P) with fuzzy search
-- Full-text search across all files
 - Recent folders menu
 
 **Preview and Rendering**
@@ -45,12 +42,6 @@ TreeMk doesn't move your notes into a special database or vault. It simply provi
 - Code syntax highlighting in preview
 - Custom CSS support for preview styling
 - Configurable preview refresh rate
-
-**Theme and Appearance**
-
-- System, light, and dark theme support
-- Customizable fonts and sizes (editor and preview)
-- Theme-aware UI elements
 
 **Export**
 
@@ -66,8 +57,7 @@ TreeMk doesn't move your notes into a special database or vault. It simply provi
 - md4c (for preview rendering)
 - pandoc (for export features)
 
-pandoc is required to export notes to formats like HTML, PDF, and DOCX.
-pandoc needs to be installed separately.
+[pandoc](https://pandoc.org/) is required to export notes to formats like HTML, PDF, and DOCX. pandoc needs to be installed separately.
 
 ## JavaScript Libraries
 
@@ -92,16 +82,13 @@ bun install
 
 The bundled files are included in the repository, so rebuilding is not required for normal builds.
 
-To render Mermaid diagrams when exporting to HTML, PDF, or DOCX with Pandoc,
-you need to install `mermaid-filter`:
+To render Mermaid diagrams when exporting to HTML, PDF, or DOCX with Pandoc, you need to install `mermaid-filter`:
 
 ```bash
 npm install -g mermaid-filter
 ```
 
-If `mermaid-filter` is available in your PATH, it will be automatically used
-during export. Otherwise, Mermaid code blocks will be exported as regular
-code blocks.
+If `mermaid-filter` is available in your PATH, it will be automatically used during export. Otherwise, Mermaid code blocks will be exported as regular code blocks.
 
 ## Building from Source
 
@@ -136,6 +123,12 @@ For VoidLinux:
 
 ```bash
 sudo xbps-install cmake gcc make qt6-base-devel qt6-webengine-devel qt6-svg-devel pkg-config md4c-devel
+```
+
+For FreeBSD:
+
+```sh
+pkg install cmake pkgconf qt6-base qt6-webengine qt6-svg md4c
 ```
 
 To build the app:
@@ -185,9 +178,10 @@ cmake --build .
 
 ## Documentation
 
-Comprehensive documentation is available online:
 
-**📚 [Read the Documentation](https://jailop.github.io/treemk)**
+User documentation is include in the application as a Help Dialog. Comprenhensive documentation for users and developers is available online:
+
+**[Read the Documentation](https://jailop.github.io/treemk)**
 
 ### Building Documentation Locally
 
@@ -204,20 +198,14 @@ Visit http://127.0.0.1:8000 to view the documentation.
 
 ## Contributing
 
-Visit [Contributing to
-TreeMk](https://jailop.github.io/treemk/contributing/) for guidelines on
-how to contribute to the project, report issues, and submit pull
-requests
+To date, this project has been a personal initiative, but it’s open to receiving contributions and incorporating collaborators. Visit [Contributing to TreeMk](https://jailop.github.io/treemk/contributing/) for guidelines on how to contribute to the project.
 
 ## License
 
-TreeMk is licensed under the GNU General Public License v3.0. See
-[LICENSE](LICENSE) for details.
+TreeMk is licensed under the GNU General Public License v3.0. See [LICENSE](LICENSE) for details.
 
 Third-party libraries used in TreeMk are subject to their own licenses.
 
 ## Disclaimer
 
-TreeMk is provided "as is" without any warranties. The developers are
-not liable for any damage or loss of data resulting from the use of this
-software. Always back up your notes before using new software.
+TreeMk is provided "as is" without any warranties. The developers are not liable for any damage or loss of data resulting from the use of this software. Always back up your notes before using new software.

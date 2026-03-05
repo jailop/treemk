@@ -10,16 +10,20 @@
 #include "fileutils.h"
 #include "markdowneditor.h"
 #include "markdownpreview.h"
+#include "navigationhistory.h"
 #include "outlinepanel.h"
 
 TabEditor::TabEditor(QWidget* parent)
     : QWidget(parent),
       m_editor(nullptr),
-      m_preview(nullptr),
-      m_splitter(nullptr),
+      m_sharedPreview(nullptr),
       m_previewTimer(nullptr),
+      m_navigationHistory(nullptr),
       m_isModified(false),
-      m_ownSaved(false) {
+      m_ownSaved(false),
+      m_lastScrollPercentage(0.0),
+      m_isScrollingFromPreview(false) {
+    m_navigationHistory = new NavigationHistory(this);
     setupUI();
 }
 
@@ -28,46 +32,28 @@ TabEditor::~TabEditor() {}
 void TabEditor::setupUI() {
     QVBoxLayout* mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(0, 0, 0, 0);
-    m_splitter = new QSplitter(Qt::Horizontal, this);
+
     m_editor = new MarkdownEditor(this);
+    mainLayout->addWidget(m_editor);
+
     connect(m_editor, &MarkdownEditor::textChanged, this,
             &TabEditor::onDocumentModified);
     connect(m_editor->verticalScrollBar(), &QScrollBar::valueChanged, this,
-            &TabEditor::syncPreviewScroll);
+            &TabEditor::onEditorScrolled);
     connect(m_editor, &MarkdownEditor::cursorPositionChanged, this,
-            &TabEditor::syncPreviewScroll);
+            &TabEditor::onEditorScrolled);
 
     connect(m_editor, &MarkdownEditor::wikiLinkClicked, this,
             &TabEditor::wikiLinkClicked);
     connect(m_editor, &MarkdownEditor::markdownLinkClicked, this,
             &TabEditor::markdownLinkClicked);
+    connect(m_editor, &MarkdownEditor::openLinkInNewTabRequested, this,
+            &TabEditor::openLinkInNewTabRequested);
     connect(m_editor, &MarkdownEditor::openLinkInNewWindowRequested, this,
             &TabEditor::openLinkInNewWindowRequested);
     connect(m_editor, &MarkdownEditor::aiAssistRequested, this,
             &TabEditor::aiAssistRequested);
 
-    m_preview = new MarkdownPreview(this);
-    m_preview->setMinimumWidth(300);
-    
-    connect(m_preview, &MarkdownPreview::wikiLinkClicked, this,
-            &TabEditor::wikiLinkClicked);
-    connect(m_preview, &MarkdownPreview::markdownLinkClicked, this,
-            &TabEditor::markdownLinkClicked);
-    connect(m_preview, &MarkdownPreview::openLinkInNewWindowRequested, this,
-            &TabEditor::openLinkInNewWindowRequested);
-    connect(m_preview, &MarkdownPreview::internalLinkClicked, this,
-            &TabEditor::internalLinkClicked);
-
-    m_splitter->addWidget(m_editor);
-    m_splitter->addWidget(m_preview);
-    m_splitter->setStretchFactor(0, 1);
-    m_splitter->setStretchFactor(1, 1);
-
-    QList<int> sizes;
-    sizes << 1000 << 1000;  // Equal sizes
-    m_splitter->setSizes(sizes);
-
-    mainLayout->addWidget(m_splitter);
     m_previewTimer = new QTimer(this);
     m_previewTimer->setSingleShot(true);
     m_previewTimer->setInterval(1000);
@@ -105,6 +91,8 @@ bool TabEditor::loadFile(const QString& filePath) {
     m_filePath = filePath;
     m_editor->setCurrentFilePath(filePath);
     m_isModified = false;
+
+    m_navigationHistory->addFile(filePath);
 
     updatePreview();
 
@@ -149,16 +137,6 @@ void TabEditor::setContent(const QString& content) {
     updatePreview();
 }
 
-void TabEditor::updatePreview() {
-    QString markdown = m_editor->toPlainText();
-    if (!m_filePath.isEmpty()) {
-        QFileInfo fileInfo(m_filePath);
-        m_preview->setBasePath(fileInfo.absolutePath());
-    }
-    syncPreviewScroll();
-    m_preview->setMarkdownContent(markdown);
-}
-
 void TabEditor::onDocumentModified() {
     if (!m_isModified) {
         setModified(true);
@@ -167,13 +145,52 @@ void TabEditor::onDocumentModified() {
     m_previewTimer->start();
 }
 
-void TabEditor::syncPreviewScroll() {
+void TabEditor::setSharedPreview(MarkdownPreview* preview) {
+    m_sharedPreview = preview;
+}
+
+void TabEditor::updatePreviewContent(MarkdownPreview* preview) {
+    if (!preview) return;
+
+    QString markdown = m_editor->toPlainText();
+    if (!m_filePath.isEmpty()) {
+        QFileInfo fileInfo(m_filePath);
+        preview->setBasePath(fileInfo.absolutePath());
+    }
+    preview->setMarkdownContent(markdown);
+    preview->scrollToPercentage(m_lastScrollPercentage);
+}
+
+void TabEditor::updatePreview() {
+    if (m_sharedPreview) {
+        updatePreviewContent(m_sharedPreview);
+    }
+}
+
+void TabEditor::onEditorScrolled() {
+    if (m_isScrollingFromPreview) {
+        return;  // Prevent feedback loop
+    }
+    
     QScrollBar* scrollBar = m_editor->verticalScrollBar();
     int maximum = scrollBar->maximum();
-    if (maximum == 0) {
-        return;  // No scrolling needed
+    if (maximum > 0) {
+        m_lastScrollPercentage =
+            static_cast<double>(scrollBar->value()) / maximum;
+        
+        if (m_sharedPreview) {
+            m_sharedPreview->scrollToPercentage(m_lastScrollPercentage);
+        }
     }
-    int value = scrollBar->value();
-    double percentage = static_cast<double>(value) / maximum;
-    m_preview->scrollToPercentage(percentage);
+}
+
+void TabEditor::setEditorScrollFromPreview(double percentage) {
+    m_isScrollingFromPreview = true;
+    m_lastScrollPercentage = percentage;
+    
+    QScrollBar* scrollBar = m_editor->verticalScrollBar();
+    int targetValue = static_cast<int>(percentage * scrollBar->maximum());
+    scrollBar->setValue(targetValue);
+    
+    QTimer::singleShot(300, this, [this]() { m_isScrollingFromPreview = false; });
 }

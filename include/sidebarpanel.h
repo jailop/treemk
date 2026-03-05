@@ -14,29 +14,29 @@ class FileSystemTreeView;
 class OutlinePanel;
 
 class SidebarPanel : public QWidget {
-  Q_OBJECT
+    Q_OBJECT
 
-public:
-  explicit SidebarPanel(QWidget *parent = nullptr);
-  ~SidebarPanel();
+   public:
+    explicit SidebarPanel(QWidget* parent = nullptr);
+    ~SidebarPanel();
 
-  // Accessors for child widgets
-  QTabWidget* getLeftTabWidget() const;
-  QWidget* getTreePanel() const;
-  QWidget* getOutlinePanel() const;
-  QWidget* getBacklinksPanel() const;
-  QWidget* getHistoryPanel() const;
-  QListWidget* getBacklinksView() const;
-  QListWidget* getHistoryView() const;
-  QLineEdit* getHistoryFilterInput() const;
-  QLineEdit* getFileFilterInput() const;
+    // Accessors for child widgets
+    QTabWidget* getLeftTabWidget() const;
+    QWidget* getTreePanel() const;
+    QWidget* getOutlinePanel() const;
+    QWidget* getBacklinksPanel() const;
+    QWidget* getHistoryPanel() const;
+    QListWidget* getBacklinksView() const;
+    QListWidget* getHistoryView() const;
+    QLineEdit* getHistoryFilterInput() const;
+    QLineEdit* getFileFilterInput() const;
 
-  // Methods to add custom widgets to panels
-  void setTreeView(FileSystemTreeView* treeView);
-  void setOutlineView(OutlinePanel* outlineView);
+    // Methods to add custom widgets to panels
+    void setTreeView(FileSystemTreeView* treeView);
+    void setOutlineView(OutlinePanel* outlineView);
 
-private:
-  Ui::SidebarPanel *ui;
+   private:
+    Ui::SidebarPanel* ui;
 };
 
-#endif // SIDEBARPANEL_H
+#endif  // SIDEBARPANEL_H

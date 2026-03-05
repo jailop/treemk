@@ -121,7 +121,93 @@ void MainWindow::onInternalLinkClicked(const QString& anchor) {
     if (!currentTab) {
         return;
     }
-    
+
     currentTab->editor()->jumpToHeading(anchor);
-    currentTab->preview()->scrollToAnchor(anchor);
+    sharedPreview->scrollToAnchor(anchor);
+}
+
+void MainWindow::onOpenLinkInNewTab(const QString& linkTarget) {
+    if (currentFolder.isEmpty()) {
+        statusBar()->showMessage(tr("No folder opened. Cannot resolve link."),
+                                 3000);
+        return;
+    }
+
+    QString actualTarget = linkTarget;
+    bool isWikiLink = false;
+
+    if (actualTarget.startsWith("wiki:")) {
+        actualTarget = actualTarget.mid(5);
+        isWikiLink = true;
+    } else if (actualTarget.startsWith("markdown:")) {
+        actualTarget = actualTarget.mid(9);
+    }
+
+    QString targetFile;
+
+    if (isWikiLink) {
+        int depth = getLinkSearchDepth();
+        targetFile =
+            linkParser->resolveLinkTarget(actualTarget, currentFilePath, depth);
+
+        if (targetFile.isEmpty()) {
+            QFileInfo currentFileInfo(currentFilePath);
+            QDir currentDir = currentFileInfo.dir();
+            targetFile = currentDir.filePath(actualTarget);
+
+            if (QFileInfo(targetFile).suffix().isEmpty()) {
+                targetFile += ".md";
+            }
+        }
+    } else {
+        LinkTarget parsed = LinkParser::parseLinkTarget(actualTarget);
+
+        if (parsed.isInternalOnly) {
+            onInternalLinkClicked(parsed.anchor);
+            return;
+        }
+
+        QString resolvedPath;
+        if (QFileInfo(parsed.filePath).isAbsolute()) {
+            resolvedPath = parsed.filePath;
+        } else {
+            QFileInfo currentFileInfo(currentFilePath);
+            QDir currentDir = currentFileInfo.dir();
+            resolvedPath = currentDir.filePath(parsed.filePath);
+        }
+        targetFile = QFileInfo(resolvedPath).absoluteFilePath();
+
+        if (!QFileInfo(targetFile).exists() &&
+            QFileInfo(targetFile).suffix().isEmpty()) {
+            QString mdPath = targetFile + ".md";
+            if (QFileInfo(mdPath).exists()) {
+                targetFile = mdPath;
+            }
+        }
+    }
+
+    if (QFileInfo(targetFile).exists()) {
+        loadFile(targetFile, true);
+    } else {
+        QMessageBox::StandardButton reply = QMessageBox::question(
+            this, tr("Create File"),
+            tr("The file '%1' does not exist. Do you want to create it?")
+                .arg(QFileInfo(targetFile).fileName()),
+            QMessageBox::Yes | QMessageBox::No);
+
+        if (reply == QMessageBox::Yes) {
+            QString title = QFileInfo(targetFile).baseName();
+            QString initialContent =
+                title.isEmpty() ? QString("\n") : QString("# %1\n\n").arg(title);
+
+            FileUtils::FileCreationResult result =
+                FileUtils::createFileWithDirectories(targetFile, initialContent);
+
+            if (result.success) {
+                loadFile(targetFile, true);
+            } else {
+                statusBar()->showMessage(result.errorMessage, 3000);
+            }
+        }
+    }
 }

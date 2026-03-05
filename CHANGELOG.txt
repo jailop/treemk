@@ -206,3 +206,45 @@ Documentation:
 - word prediction is only activated at the end of the line or if there
   is a blank space after the cursor position
 - a file filter has been added
+
+2026-02-19:
+
+- Fixed: Auto-numbering lists. It was repeating the same number when the
+  user press Enter. Now, the number is auto-increased.
+
+2026-03-03:
+
+- Fixed O(N²) backlinks algorithm → O(N×L) with hash-based lookups
+- Migrated directory scanning to QDirIterator (3 components)
+- Shared single QWebEngineView across all tabs
+- Per-tab scroll position maintained when switching tabs
+- Per-tab independent navigation history
+- History panel shows current tab's history (duplicates filtered)
+- Intelligent tab reuse: reuses unmodified tabs by default
+- "Open in New Tab" action (Ctrl+Shift+O) for explicit new tabs
+- Ctrl+Double-click in file tree opens in new tab
+- Ctrl+Shift+Click on wiki-links and markdown links opens in new tab
+- "Open in New Tab" context menu option in file tree and editor
+- Modified tabs never replaced without confirmation
+- Safety: at least one tab always remains open
+- Separate toggle actions for editor (Ctrl+E) and preview (Ctrl+P)
+- Removed cycling view mode in favor of independent toggles
+- Panels properly expand to full width when opposite panel hidden
+- Safety constraint: at least one panel must be visible
+- Actions automatically disabled when opposite panel hidden (grayed out)
+- Bidirectional scroll synchronization between editor and preview
+- Editor scrolling syncs to preview in real-time
+- Preview scrolling syncs to editor (200ms polling)
+- Loop prevention for smooth user experience
+- Focus mode properly restores individual panel states
+- Open in new window fixed (now opens as a new process)
+
+2026-03-05:
+
+- The main.cpp has been refactored to improve modularity and
+  readability. Helper functions to set the initial theme and the ai
+  providers has been moved to separated files, while other like the one
+  that get the file system location are define in a anonymous namespace
+  in the same file. Comments have been included to explain why the
+  refered functions exists and what they do. The `main` function now
+  looks declarative.

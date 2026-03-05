@@ -1,6 +1,8 @@
 #include "managers/windowmanager.h"
 
 #include <QApplication>
+#include <QCoreApplication>
+#include <QProcess>
 #include <QScreen>
 #include <QWidget>
 
@@ -19,30 +21,41 @@ WindowManager::WindowManager() : QObject(nullptr), m_windowOffset(0) {}
 
 MainWindow* WindowManager::createWindow(const QString& folder,
                                         const QString& file) {
-    MainWindow* window = new MainWindow();
-    window->setAttribute(Qt::WA_DeleteOnClose);
-    window->setStartupArguments(folder, file);
-    window->initializeSettings();
-
-    m_windows.append(window);
-
-    connect(window, &QObject::destroyed, this,
-            &WindowManager::onWindowDestroyed);
-
-    window->show();
-
-    // Apply cascade offset for new windows
-    if (m_windows.count() > 1) {
-        QPoint offset(30 * m_windowOffset, 30 * m_windowOffset);
-        window->move(window->pos() + offset);
-
-        // Increment and wrap offset to keep windows on screen
-        m_windowOffset = (m_windowOffset + 1) % 10;
-    } else {
-        m_windowOffset = 1;  // Start offsetting from second window
+    // Safety check: prevent recursive spawning
+    // If TREEMK_NEW_WINDOW env var is set, we're being launched as a new window
+    // Don't spawn another one
+    if (qEnvironmentVariableIsSet("TREEMK_NEW_WINDOW")) {
+        qWarning() << "Already in new window mode, not spawning another";
+        return nullptr;
     }
-
-    return window;
+    
+    // Launch as a separate process to avoid QtWebEngine multi-window issues
+    // Each process gets its own Chromium renderer, avoiding zygote fork problems
+    
+    QStringList arguments;
+    if (!folder.isEmpty()) {
+        arguments << folder;
+    }
+    if (!file.isEmpty()) {
+        arguments << file;
+    }
+    
+    QString program = QCoreApplication::applicationFilePath();
+    
+    // Set environment variable to prevent recursive spawning
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    env.insert("TREEMK_NEW_WINDOW", "1");
+    
+    QProcess process;
+    process.setProcessEnvironment(env);
+    bool started = process.startDetached(program, arguments);
+    
+    if (!started) {
+        qWarning() << "Failed to start new window process";
+    }
+    
+    // Return nullptr since we're not managing the window in this process
+    return nullptr;
 }
 
 void WindowManager::onWindowDestroyed(QObject* obj) {

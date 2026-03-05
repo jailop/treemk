@@ -16,6 +16,7 @@
 #include <QShortcut>
 #include <QStyleHints>
 #include <QTextDocument>
+#include <QTimer>
 #include <QUrl>
 #include <QWebEnginePage>
 #include <QWebEngineProfile>
@@ -82,7 +83,9 @@ MarkdownPreview::MarkdownPreview(QWidget* parent)
       basePath(QDir::homePath()),
       latexEnabled(true),
       lastScrollPercentage(0.0),
-      lastMarkdownContent("") {
+      lastMarkdownContent(""),
+      scrollCheckTimer(nullptr),
+      isScrollingFromEditor(false) {
     setContextMenuPolicy(Qt::CustomContextMenu);
     WikiLinkPage* wikiPage = new WikiLinkPage(this);
     setPage(wikiPage);
@@ -100,6 +103,12 @@ MarkdownPreview::MarkdownPreview(QWidget* parent)
         connect(ThemeManager::instance(), &ThemeManager::themeChanged, this,
                 &MarkdownPreview::onThemeChanged);
     }
+
+    scrollCheckTimer = new QTimer(this);
+    scrollCheckTimer->setInterval(200);
+    connect(scrollCheckTimer, &QTimer::timeout, this,
+            &MarkdownPreview::checkScrollPosition);
+    scrollCheckTimer->start();
 }
 
 MarkdownPreview::~MarkdownPreview() {}
@@ -207,11 +216,13 @@ void MarkdownPreview::scrollToAnchor(const QString& anchor) {
 
 void MarkdownPreview::setTheme(const QString& theme) { currentTheme = theme; }
 void MarkdownPreview::scrollToPercentage(double percentage) {
+    isScrollingFromEditor = true;
     lastScrollPercentage = percentage;
     QString script =
-        QString("window.scrollTo(0, document.body.scrollHeight * %1);")
+        QString("if (document.body) window.scrollTo(0, document.body.scrollHeight * %1);")
             .arg(percentage);
     page()->runJavaScript(script);
+    QTimer::singleShot(300, this, [this]() { isScrollingFromEditor = false; });
 }
 
 double MarkdownPreview::currentScrollPercentage() const {
@@ -488,6 +499,13 @@ void MarkdownPreview::showContextMenu(const QPoint& pos) {
         QString href = linkInfo.value("href").toString();
 
         if (isLink && !href.isEmpty()) {
+            QAction* openNewTabAction =
+                contextMenu.addAction(tr("Open Link in New Tab"));
+            connect(openNewTabAction, &QAction::triggered, this,
+                    [this, href]() {
+                        emit openLinkInNewTabRequested(href);
+                    });
+            
             QAction* openNewWindowAction =
                 contextMenu.addAction(tr("Open Link in New Window"));
             connect(openNewWindowAction, &QAction::triggered, this,
@@ -557,4 +575,25 @@ QString MarkdownPreview::addHeadingIds(const QString& html) {
     }
     
     return result;
+}
+
+void MarkdownPreview::checkScrollPosition() {
+    if (isScrollingFromEditor) {
+        return;
+    }
+    QString script =
+        "(function() {"
+        "  if (!document.body) return 0;"
+        "  var scrollPercentage = window.scrollY / (document.body.scrollHeight - window.innerHeight);"
+        "  return isNaN(scrollPercentage) ? 0 : scrollPercentage;"
+        "})();";
+
+    page()->runJavaScript(script, [this](const QVariant& result) {
+        bool ok;
+        double percentage = result.toDouble(&ok);
+        if (ok && qAbs(percentage - lastScrollPercentage) > 0.001) {
+            lastScrollPercentage = percentage;
+            emit scrollPercentageChanged(percentage);
+        }
+    });
 }

@@ -44,4 +44,24 @@ FileCreationResult createFileWithDirectories(const QString& filePath,
     return result;
 }
 
+bool isImageFile(const QString& filePath) {
+    static const QStringList imageExtensions = {
+        "png", "jpg", "jpeg", "gif", "bmp", "svg", "webp"
+    };
+    
+    QFileInfo fileInfo(filePath);
+    QString suffix = fileInfo.suffix().toLower();
+    return imageExtensions.contains(suffix);
+}
+
+bool isMarkdownFile(const QString& filePath) {
+    static const QStringList markdownExtensions = {
+        "md", "markdown", "txt"
+    };
+    
+    QFileInfo fileInfo(filePath);
+    QString suffix = fileInfo.suffix().toLower();
+    return markdownExtensions.contains(suffix);
+}
+
 }  // namespace FileUtils
