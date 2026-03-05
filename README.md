@@ -4,9 +4,7 @@ TreeMk is a desktop Markdown editor that works directly with your file system—
 
 **Work with your files, where they already are.**
 
-TreeMk doesn't move your notes into a special database or vault. It
-simply provides an integrated environment for editing and navigating
-Markdown files across any folder on your system.
+TreeMk doesn't move your notes into a special database or vault. It simply provides an integrated environment for editing and navigating Markdown files across any folder on your system.
 
 ![screenshot](screenshot.png)
 
@@ -59,8 +57,7 @@ Markdown files across any folder on your system.
 - md4c (for preview rendering)
 - pandoc (for export features)
 
-pandoc is required to export notes to formats like HTML, PDF, and DOCX.
-pandoc needs to be installed separately.
+[pandoc](https://pandoc.org/) is required to export notes to formats like HTML, PDF, and DOCX. pandoc needs to be installed separately.
 
 ## JavaScript Libraries
 
@@ -83,19 +80,15 @@ bun install
 ./build-preview-bundle.sh
 ```
 
-The bundled files are included in the repository, so rebuilding is not
-required for normal builds.
+The bundled files are included in the repository, so rebuilding is not required for normal builds.
 
-To render Mermaid diagrams when exporting to HTML, PDF, or DOCX with Pandoc,
-you need to install `mermaid-filter`:
+To render Mermaid diagrams when exporting to HTML, PDF, or DOCX with Pandoc, you need to install `mermaid-filter`:
 
 ```bash
 npm install -g mermaid-filter
 ```
 
-If `mermaid-filter` is available in your PATH, it will be automatically used
-during export. Otherwise, Mermaid code blocks will be exported as regular
-code blocks.
+If `mermaid-filter` is available in your PATH, it will be automatically used during export. Otherwise, Mermaid code blocks will be exported as regular code blocks.
 
 ## Building from Source
 
@@ -185,7 +178,8 @@ cmake --build .
 
 ## Documentation
 
-Comprehensive documentation is available online:
+
+User documentation is include in the application as a Help Dialog. Comprenhensive documentation for users and developers is available online:
 
 **[Read the Documentation](https://jailop.github.io/treemk)**
 
@@ -204,20 +198,14 @@ Visit http://127.0.0.1:8000 to view the documentation.
 
 ## Contributing
 
-Visit [Contributing to
-TreeMk](https://jailop.github.io/treemk/contributing/) for guidelines on
-how to contribute to the project, report issues, and submit pull
-requests
+To date, this project has been a personal initiative, but it’s open to receiving contributions and incorporating collaborators. Visit [Contributing to TreeMk](https://jailop.github.io/treemk/contributing/) for guidelines on how to contribute to the project.
 
 ## License
 
-TreeMk is licensed under the GNU General Public License v3.0. See
-[LICENSE](LICENSE) for details.
+TreeMk is licensed under the GNU General Public License v3.0. See [LICENSE](LICENSE) for details.
 
 Third-party libraries used in TreeMk are subject to their own licenses.
 
 ## Disclaimer
 
-TreeMk is provided "as is" without any warranties. The developers are
-not liable for any damage or loss of data resulting from the use of this
-software. Always back up your notes before using new software.
+TreeMk is provided "as is" without any warranties. The developers are not liable for any damage or loss of data resulting from the use of this software. Always back up your notes before using new software.
