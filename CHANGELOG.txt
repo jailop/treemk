@@ -238,3 +238,13 @@ Documentation:
 - Loop prevention for smooth user experience
 - Focus mode properly restores individual panel states
 - Open in new window fixed (now opens as a new process)
+
+2026-03-05:
+
+- The main.cpp has been refactored to improve modularity and
+  readability. Helper functions to set the initial theme and the ai
+  providers has been moved to separated files, while other like the one
+  that get the file system location are define in a anonymous namespace
+  in the same file. Comments have been included to explain why the
+  refered functions exists and what they do. The `main` function now
+  looks declarative.

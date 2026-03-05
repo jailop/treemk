@@ -216,6 +216,7 @@ void MarkdownPreview::scrollToAnchor(const QString& anchor) {
 
 void MarkdownPreview::setTheme(const QString& theme) { currentTheme = theme; }
 void MarkdownPreview::scrollToPercentage(double percentage) {
+    /*
     isScrollingFromEditor = true;
     lastScrollPercentage = percentage;
     QString script =
@@ -223,6 +224,7 @@ void MarkdownPreview::scrollToPercentage(double percentage) {
             .arg(percentage);
     page()->runJavaScript(script);
     QTimer::singleShot(300, this, [this]() { isScrollingFromEditor = false; });
+    */
 }
 
 double MarkdownPreview::currentScrollPercentage() const {
@@ -581,7 +583,7 @@ void MarkdownPreview::checkScrollPosition() {
     if (isScrollingFromEditor) {
         return;
     }
-
+    /*
     QString script =
         "var scrollPercentage = window.scrollY / (document.body.scrollHeight - "
         "window.innerHeight);"
@@ -595,4 +597,5 @@ void MarkdownPreview::checkScrollPosition() {
             emit scrollPercentageChanged(percentage);
         }
     });
+    */
 }

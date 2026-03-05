@@ -1,9 +1,6 @@
 # TreeMk - Integrated Markdown Editor
 
-TreeMk is a desktop Markdown editor that works directly with your file
-system—no proprietary vaults, no lock-in, just your files organized your
-way. Built with Qt, it combines a powerful text editor with a file
-explorer, wiki-style linking, and rich content rendering.
+TreeMk is a desktop Markdown editor that works directly with your file system—no proprietary vaults, no lock-in, just your files organized your way. Built with Qt, it combines a powerful text editor with a file explorer, wiki-style linking, and rich content rendering.
 
 **Work with your files, where they already are.**
 

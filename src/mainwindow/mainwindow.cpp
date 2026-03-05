@@ -89,36 +89,31 @@ MainWindow::MainWindow(QWidget* parent)
     setWindowTitle("TreeMk - Markdown Editor");
     setWindowIcon(QIcon::fromTheme("text-editor"));
 
-    // Setup progress bar in status bar
     progressBar = new QProgressBar(this);
     progressBar->setMaximumWidth(200);
     progressBar->setVisible(false);
     statusBar()->addPermanentWidget(progressBar);
     statusBar()->showMessage(tr("Ready"));
 
-    // Setup auto-save timer
     autoSaveTimer = new QTimer(this);
     connect(autoSaveTimer, &QTimer::timeout, this, &MainWindow::autoSave);
 
-    // Setup preview update timer
     previewUpdateTimer = new QTimer(this);
     previewUpdateTimer->setSingleShot(true);
     connect(previewUpdateTimer, &QTimer::timeout, this,
             &MainWindow::updatePreview);
 
-    // Create UI components in order
     createLayout();
     createActions();
     createAIAssistMenu();
     createMenus();
     createToolbar();
-    // Note: readSettings() and initial tab creation happen in initializeSettings()
+    // readSettings() and initial tab creation happen in initializeSettings()
 }
 
 MainWindow::~MainWindow() {
-    // Properly cleanup QWebEngineView to avoid profile warning
     if (sharedPreview) {
-        sharedPreview->setPage(nullptr);  // Release page first
+        sharedPreview->setPage(nullptr);
         delete sharedPreview;
         sharedPreview = nullptr;
     }
