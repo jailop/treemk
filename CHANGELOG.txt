@@ -248,3 +248,12 @@ Documentation:
   in the same file. Comments have been included to explain why the
   refered functions exists and what they do. The `main` function now
   looks declarative.
+- Moved to v.0.8-alpha
+
+0.8.1 - 2026-04-07:
+
+- Removed feature to automatically open main.md file (or the one defined
+  by the user) when a new directory is openned or set as default. This
+  feature was included assuming in each folder there is a main.md file,
+  a kind of index. But that assumptions is dependent on the workflow of
+  the user and not essential for the application.

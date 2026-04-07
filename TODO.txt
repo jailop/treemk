@@ -1,2 +1,0 @@
-- [ ] cut, copy, and paste on the preview panel
-- [ ] command line options, for example to open a file

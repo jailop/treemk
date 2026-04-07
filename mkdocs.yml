@@ -1,7 +1,7 @@
 site_name: TreeMk Documentation
 site_url: https://jailop.github.io/treemk
-site_description: TreeMk - A Markdown editor with wiki-style linking and AI assistance
-site_author: DataInquiry Team
+site_description: TreeMk - A Markdown editor with wiki-style linking
+site_author: Jaime Lopez
 repo_url: https://github.com/jailop/treemk
 repo_name: jailop/treemk
 edit_uri: edit/main/docs/

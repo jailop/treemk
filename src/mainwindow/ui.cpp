@@ -161,12 +161,6 @@ void MainWindow::createMenus() {
     viewMenu->addSeparator();
     viewMenu->addAction(toggleFocusModeAction);
     viewMenu->addSeparator();
-    /*
-    QMenu* previewThemeMenu = viewMenu->addMenu(tr("Preview Theme"));
-    previewThemeMenu->addAction(previewThemeLightAction);
-    previewThemeMenu->addAction(previewThemeDarkAction);
-    previewThemeMenu->addAction(previewThemeSepiaAction);
-    */
 
     goMenu = menuBar()->addMenu(tr("&Go"));
     goMenu->addAction(backAction);
@@ -238,7 +232,6 @@ void MainWindow::createToolbar() {
 }
 
 void MainWindow::createLayout() {
-    // Create sidebar panel from UI file
     sidebarPanel = new SidebarPanel(this);
     
     // Get references to widgets from UI
@@ -369,18 +362,6 @@ void MainWindow::createLayout() {
     connect(sharedPreview, &MarkdownPreview::internalLinkClicked, this,
             &MainWindow::onInternalLinkClicked);
     
-    // DISABLED: Preview to Editor scroll sync (causes feedback loop)
-    // Keeping editor to preview sync only (one-way synchronization)
-    /*
-    connect(sharedPreview, &MarkdownPreview::scrollPercentageChanged, this,
-            [this](double percentage) {
-                TabEditor* tab = currentTabEditor();
-                if (tab) {
-                    tab->setEditorScrollFromPreview(percentage);
-                }
-            });
-    */
-
     editorPreviewSplitter = new QSplitter(Qt::Horizontal, this);
     editorPreviewSplitter->addWidget(tabWidget);
     editorPreviewSplitter->addWidget(sharedPreview);
@@ -394,8 +375,6 @@ void MainWindow::createLayout() {
     mainSplitter->setStretchFactor(1, 1);
 
     setCentralWidget(mainSplitter);
-    
-    // Note: createNewTab() is called from initializeSettings() after window is shown
 }
 
 void MainWindow::readSettings() {
@@ -490,44 +469,22 @@ void MainWindow::readSettings() {
             }
         }
 
-        // Only restore files that belong to the current folder
-        // This prevents opening unrelated files when opening in new window
+        // restore files that belong to the current folder
         for (const QString& filePath : openFiles) {
             if (QFileInfo::exists(filePath)) {
-                // Check if file belongs to current folder
                 QFileInfo fileInfo(filePath);
                 QString fileFolder = fileInfo.absolutePath();
                 
-                // Only load if in current folder hierarchy
                 if (!folderToOpen.isEmpty() && 
                     !fileFolder.startsWith(folderToOpen)) {
-                    continue;  // Skip files outside current folder
+                    continue;
                 }
-                
                 loadFile(filePath);
             }
         }
 
         if (activeTabIndex >= 0 && activeTabIndex < tabWidget->count()) {
             tabWidget->setCurrentIndex(activeTabIndex);
-        }
-    } else if (!folderToOpen.isEmpty()) {
-        QString mainFileName =
-            settings->value("workspace/mainFileName", "main.md").toString();
-        QString mainFilePath =
-            MainFileLocator::findMainFile(folderToOpen, mainFileName);
-
-        if (!mainFilePath.isEmpty() && QFileInfo::exists(mainFilePath)) {
-            if (tabWidget->count() == 1) {
-                TabEditor* firstTab =
-                    qobject_cast<TabEditor*>(tabWidget->widget(0));
-                if (firstTab && firstTab->filePath().isEmpty() &&
-                    !firstTab->editor()->isModified()) {
-                    tabWidget->removeTab(0);
-                    delete firstTab;
-                }
-            }
-            loadFile(mainFilePath);
         }
     }
 
@@ -708,16 +665,6 @@ void MainWindow::applySettings() {
     if (sharedPreview) {
         sharedPreview->setTheme(theme);
     }
-    /* TODO to be removed. theme is general for all the app, not just
-     * preview.
-    if (previewThemeDarkAction && theme == "dark") {
-        previewThemeDarkAction->setChecked(true);
-    } else if (previewThemeSepiaAction && theme == "sepia") {
-        previewThemeSepiaAction->setChecked(true);
-    } else if (previewThemeLightAction) {
-        previewThemeLightAction->setChecked(true);
-    }
-    */
 
     QString fontFamily =
         settings->value("editor/font", "Sans Serif").toString();
