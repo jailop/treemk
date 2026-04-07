@@ -248,3 +248,4 @@ Documentation:
   in the same file. Comments have been included to explain why the
   refered functions exists and what they do. The `main` function now
   looks declarative.
+- Moved to v.0.8-alpha
