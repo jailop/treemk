@@ -9,8 +9,7 @@ WorkspaceManager::WorkspaceManager(QObject* parent) : QObject(parent) {}
 
 WorkspaceManager::~WorkspaceManager() {}
 
-bool WorkspaceManager::openFolder(const QString& folderPath, bool autoOpenMain,
-                                  const QString& mainFileName) {
+bool WorkspaceManager::openFolder(const QString& folderPath) {
     if (folderPath.isEmpty()) {
         return false;
     }
@@ -21,23 +20,6 @@ bool WorkspaceManager::openFolder(const QString& folderPath, bool autoOpenMain,
     }
 
     m_currentFolder = dir.absolutePath();
-    m_mainFile.clear();
-
     emit folderOpened(m_currentFolder);
-
-    if (autoOpenMain) {
-        QString preferredName =
-            mainFileName.isEmpty() ? "main.md" : mainFileName;
-        QString mainFilePath =
-            MainFileLocator::findMainFile(m_currentFolder, preferredName);
-
-        if (!mainFilePath.isEmpty()) {
-            m_mainFile = mainFilePath;
-            emit mainFileFound(mainFilePath);
-        } else {
-            emit noMainFileFound();
-        }
-    }
-
     return true;
 }

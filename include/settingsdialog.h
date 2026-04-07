@@ -24,7 +24,6 @@ class SettingsDialog : public QDialog {
     bool getAutoSaveEnabled() const;
     QString getDefaultTheme() const;
     QString getAppTheme() const;
-    QString getMainFileName() const;
     int getLinkSearchDepth() const;
 
    signals:
@@ -90,7 +89,6 @@ class SettingsDialog : public QDialog {
     QSpinBox* linkSearchDepthSpinBox;
 
     // Appearance settings
-    QLineEdit* mainFileNameLineEdit;
     QComboBox* themeComboBox;
     // AI settings
     QCheckBox* aiEnabledCheckBox;

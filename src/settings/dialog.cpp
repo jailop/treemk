@@ -243,18 +243,6 @@ void SettingsDialog::setupMainTab() {
     QGroupBox* workspaceGroup = new QGroupBox(tr("Workspace"));
     QFormLayout* workspaceLayout = new QFormLayout(workspaceGroup);
 
-    mainFileNameLineEdit = new QLineEdit();
-    mainFileNameLineEdit->setPlaceholderText(tr("main.md"));
-    workspaceLayout->addRow(tr("Main file name:"), mainFileNameLineEdit);
-
-    QLabel* mainFileNote =
-        new QLabel(tr("File to automatically open when opening a folder. "
-                      "Common alternatives: index.md, README.md"));
-    mainFileNote->setWordWrap(true);
-    mainFileNote->setStyleSheet(QString("color: %1; font-size: 9pt;")
-                               .arg(ColorPalette::toHexString(noteColor)));
-    workspaceLayout->addRow(mainFileNote);
-
     linkSearchDepthSpinBox = new QSpinBox();
     linkSearchDepthSpinBox->setRange(MIN_LINK_SEARCH_DEPTH,
                                      MAX_LINK_SEARCH_DEPTH);
@@ -342,8 +330,6 @@ void SettingsDialog::loadSettings() {
         settings.value("general/restoreSession", true).toBool());
 
     // Workspace settings
-    mainFileNameLineEdit->setText(
-        settings.value("workspace/mainFileName", "main.md").toString());
     linkSearchDepthSpinBox->setValue(
         settings.value("workspace/linkSearchDepth", DEFAULT_LINK_SEARCH_DEPTH)
             .toInt());
@@ -398,7 +384,6 @@ void SettingsDialog::saveSettings() {
     settings.setValue("general/restoreSession",
                       restoreSessionCheckBox->isChecked());
 
-    settings.setValue("workspace/mainFileName", mainFileNameLineEdit->text());
     settings.setValue("workspace/linkSearchDepth",
                       linkSearchDepthSpinBox->value());
 
@@ -454,11 +439,6 @@ QString SettingsDialog::getDefaultTheme() const {
 
 QString SettingsDialog::getAppTheme() const {
     return themeComboBox->currentData().toString();
-}
-
-QString SettingsDialog::getMainFileName() const {
-    QString fileName = mainFileNameLineEdit->text().trimmed();
-    return fileName.isEmpty() ? "main.md" : fileName;
 }
 
 int SettingsDialog::getLinkSearchDepth() const {
