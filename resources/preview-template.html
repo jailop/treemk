@@ -6,7 +6,6 @@
 <link rel="stylesheet" href="qrc:/css-libs/HIGHLIGHT_THEME">
 <script src="qrc:/js/preview-bundle.min.js"></script>
 <script>
-// Initialize mermaid after bundle loads
 window.mermaid.initialize({ startOnLoad: false, theme: 'MERMAID_THEME' });
 </script>
 <style>
@@ -29,7 +28,8 @@ document.addEventListener('DOMContentLoaded', function() {
       strict: false
     });
   }
-  
+
+  let mermaidIdCounter = 0;
   document.querySelectorAll('pre code').forEach((block) => {
     if (block.classList.contains('language-mermaid')) {
       const pre = block.parentElement;
@@ -37,7 +37,8 @@ document.addEventListener('DOMContentLoaded', function() {
       const container = document.createElement('div');
       container.className = 'mermaid-container';
       pre.replaceWith(container);
-      window.mermaid.render('mermaid-' + Date.now(), code).then(result => {
+      const uniqueId = 'mermaid-' + Date.now() + '-' + (++mermaidIdCounter);
+      window.mermaid.render(uniqueId, code).then(result => {
         container.innerHTML = result.svg;
       }).catch(err => {
         container.innerHTML = '<div style="color: red; padding: 10px; border: 1px solid red; border-radius: 3px;">Mermaid Error: ' + err.message + '</div>';

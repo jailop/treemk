@@ -257,3 +257,7 @@ Documentation:
   feature was included assuming in each folder there is a main.md file,
   a kind of index. But that assumptions is dependent on the workflow of
   the user and not essential for the application.
+
+2026-04-17:
+
+- Preview was not rendering more than one mermaid diagram - fixed.
