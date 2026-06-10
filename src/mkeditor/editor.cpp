@@ -427,6 +427,7 @@ QString MarkdownEditor::extractMainTitle(const QString& filePath) const {
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         return QString();
     }
+    /*
     QTextStream in(&file);
     QRegularExpression headerPattern(RegexPatterns::HEADER_H1);
     while (!in.atEnd()) {
@@ -438,12 +439,14 @@ QString MarkdownEditor::extractMainTitle(const QString& filePath) const {
         }
     }
     file.close();
+    */
     return QString();
 }
 
 void MarkdownEditor::dropEvent(QDropEvent* event) {
     if (event->mimeData()->hasUrls()) {
         QList<QUrl> urls = event->mimeData()->urls();
+        /*
         QTextCursor cursor = cursorForPosition(event->position().toPoint());
         setTextCursor(cursor);
         for (const QUrl& url : urls) {
@@ -480,6 +483,7 @@ void MarkdownEditor::dropEvent(QDropEvent* event) {
             }
         }
         event->acceptProposedAction();
+        */
     } else {
         QTextEdit::dropEvent(event);
     }
@@ -736,5 +740,5 @@ void MarkdownEditor::jumpToHeading(const QString& anchor) {
         block = block.next();
     }
     
-    qWarning() << "Heading not found:" << anchor;
+    // qWarning() << "Heading not found:" << anchor;
 }

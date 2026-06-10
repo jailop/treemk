@@ -120,7 +120,7 @@ void HelpDialog::loadHelpContent(const QString& fileName) {
     }
 
     QTextStream in(&file);
-    in.setEncoding(QStringConverter::Utf8);
+    // in.setEncoding(QStringConverter::Utf8);
     QString content = in.readAll();
     file.close();
 
@@ -171,7 +171,7 @@ void HelpDialog::onBackClicked() {
 
         if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
             QTextStream in(&file);
-            in.setEncoding(QStringConverter::Utf8);
+            // in.setEncoding(QStringConverter::Utf8);
             QString content = in.readAll();
             file.close();
             contentView->setMarkdownContent(content);
@@ -193,7 +193,7 @@ void HelpDialog::onForwardClicked() {
 
         if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
             QTextStream in(&file);
-            in.setEncoding(QStringConverter::Utf8);
+            // in.setEncoding(QStringConverter::Utf8);
             QString content = in.readAll();
             file.close();
             contentView->setMarkdownContent(content);
@@ -343,6 +343,7 @@ void HelpDialog::performSearch(const QString& searchTerm) {
 
 void HelpDialog::onPrintClicked() {
 #ifndef QT_NO_PRINTER
+    /*
     QPrinter printer(QPrinter::HighResolution);
     QPrintDialog printDialog(&printer, this);
     printDialog.setWindowTitle(tr("Print Help"));
@@ -350,6 +351,7 @@ void HelpDialog::onPrintClicked() {
     if (printDialog.exec() == QDialog::Accepted) {
         contentView->print(&printer);
     }
+    */
 #else
     QMessageBox::information(this, tr("Print"),
                              tr("Printing is not supported in this build."));

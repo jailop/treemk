@@ -25,7 +25,7 @@ MainWindow* WindowManager::createWindow(const QString& folder,
     // If TREEMK_NEW_WINDOW env var is set, we're being launched as a new window
     // Don't spawn another one
     if (qEnvironmentVariableIsSet("TREEMK_NEW_WINDOW")) {
-        qWarning() << "Already in new window mode, not spawning another";
+        // qWarning() << "Already in new window mode, not spawning another";
         return nullptr;
     }
     
@@ -51,7 +51,7 @@ MainWindow* WindowManager::createWindow(const QString& folder,
     bool started = process.startDetached(program, arguments);
     
     if (!started) {
-        qWarning() << "Failed to start new window process";
+        // qWarning() << "Failed to start new window process";
     }
     
     // Return nullptr since we're not managing the window in this process

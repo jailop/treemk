@@ -160,11 +160,11 @@ void MainWindow::onTabChanged(int index) {
 
         MarkdownEditor* editor = tab->editor();
         if (editor && cutAction && copyAction && undoAction && redoAction) {
+            /*
             cutAction->setEnabled(editor->textCursor().hasSelection());
             copyAction->setEnabled(editor->textCursor().hasSelection());
             undoAction->setEnabled(editor->document()->isUndoAvailable());
             redoAction->setEnabled(editor->document()->isRedoAvailable());
-
             connect(editor, &QTextEdit::copyAvailable, cutAction,
                     &QAction::setEnabled, Qt::UniqueConnection);
             connect(editor, &QTextEdit::copyAvailable, copyAction,
@@ -173,6 +173,7 @@ void MainWindow::onTabChanged(int index) {
                     &QAction::setEnabled, Qt::UniqueConnection);
             connect(editor, &QTextEdit::redoAvailable, redoAction,
                     &QAction::setEnabled, Qt::UniqueConnection);
+            */
         }
 
         if (!tab->filePath().isEmpty()) {

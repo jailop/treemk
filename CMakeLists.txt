@@ -23,7 +23,7 @@ if (UNIX AND NOT APPLE)
     add_compile_options(-Wall -g)
 endif()
 
-find_package(Qt6 REQUIRED COMPONENTS 
+find_package(Qt5 REQUIRED COMPONENTS 
     Core 
     Gui 
     Widgets
@@ -96,13 +96,13 @@ else()
 endif()
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
-    Qt6::Core
-    Qt6::Gui
-    Qt6::Widgets
-    Qt6::WebEngineWidgets
-    Qt6::Svg
-    Qt6::Network
-    Qt6::Concurrent
+    Qt5::Core
+    Qt5::Gui
+    Qt5::Widgets
+    Qt5::WebEngineWidgets
+    Qt5::Svg
+    Qt5::Network
+    Qt5::Concurrent
     ${MD4C_LIBRARIES}
 )
 
@@ -111,8 +111,8 @@ if(WIN32)
         RUNTIME DESTINATION .
     )
     # Deploy Qt dependencies on Windows
-    if(Qt6_DIR)
-        get_target_property(QMAKE_EXECUTABLE Qt6::qmake IMPORTED_LOCATION)
+    if(Qt5_DIR)
+        get_target_property(QMAKE_EXECUTABLE Qt5::qmake IMPORTED_LOCATION)
         get_filename_component(QT_BIN_DIR "${QMAKE_EXECUTABLE}" DIRECTORY)
         find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${QT_BIN_DIR}")
         if(WINDEPLOYQT_EXECUTABLE)
@@ -123,8 +123,8 @@ elseif(APPLE)
     install(TARGETS ${PROJECT_NAME}
         BUNDLE DESTINATION .
     )
-    if(Qt6_DIR)
-        get_target_property(QMAKE_EXECUTABLE Qt6::qmake IMPORTED_LOCATION)
+    if(Qt5_DIR)
+        get_target_property(QMAKE_EXECUTABLE Qt5::qmake IMPORTED_LOCATION)
         get_filename_component(QT_BIN_DIR "${QMAKE_EXECUTABLE}" DIRECTORY)
         find_program(MACDEPLOYQT_EXECUTABLE macdeployqt HINTS "${QT_BIN_DIR}")
         if(MACDEPLOYQT_EXECUTABLE)

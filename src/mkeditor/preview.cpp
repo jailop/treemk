@@ -425,7 +425,7 @@ QString MarkdownPreview::resolveAndIncludeFile(const QString& linkTarget,
             .arg(linkTarget.toHtmlEscaped());
     }
     QTextStream in(&file);
-    in.setEncoding(QStringConverter::Utf8);
+    // in.setEncoding(QStringConverter::Utf8);
     QString content = in.readAll();
     file.close();
     QString includedHtml = convertMarkdownToHtml(content);
@@ -471,7 +471,7 @@ QString MarkdownPreview::readFileContent(const QString& linkTarget,
         return QString();
     }
     QTextStream in(&file);
-    in.setEncoding(QStringConverter::Utf8);
+    // in.setEncoding(QStringConverter::Utf8);
     QString content = in.readAll();
     file.close();
     errorMsg.clear();

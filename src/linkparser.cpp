@@ -59,7 +59,7 @@ QVector<QString> LinkParser::extractLinksFromFile(const QString& filePath) {
     }
 
     QTextStream in(&file);
-    in.setEncoding(QStringConverter::Utf8);
+    // in.setEncoding(QStringConverter::Utf8);
     QString content = in.readAll();
     file.close();
 

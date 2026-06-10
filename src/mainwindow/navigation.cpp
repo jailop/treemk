@@ -36,17 +36,19 @@ void MainWindow::navigateForward() {
 void MainWindow::updateNavigationActions() {
     TabEditor* tab = currentTabEditor();
     if (!tab) {
-        if (backAction) backAction->setEnabled(false);
-        if (forwardAction) forwardAction->setEnabled(false);
+        // if (backAction) backAction->setEnabled(false);
+        // if (forwardAction) forwardAction->setEnabled(false);
         return;
     }
 
+    /*
     if (backAction) {
         backAction->setEnabled(tab->navigationHistory()->canGoBack());
     }
     if (forwardAction) {
         forwardAction->setEnabled(tab->navigationHistory()->canGoForward());
     }
+    */
 }
 
 void MainWindow::filterHistoryList() {

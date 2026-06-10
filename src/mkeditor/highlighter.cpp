@@ -322,20 +322,24 @@ void MarkdownHighlighter::setCurrentCursorLine(int lineNumber) {
         QTextDocument* doc = document();
         if (doc) {
             // Rehighlight the old cursor line
+            /*
             if (oldLine >= 0 && oldLine < doc->blockCount()) {
                 QTextBlock oldBlock = doc->findBlockByNumber(oldLine);
                 if (oldBlock.isValid()) {
                     rehighlightBlock(oldBlock);
                 }
             }
+            */
 
             // Rehighlight the new cursor line
+            /*
             if (lineNumber >= 0 && lineNumber < doc->blockCount()) {
                 QTextBlock newBlock = doc->findBlockByNumber(lineNumber);
                 if (newBlock.isValid()) {
                     rehighlightBlock(newBlock);
                 }
             }
+            */
         }
     }
 }

@@ -115,7 +115,7 @@ void SearchDialog::scanDirectoryIterative(const QString& dirPath,
         }
 
         QTextStream in(&file);
-        in.setEncoding(QStringConverter::Utf8);
+        // in.setEncoding(QStringConverter::Utf8);
 
         int lineNumber = 0;
         while (!in.atEnd()) {

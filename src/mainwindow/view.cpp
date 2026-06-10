@@ -57,6 +57,7 @@ void MainWindow::toggleEditor() {
     }
 
     // Update action checkstate
+    /*
     if (toggleEditorAction) {
         toggleEditorAction->setChecked(newEditorVisible);
     }
@@ -65,6 +66,7 @@ void MainWindow::toggleEditor() {
     if (togglePreviewAction) {
         togglePreviewAction->setEnabled(newEditorVisible);
     }
+    */
 }
 
 void MainWindow::togglePreview() {
@@ -102,6 +104,7 @@ void MainWindow::togglePreview() {
     }
 
     // Update action checkstate
+    /*
     if (togglePreviewAction) {
         togglePreviewAction->setChecked(newPreviewVisible);
     }
@@ -110,6 +113,7 @@ void MainWindow::togglePreview() {
     if (toggleEditorAction) {
         toggleEditorAction->setEnabled(newPreviewVisible);
     }
+    */
 }
 
 void MainWindow::onWikiLinkClicked(const QString& linkTarget) {

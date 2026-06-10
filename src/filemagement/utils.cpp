@@ -35,7 +35,7 @@ FileCreationResult createFileWithDirectories(const QString& filePath,
 
     if (!initialContent.isEmpty()) {
         QTextStream out(&file);
-        out.setEncoding(QStringConverter::Utf8);
+        // out.setEncoding(QStringConverter::Utf8);
         out << initialContent;
     }
 

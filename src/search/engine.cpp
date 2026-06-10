@@ -33,7 +33,7 @@ QList<SearchEngine::SearchResult> SearchEngine::searchInFile(
     }
 
     QTextStream in(&file);
-    in.setEncoding(QStringConverter::Utf8);
+    // in.setEncoding(QStringConverter::Utf8);
     QString content = in.readAll();
     file.close();
 

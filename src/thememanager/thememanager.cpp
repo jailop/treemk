@@ -344,7 +344,7 @@ QString ThemeManager::getPreviewStyleSheet() const {
     }
     QFile cssFile(cssFileName);
     if (!cssFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        qWarning() << "Failed to load theme CSS:" << cssFileName;
+        // qWarning() << "Failed to load theme CSS:" << cssFileName;
         return "";
     }
     QString styleSheet = QString::fromUtf8(cssFile.readAll());
