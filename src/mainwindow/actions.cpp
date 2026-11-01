@@ -106,7 +106,7 @@ void MainWindow::createActions() {
         this, iconWithFallback("document-print", QStyle::SP_DialogSaveButton),
         tr("&Print..."), tr("Print the document preview"),
         tr("Print preview"));
-    printAction->setShortcuts(QKeySequence::Print);
+    printAction->setShortcut(QKeySequence(tr("Ctrl+Alt+P")));
     connect(printAction, &QAction::triggered, this, &MainWindow::print);
 
     exportHtmlAction = createAction(
@@ -321,7 +321,7 @@ void MainWindow::createActions() {
 
     openInNewTabAction = createAction(
         this, tr("Open in &New Tab"), tr("Open selected file in a new tab"));
-    openInNewTabAction->setShortcut(QKeySequence(tr("Ctrl+Shift+O")));
+    openInNewTabAction->setShortcut(QKeySequence(tr("Ctrl+T")));
     connect(openInNewTabAction, &QAction::triggered, this,
             &MainWindow::openInNewTab);
 
@@ -453,7 +453,7 @@ void MainWindow::createActions() {
         tr("&Preview"), tr("Toggle preview panel"));
     togglePreviewAction->setCheckable(true);
     togglePreviewAction->setChecked(true);
-    togglePreviewAction->setShortcut(QKeySequence(tr("Ctrl+P")));
+    togglePreviewAction->setShortcut(QKeySequence(tr("Ctrl+Shift+P")));
     connect(togglePreviewAction, &QAction::triggered, this,
             &MainWindow::togglePreview);
 

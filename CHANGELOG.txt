@@ -268,3 +268,4 @@ Documentation:
   subdirectories
 - File treeview code refactored in smaller files
 - "Open with..." option added to the file treeview panel
+- Conflicts among keyboard shortcuts fixed

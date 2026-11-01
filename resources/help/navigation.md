@@ -298,13 +298,15 @@ These options are also available in the main menu under option `Go`
 TreeMk intelligently manages tabs to reduce clutter while giving you control:
 
 **Default Behavior (Current Tab):**
+
 - Clicking wiki-links reuses the current tab if unmodified
 - Opening files from the file tree reuses unmodified tabs
 - Following backlinks reuses the current tab
 - This prevents tab proliferation when exploring links
 
 **Opening in New Tab Explicitly:**
-- **Ctrl+Shift+O**: Open selected file in new tab (from file tree or menu)
+
+- **Ctrl+T**: Open selected file in new tab (from file tree or menu)
 - **Ctrl+Double-click**: Open file in new tab (file tree)
 - **Ctrl+Shift+Click**: Open link in new tab (on wiki-links and markdown links)
 - **Right-click → Open in New Tab**: Context menu option (file tree)
