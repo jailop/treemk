@@ -16,25 +16,31 @@ void FileSystemTreeView::createContextMenu() {
             &FileSystemTreeView::createNewFolder);
     renameAction = new QAction(tr("Rename"), this);
     renameAction->setShortcut(QKeySequence(Qt::Key_F2));
+    renameAction->setShortcutContext(Qt::WidgetWithChildrenShortcut);
     connect(renameAction, &QAction::triggered, this,
             &FileSystemTreeView::renameItem);
     deleteAction = new QAction(tr("Delete"), this);
     deleteAction->setShortcut(QKeySequence::Delete);
+    deleteAction->setShortcutContext(Qt::WidgetWithChildrenShortcut);
     connect(deleteAction, &QAction::triggered, this,
             &FileSystemTreeView::deleteItem);
     cutAction = new QAction(tr("Cut"), this);
     cutAction->setShortcut(QKeySequence::Cut);
+    cutAction->setShortcutContext(Qt::WidgetWithChildrenShortcut);
     connect(cutAction, &QAction::triggered, this, &FileSystemTreeView::cutItem);
     copyAction = new QAction(tr("Copy"), this);
     copyAction->setShortcut(QKeySequence::Copy);
+    copyAction->setShortcutContext(Qt::WidgetWithChildrenShortcut);
     connect(copyAction, &QAction::triggered, this,
             &FileSystemTreeView::copyItem);
     pasteAction = new QAction(tr("Paste"), this);
     pasteAction->setShortcut(QKeySequence::Paste);
+    pasteAction->setShortcutContext(Qt::WidgetWithChildrenShortcut);
     connect(pasteAction, &QAction::triggered, this,
             &FileSystemTreeView::pasteItem);
     refreshAction = new QAction(tr("Refresh"), this);
     refreshAction->setShortcut(QKeySequence::Refresh);
+    refreshAction->setShortcutContext(Qt::WidgetWithChildrenShortcut);
     connect(refreshAction, &QAction::triggered, this,
             &FileSystemTreeView::refreshDirectory);
     setCurrentFolderAction = new QAction(tr("Set as Current Folder"), this);

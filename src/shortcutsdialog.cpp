@@ -98,8 +98,10 @@ void ShortcutsDialog::loadShortcuts() {
     // File operations
     addShortcut(tr("File"), tr("New File"), tr("Ctrl+N"));
     addShortcut(tr("File"), tr("Open Folder"), tr("Ctrl+Shift+O"));
+    addShortcut(tr("File"), tr("Open in New Tab"), tr("Ctrl+T"));
     addShortcut(tr("File"), tr("Save"), tr("Ctrl+S"));
     addShortcut(tr("File"), tr("Save As"), tr("Ctrl+Shift+S"));
+    addShortcut(tr("File"), tr("Print"), tr("Ctrl+Alt+P"));
     addShortcut(tr("File"), tr("Close Tab"), tr("Ctrl+W"));
     addShortcut(tr("File"), tr("Close All Tabs"), tr("Ctrl+Shift+W"));
     addShortcut(tr("File"), tr("Quit"), tr("Ctrl+Q"));

@@ -142,40 +142,12 @@ Enable **Settings → General → Auto-save** to automatically save your work ev
 
 ## View Modes: Customize Your Workspace
 
-TreeMk gives you flexible control over your workspace layout. You can show or hide the editor and preview panels independently to match your current task.
+TreeMk gives you flexible control over your workspace layout. You can show or
+hide the editor and preview panels independently to match your current task.
 
-### Toggle Editor Panel (Ctrl+E)
-
-- Hide the editor to see the preview in full width
-- Perfect for reading rendered documents
-- Menu: **View → Toggle Editor**
-- Toolbar: Editor button (document icon)
-
-### Toggle Preview Panel (Ctrl+P)
-
-- Hide the preview to see the editor in full width
-- Ideal for focused writing without distractions
-- Menu: **View → Toggle Preview**
-- Toolbar: Preview button (eye icon)
-
-## Focus Mode: Writing Without Distractions
-
-Sometimes you need to tune out everything except your words. Press **F11** to enter Focus Mode—a distraction-free environment where the menu bar, toolbar, sidebar, and preview all disappear, leaving only your editor and your thoughts.
-
-In Focus Mode, TreeMk centers your text with a maximum width of 900 pixels, no matter how wide your window is. This creates a comfortable reading width that doesn't force your eyes to track across an entire monitor. It's the digital equivalent of a blank page on a clean desk.
-
-**What happens in Focus Mode:**
-
-- Menu bar hidden
-- Toolbar hidden  
-- Sidebar (files, outline, backlinks, history) hidden
-- Preview panel hidden
-- Text centered with comfortable max-width
-- Status bar briefly shows "Focus Mode: ON (F11 to exit)" then disappears
-
-Press **F11** again to exit Focus Mode. Everything returns to exactly how it was—your sidebar visibility, panel visibility, all restored. You can also access Focus Mode through **View → Focus Mode** in the menu.
-
-**When to use it:** First drafts. Flow states. Timed writing sessions. Late-night journal entries. Anytime you want nothing between you and your writing.
+- Toggle Editor Panel (Ctrl+E)
+- Toggle Preview Panel (Ctrl+Shift+P)
+- Focus Mode (F11)
 
 ## Writing with AI Assistance
 
