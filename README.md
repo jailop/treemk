@@ -1,10 +1,9 @@
 # TreeMk - Integrated Markdown Editor
 
-TreeMk is a desktop Markdown editor that works directly with your file system—no proprietary vaults, no lock-in, just your files organized your way. Built with Qt, it combines a powerful text editor with a file explorer, wiki-style linking, and rich content rendering.
-
-**Work with your files, where they already are.**
-
-TreeMk doesn't move your notes into a special database or vault. It simply provides an integrated environment for editing and navigating Markdown files across any folder on your system.
+TreeMk is a desktop Markdown editor that works directly with your file system.
+No proprietary vaults, no lock-in, just your files organized your way. Built
+with Qt, it combines a powerful text editor with a file explorer, wiki-style
+linking, and rich content rendering.
 
 ![screenshot](screenshot.png)
 
@@ -198,14 +197,20 @@ Visit http://127.0.0.1:8000 to view the documentation.
 
 ## Contributing
 
-To date, this project has been a personal initiative, but it’s open to receiving contributions and incorporating collaborators. Visit [Contributing to TreeMk](https://jailop.github.io/treemk/contributing/) for guidelines on how to contribute to the project.
+To date, this project has been a personal initiative, but it’s open to receiving
+contributions and incorporating collaborators. Visit [Contributing to
+TreeMk](https://jailop.github.io/treemk/contributing/) for guidelines on how to
+contribute to the project.
 
 ## License
 
-TreeMk is licensed under the GNU General Public License v3.0. See [LICENSE](LICENSE) for details.
+TreeMk is licensed under the GNU General Public License v3.0. See
+[LICENSE](LICENSE) for details.
 
 Third-party libraries used in TreeMk are subject to their own licenses.
 
 ## Disclaimer
 
-TreeMk is provided "as is" without any warranties. The developers are not liable for any damage or loss of data resulting from the use of this software. Always back up your notes before using new software.
+TreeMk is provided "as is" without any warranties. The developers are not liable
+for any damage or loss of data resulting from the use of this software. Always
+back up your notes before using new software.

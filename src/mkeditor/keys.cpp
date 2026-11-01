@@ -301,13 +301,17 @@ void MarkdownEditor::keyPressEvent(QKeyEvent* event) {
 
         if (shouldClose) {
             QTextCursor cursor = textCursor();
-            QString textAfterCursor = 
+            QString textAfterCursor =
                 cursor.block().text().mid(cursor.positionInBlock());
-            
-            bool atEndOrWhitespace = textAfterCursor.isEmpty() || 
-                                     textAfterCursor.at(0).isSpace();
-            
-            if (atEndOrWhitespace) {
+
+            bool allowAutoClose = textAfterCursor.isEmpty() ||
+                                  textAfterCursor.at(0).isSpace() ||
+                                  textAfterCursor.at(0) == ')' ||
+                                  textAfterCursor.at(0) == ']' ||
+                                  textAfterCursor.at(0) == '}' ||
+                                  textAfterCursor.at(0) == '`';
+
+            if (allowAutoClose) {
                 cursor.insertText(event->text() + closingChar);
                 cursor.movePosition(QTextCursor::Left, QTextCursor::MoveAnchor);
                 setTextCursor(cursor);

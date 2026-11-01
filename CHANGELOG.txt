@@ -261,3 +261,10 @@ Documentation:
 2026-04-17:
 
 - Preview was not rendering more than one mermaid diagram - fixed.
+
+2026-11-01:
+
+- File drag and drop enable in directory tree view, to move files into
+  subdirectories
+- File treeview code refactored in smaller files
+- "Open with..." option added to the file treeview panel
