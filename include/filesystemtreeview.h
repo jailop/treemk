@@ -6,6 +6,10 @@
 #include <QSortFilterProxyModel>
 #include <QTreeView>
 
+class QDragEnterEvent;
+class QDragMoveEvent;
+class QDropEvent;
+
 /**
  * This class represents a tree view for displaying
  * and managing the file system. It provides functionalities
@@ -53,6 +57,9 @@ class FileSystemTreeView : public QTreeView {
     void mouseDoubleClickEvent(QMouseEvent* event) override;
     void contextMenuEvent(QContextMenuEvent* event) override;
     void keyPressEvent(QKeyEvent* event) override;
+    void dragEnterEvent(QDragEnterEvent* event) override;
+    void dragMoveEvent(QDragMoveEvent* event) override;
+    void dropEvent(QDropEvent* event) override;
 
    private slots:
     void onSelectionChanged(const QModelIndex& current,
@@ -83,6 +90,7 @@ class FileSystemTreeView : public QTreeView {
     void setupView();
     void createContextMenu();
     bool copyDirectory(const QString& srcPath, const QString& dstPath);
+    QString dropTargetDir(const QPoint& pos) const;
     void setupFileSystemWatcher();
     void addDirectoriesToWatcher(const QString& path);
 
