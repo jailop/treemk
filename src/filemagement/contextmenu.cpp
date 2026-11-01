@@ -4,7 +4,6 @@
 #include <QDir>
 #include <QFileInfo>
 #include <QMenu>
-#include <QProcess>
 #include <QSortFilterProxyModel>
 
 void FileSystemTreeView::createContextMenu() {
@@ -57,36 +56,15 @@ void FileSystemTreeView::createContextMenu() {
     connect(openInFileExplorerAction, &QAction::triggered, this,
             &FileSystemTreeView::openInFileExplorer);
 
-    // Only create "Open With" action on supported platforms
-    openWithAction = nullptr;
-#if defined(Q_OS_WIN)
-    // Windows supports "Open With" dialog
     openWithAction = new QAction(tr("Open With..."), this);
     connect(openWithAction, &QAction::triggered, this,
             &FileSystemTreeView::openFileWith);
-#elif defined(Q_OS_LINUX)
-    // On Linux, only GNOME/GTK environments support it via gio
-    QString desktopEnv = qgetenv("XDG_CURRENT_DESKTOP");
-    if (desktopEnv.contains("GNOME", Qt::CaseInsensitive) ||
-        desktopEnv.contains("GTK", Qt::CaseInsensitive) ||
-        desktopEnv.contains("XFCE", Qt::CaseInsensitive) ||
-        desktopEnv.contains("MATE", Qt::CaseInsensitive)) {
-        // Check if gio is available
-        if (QProcess::execute("which", QStringList() << "gio") == 0) {
-            openWithAction = new QAction(tr("Open With..."), this);
-            connect(openWithAction, &QAction::triggered, this,
-                    &FileSystemTreeView::openFileWith);
-        }
-    }
-#endif
 
     contextMenu->addAction(newFileAction);
     contextMenu->addAction(newFolderAction);
     contextMenu->addSeparator();
     contextMenu->addAction(openAction);
-    if (openWithAction) {
-        contextMenu->addAction(openWithAction);
-    }
+    contextMenu->addAction(openWithAction);
     contextMenu->addAction(openInNewTabAction);
     contextMenu->addAction(openInNewWindowAction);
     contextMenu->addAction(openInFileExplorerAction);
@@ -132,33 +110,17 @@ void FileSystemTreeView::contextMenuEvent(QContextMenuEvent* event) {
         }
     }
 
-    // Enable/disable actions based on selection
     pasteAction->setEnabled(!clipboardPath.isEmpty());
     renameAction->setEnabled(hasSelection);
     deleteAction->setEnabled(hasSelection);
     cutAction->setEnabled(hasSelection);
     copyAction->setEnabled(hasSelection);
-
-    // Open - for all files (md/txt files open in TreeMk, others with system
-    // app)
     openAction->setEnabled(hasSelection && !isDirectory);
-
-    // Open With - only for non-markdown files
-    if (openWithAction) {
-        openWithAction->setEnabled(hasSelection && isNonMarkdownFile);
-    }
-
-    // Open in new window - for md/txt files and directories
+    openWithAction->setEnabled(hasSelection && isNonMarkdownFile);
     openInNewWindowAction->setEnabled(hasSelection &&
                                       (isMarkdownFile || isDirectory));
-
-    // Open in new tab - only for markdown files
     openInNewTabAction->setEnabled(hasSelection && isMarkdownFile);
-
-    // Folder navigation actions - only for directories
     setCurrentFolderAction->setEnabled(hasSelection && isDirectory);
-
-    // Parent folder action - check if we're not already at root
     QDir currentDir(currentRootPath);
     bool hasParent = currentDir.cdUp();
     goToParentAction->setEnabled(hasParent);

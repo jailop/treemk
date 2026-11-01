@@ -1,4 +1,5 @@
 #include "filesystemtreeview.h"
+#include "openwithdialog.h"
 
 #include <QDesktopServices>
 #include <QDir>
@@ -74,17 +75,14 @@ void FileSystemTreeView::openFileWith() {
     }
 
 #ifdef Q_OS_WIN
-    // Windows: use the "Open With" dialog
+    // native "Open With" dialog
     QProcess::startDetached(
         "rundll32.exe", QStringList()
                             << "shell32.dll,OpenAs_RunDLL"
                             << QDir::toNativeSeparators(filePath));
-
-#elif defined(Q_OS_LINUX)
-    // Linux: use gio (available on GNOME/GTK environments)
-    QProcess::startDetached("gio",
-                            QStringList() << "open" << "--ask" << filePath);
-
+#else
+    OpenWithDialog dialog(filePath, this);
+    dialog.exec();
 #endif
 }
 
